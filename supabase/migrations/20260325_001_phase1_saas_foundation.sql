@@ -81,7 +81,20 @@ ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS invited_by UUID,
-  ADD COLUMN IF NOT EXISTS membership_status public.membership_status NOT NULL DEFAULT 'active';
+  ADD COLUMN IF NOT EXISTS membership_status public.membership_status;
+
+UPDATE public.users
+SET membership_status = CASE
+  WHEN is_active = false THEN 'inactive'::public.membership_status
+  ELSE 'active'::public.membership_status
+END
+WHERE membership_status IS NULL;
+
+ALTER TABLE public.users
+  ALTER COLUMN membership_status SET DEFAULT 'active';
+
+ALTER TABLE public.users
+  ALTER COLUMN membership_status SET NOT NULL;
 
 -- Support composite ownership validation without changing current source of truth.
 ALTER TABLE public.users
@@ -114,6 +127,17 @@ ALTER TABLE public.tenants
 ALTER TABLE public.tenants
   ADD CONSTRAINT tenants_status_requires_suspended_at_chk CHECK (
     (status <> 'suspended') OR suspended_at IS NOT NULL
+  );
+
+ALTER TABLE public.invitations
+  DROP CONSTRAINT IF EXISTS invitations_role_check;
+
+ALTER TABLE public.invitations
+  DROP CONSTRAINT IF EXISTS invitations_role_allowed_chk;
+
+ALTER TABLE public.invitations
+  ADD CONSTRAINT invitations_role_allowed_chk CHECK (
+    role IN ('owner', 'admin', 'coordinator', 'agent', 'assistant')
   );
 
 -- =============================================================================
@@ -171,7 +195,6 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
   CONSTRAINT subscriptions_seats_override_positive_chk CHECK (
     seats_override IS NULL OR seats_override > 0
   ),
-  CONSTRAINT subscriptions_provider_subscription_unique UNIQUE (provider, provider_subscription_id),
   CONSTRAINT subscriptions_trial_window_chk CHECK (
     trial_ends_at IS NULL OR trial_started_at IS NULL OR trial_ends_at >= trial_started_at
   ),
@@ -222,6 +245,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_current_provider_customer
   WHERE is_current = true
     AND provider IS NOT NULL
     AND provider_customer_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_current_provider_subscription
+  ON public.subscriptions(provider, provider_subscription_id)
+  WHERE is_current = true
+    AND provider IS NOT NULL
+    AND provider_subscription_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_one_current_per_tenant
   ON public.subscriptions(tenant_id)
   WHERE is_current = true;

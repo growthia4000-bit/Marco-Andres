@@ -354,7 +354,7 @@ export default function LeadsPage() {
                                   <button onClick={(e) => { e.stopPropagation(); router.push(`/leads/${lead.id}`) }} className="p-1 hover:bg-blue-50 rounded">
                                     <Eye size={14} className="text-blue-500" />
                                   </button>
-                                  <button onClick={(e) => { e.stopPropagation(); router.push(`/leads/${lead.id}`) }} className="p-1 hover:bg-slate-100 rounded">
+                                  <button onClick={(e) => { e.stopPropagation(); router.push(`/leads/${lead.id}/edit`) }} className="p-1 hover:bg-slate-100 rounded">
                                     <Edit size={14} className="text-slate-400" />
                                   </button>
                                 </div>
@@ -444,7 +444,7 @@ export default function LeadsPage() {
                             <Link href={`/leads/${lead.id}`} className="p-2 hover:bg-blue-50 rounded-lg">
                               <Eye size={16} className="text-blue-500" />
                             </Link>
-                            <Link href={`/leads/${lead.id}`} className="p-2 hover:bg-slate-100 rounded-lg">
+                            <Link href={`/leads/${lead.id}/edit`} className="p-2 hover:bg-slate-100 rounded-lg">
                               <Edit size={16} className="text-slate-500" />
                             </Link>
                             <button onClick={() => handleDelete(lead.id)} className="p-2 hover:bg-red-50 rounded-lg">

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import SuperadminDashboard from './SuperadminDashboard'
+import { reactivateTenantAction, suspendTenantAction } from './actions'
 
 type TenantRow = {
   id: string
@@ -9,6 +10,7 @@ type TenantRow = {
   status: 'active' | 'inactive' | 'suspended'
   email: string | null
   trial_ends_at: string | null
+  suspended_at: string | null
   created_at: string
 }
 
@@ -72,7 +74,7 @@ export default async function AdminPage() {
   const [{ data: tenantsData, error: tenantsError }, { data: subscriptionsData, error: subscriptionsError }] = await Promise.all([
     supabase
       .from('tenants')
-      .select('id, name, slug, status, email, trial_ends_at, created_at')
+      .select('id, name, slug, status, email, trial_ends_at, suspended_at, created_at')
       .order('created_at', { ascending: false }),
     supabase
       .from('subscriptions')
@@ -132,6 +134,8 @@ export default async function AdminPage() {
         subscription: subscriptionByTenant.get(tenant.id) ?? null,
         capacity: capacityByTenant.get(tenant.id) ?? null,
       }))}
+      suspendTenantAction={suspendTenantAction}
+      reactivateTenantAction={reactivateTenantAction}
     />
   )
 }

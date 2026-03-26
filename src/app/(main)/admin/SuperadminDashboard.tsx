@@ -8,6 +8,7 @@ type TenantItem = {
   status: 'active' | 'inactive' | 'suspended'
   email: string | null
   trial_ends_at: string | null
+  suspended_at: string | null
   created_at: string
   subscription: {
     tenant_id: string
@@ -83,12 +84,16 @@ function statusLabel(value: string | null) {
 export default function SuperadminDashboard({
   currentUser,
   tenants,
+  suspendTenantAction,
+  reactivateTenantAction,
 }: {
   currentUser: {
     fullName: string
     email: string
   }
   tenants: TenantItem[]
+  suspendTenantAction: (formData: FormData) => Promise<void>
+  reactivateTenantAction: (formData: FormData) => Promise<void>
 }) {
   const totals = {
     tenants: tenants.length,
@@ -199,6 +204,7 @@ export default function SuperadminDashboard({
                     <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Puede crear más</th>
                     <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Operativo</th>
                     <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Fechas</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,6 +250,30 @@ export default function SuperadminDashboard({
                         <p>Creado: {formatDate(tenant.created_at)}</p>
                         <p>Trial fin: {formatDate(tenant.trial_ends_at || tenant.subscription?.trial_ends_at || null)}</p>
                         <p>Periodo fin: {formatDate(tenant.subscription?.current_period_end || null)}</p>
+                        <p>Suspension: {formatDate(tenant.suspended_at)}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        {tenant.status === 'suspended' ? (
+                          <form action={reactivateTenantAction}>
+                            <input type="hidden" name="tenantId" value={tenant.id} />
+                            <button
+                              type="submit"
+                              className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition text-sm font-medium"
+                            >
+                              Reactivar
+                            </button>
+                          </form>
+                        ) : (
+                          <form action={suspendTenantAction}>
+                            <input type="hidden" name="tenantId" value={tenant.id} />
+                            <button
+                              type="submit"
+                              className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition text-sm font-medium"
+                            >
+                              Suspender
+                            </button>
+                          </form>
+                        )}
                       </td>
                     </tr>
                   ))}

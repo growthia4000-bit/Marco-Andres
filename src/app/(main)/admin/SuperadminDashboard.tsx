@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import { AlertTriangle, BadgeCheck, Building2, CircleOff, Shield, Users } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider'
 
 type TenantItem = {
   id: string
@@ -34,15 +37,6 @@ type TenantItem = {
   } | null
 }
 
-function formatDate(value: string | null) {
-  if (!value) return '-'
-  return new Date(value).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 function statusBadge(value: string | null) {
   switch (value) {
     case 'active':
@@ -63,21 +57,22 @@ function statusBadge(value: string | null) {
 }
 
 function statusLabel(value: string | null) {
+  const fallback = 'admin.status.unknown'
   switch (value) {
     case 'active':
-      return 'Activo'
+      return 'admin.status.active'
     case 'trial':
-      return 'Trial'
+      return 'admin.status.trial'
     case 'past_due':
-      return 'Pago pendiente'
+      return 'admin.status.past_due'
     case 'suspended':
-      return 'Suspendido'
+      return 'admin.status.suspended'
     case 'canceled':
-      return 'Cancelado'
+      return 'admin.status.canceled'
     case 'inactive':
-      return 'Inactivo'
+      return 'admin.status.inactive'
     default:
-      return 'Sin dato'
+      return fallback
   }
 }
 
@@ -95,6 +90,7 @@ export default function SuperadminDashboard({
   suspendTenantAction: (formData: FormData) => Promise<void>
   reactivateTenantAction: (formData: FormData) => Promise<void>
 }) {
+  const { t, formatDate } = useI18n()
   const totals = {
     tenants: tenants.length,
     operational: tenants.filter((tenant) => tenant.capacity?.is_operational).length,
@@ -111,16 +107,16 @@ export default function SuperadminDashboard({
           <div>
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <Shield size={16} />
-              <span>Superadmin</span>
+              <span>{t('admin.superadmin')}</span>
             </div>
-            <h1 className="text-2xl font-semibold text-slate-900 mt-1">Panel Global</h1>
-            <p className="text-sm text-slate-500 mt-1">Monitorea tenants, suscripciones y capacidad sin afectar el flujo normal del CRM.</p>
+            <h1 className="text-2xl font-semibold text-slate-900 mt-1">{t('admin.globalPanel')}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t('admin.subtitle')}</p>
           </div>
           <div className="text-right">
             <p className="text-sm font-medium text-slate-900">{currentUser.fullName}</p>
             <p className="text-sm text-slate-500">{currentUser.email}</p>
             <Link href="/dashboard" className="text-sm text-blue-600 hover:text-blue-700">
-              Volver al dashboard
+              {t('admin.backToDashboard')}
             </Link>
           </div>
         </div>
@@ -134,7 +130,7 @@ export default function SuperadminDashboard({
                 <Building2 size={22} />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Tenants</p>
+                <p className="text-sm text-slate-500">{t('admin.tenants')}</p>
                 <p className="text-2xl font-bold text-slate-900">{totals.tenants}</p>
               </div>
             </div>
@@ -146,7 +142,7 @@ export default function SuperadminDashboard({
                 <BadgeCheck size={22} />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Operativos</p>
+                <p className="text-sm text-slate-500">{t('admin.operational')}</p>
                 <p className="text-2xl font-bold text-slate-900">{totals.operational}</p>
               </div>
             </div>
@@ -158,7 +154,7 @@ export default function SuperadminDashboard({
                 <AlertTriangle size={22} />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Con alertas</p>
+                <p className="text-sm text-slate-500">{t('admin.issues')}</p>
                 <p className="text-2xl font-bold text-slate-900">{totals.issues}</p>
               </div>
             </div>
@@ -170,7 +166,7 @@ export default function SuperadminDashboard({
                 <Users size={22} />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Usuarios facturables</p>
+                <p className="text-sm text-slate-500">{t('admin.billableUsers')}</p>
                 <p className="text-2xl font-bold text-slate-900">{totals.billableUsers}</p>
               </div>
             </div>
@@ -180,31 +176,31 @@ export default function SuperadminDashboard({
         <section className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Tenants</h2>
-              <p className="text-sm text-slate-500">Estado operativo, suscripción actual y capacidad de usuarios.</p>
+              <h2 className="text-lg font-semibold text-slate-900">{t('admin.tenantSectionTitle')}</h2>
+              <p className="text-sm text-slate-500">{t('admin.tenantSectionSubtitle')}</p>
             </div>
           </div>
 
           {tenants.length === 0 ? (
             <div className="p-12 text-center text-slate-500">
               <CircleOff className="mx-auto mb-3 text-slate-300" size={36} />
-              No hay tenants disponibles.
+              {t('admin.noTenants')}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1120px]">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Tenant</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Estado tenant</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Plan actual</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Suscripción</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Usuarios facturables</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Max usuarios</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Puede crear más</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Operativo</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Fechas</th>
-                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">Acciones</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.tenant')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.tenantStatus')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.currentPlan')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.subscription')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.billableUsers')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.maxUsers')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.canCreateMore')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.operational')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.dates')}</th>
+                    <th className="text-left px-6 py-3 text-sm font-medium text-slate-600">{t('admin.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -214,20 +210,20 @@ export default function SuperadminDashboard({
                         <div>
                           <p className="font-medium text-slate-900">{tenant.name}</p>
                           <p className="text-sm text-slate-500">/{tenant.slug}</p>
-                          <p className="text-xs text-slate-400 mt-1">{tenant.email || 'Sin email'}</p>
+                          <p className="text-xs text-slate-400 mt-1">{tenant.email || t('admin.table.noEmail')}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex px-3 py-1 rounded-full border text-xs font-medium ${statusBadge(tenant.status)}`}>
-                          {statusLabel(tenant.status)}
+                          {t(statusLabel(tenant.status))}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-700">
-                        {tenant.subscription?.plans?.name || tenant.capacity?.plan_slug || 'Sin plan'}
+                        {tenant.subscription?.plans?.name || tenant.capacity?.plan_slug || t('admin.table.noPlan')}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex px-3 py-1 rounded-full border text-xs font-medium ${statusBadge(tenant.subscription?.status || tenant.capacity?.subscription_status || null)}`}>
-                          {statusLabel(tenant.subscription?.status || tenant.capacity?.subscription_status || null)}
+                          {t(statusLabel(tenant.subscription?.status || tenant.capacity?.subscription_status || null))}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-700">
@@ -238,19 +234,19 @@ export default function SuperadminDashboard({
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={tenant.capacity?.can_create_more_users ? 'text-emerald-600 font-medium' : 'text-red-600 font-medium'}>
-                          {tenant.capacity?.can_create_more_users ? 'Sí' : 'No'}
+                          {tenant.capacity?.can_create_more_users ? t('admin.table.yes') : t('admin.table.no')}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={tenant.capacity?.is_operational ? 'text-emerald-600 font-medium' : 'text-red-600 font-medium'}>
-                          {tenant.capacity?.is_operational ? 'Sí' : 'No'}
+                          {tenant.capacity?.is_operational ? t('admin.table.yes') : t('admin.table.no')}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        <p>Creado: {formatDate(tenant.created_at)}</p>
-                        <p>Trial fin: {formatDate(tenant.trial_ends_at || tenant.subscription?.trial_ends_at || null)}</p>
-                        <p>Periodo fin: {formatDate(tenant.subscription?.current_period_end || null)}</p>
-                        <p>Suspension: {formatDate(tenant.suspended_at)}</p>
+                        <p>{t('admin.table.created')}: {formatDate(tenant.created_at, { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                        <p>{t('admin.table.trialEnds')}: {tenant.trial_ends_at || tenant.subscription?.trial_ends_at ? formatDate(tenant.trial_ends_at || tenant.subscription?.trial_ends_at || '', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</p>
+                        <p>{t('admin.table.periodEnds')}: {tenant.subscription?.current_period_end ? formatDate(tenant.subscription.current_period_end, { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</p>
+                        <p>{t('admin.table.suspension')}: {tenant.suspended_at ? formatDate(tenant.suspended_at, { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</p>
                       </td>
                       <td className="px-6 py-4">
                         {tenant.status === 'suspended' ? (
@@ -260,7 +256,7 @@ export default function SuperadminDashboard({
                               type="submit"
                               className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition text-sm font-medium"
                             >
-                              Reactivar
+                              {t('admin.table.reactivate')}
                             </button>
                           </form>
                         ) : (
@@ -270,7 +266,7 @@ export default function SuperadminDashboard({
                               type="submit"
                               className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition text-sm font-medium"
                             >
-                              Suspender
+                              {t('admin.table.suspend')}
                             </button>
                           </form>
                         )}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useI18n()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,24 +45,24 @@ export default function LoginPage() {
             <span className="text-white font-bold text-2xl">I</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">InmoCRM</h1>
-          <p className="text-slate-500 mt-1">CRM Inmobiliario Multi-Agente</p>
+          <p className="text-slate-500 mt-1">{t('auth.brandSubtitle')}</p>
         </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-xl font-semibold text-slate-900 mb-6">Iniciar Sesión</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-6">{t('auth.login.title')}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Correo electrónico
+                {t('auth.login.email')}
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
+                placeholder={t('auth.login.emailPlaceholder')}
                 required
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               />
@@ -69,7 +71,7 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Contraseña
+                {t('auth.login.password')}
               </label>
               <div className="relative">
                 <input
@@ -108,17 +110,17 @@ export default function LoginPage() {
               ) : (
                 <>
                   <LogIn size={20} />
-                  Iniciar Sesión
-                </>
-              )}
+                   {t('auth.login.submit')}
+                 </>
+               )}
             </button>
           </form>
 
           {/* Link to signup */}
           <p className="text-center text-slate-500 mt-6">
-            ¿No tienes cuenta?{' '}
+            {t('auth.login.noAccount')}{' '}
             <Link href="/signup" className="text-blue-500 font-medium hover:underline">
-              Regístrate
+              {t('auth.login.signupLink')}
             </Link>
           </p>
         </div>

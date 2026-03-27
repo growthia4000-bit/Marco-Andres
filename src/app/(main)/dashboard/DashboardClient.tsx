@@ -26,6 +26,7 @@ import {
   TrendingUp, Clock, CheckCircle, BarChart3, PieChart, ArrowRight,
   Building2, UserPlus, FileText, Activity, LogOut
 } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider'
 
 interface Widget {
   id: string
@@ -55,6 +56,7 @@ interface SortableWidgetProps {
 }
 
 function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
+  const { t, formatDate } = useI18n()
   const {
     attributes,
     listeners,
@@ -70,6 +72,18 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
     opacity: isDragging ? 0.5 : 1,
   }
 
+  const getWidgetTitle = (id: string) => {
+    if (id.startsWith('properties-count')) return t('dashboard.widgets.propertiesCount')
+    if (id.startsWith('leads-count')) return t('dashboard.widgets.leadsCount')
+    if (id.startsWith('appointments-today')) return t('dashboard.widgets.appointmentsToday')
+    if (id.startsWith('revenue')) return t('dashboard.widgets.revenue')
+    if (id.startsWith('recent-leads')) return t('dashboard.widgets.recentLeads')
+    if (id.startsWith('upcoming-appointments')) return t('dashboard.widgets.upcomingAppointments')
+    if (id.startsWith('conversion-rate')) return t('dashboard.widgets.conversionRate')
+    if (id.startsWith('properties-by-type')) return t('dashboard.widgets.propertiesByType')
+    return widget.title
+  }
+
   const renderContent = () => {
     switch (widget.id) {
       case 'properties-count':
@@ -80,7 +94,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
             </div>
             <div>
               <p className="text-3xl font-bold text-slate-900">{stats.properties.total}</p>
-              <p className="text-sm text-slate-500">Propiedades</p>
+               <p className="text-sm text-slate-500">{t('dashboard.widgets.propertiesCount')}</p>
             </div>
           </div>
         )
@@ -92,7 +106,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
             </div>
             <div>
               <p className="text-3xl font-bold text-slate-900">{stats.leads.total}</p>
-              <p className="text-sm text-slate-500">Leads</p>
+               <p className="text-sm text-slate-500">{t('dashboard.widgets.leadsCount')}</p>
             </div>
           </div>
         )
@@ -104,7 +118,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
             </div>
             <div>
               <p className="text-3xl font-bold text-slate-900">{stats.appointments.today}</p>
-              <p className="text-sm text-slate-500">Citas Hoy</p>
+               <p className="text-sm text-slate-500">{t('dashboard.widgets.appointmentsToday')}</p>
             </div>
           </div>
         )
@@ -116,7 +130,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
             </div>
             <div>
               <p className="text-3xl font-bold text-slate-900">{(stats.revenue.total / 1000).toFixed(0)}K</p>
-              <p className="text-sm text-slate-500">EUR Vendidos</p>
+               <p className="text-sm text-slate-500">{t('dashboard.labels.soldEur')}</p>
             </div>
           </div>
         )
@@ -124,7 +138,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
         return (
           <div className="space-y-2">
             {stats.recentLeads.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center py-4">Sin leads recientes</p>
+               <p className="text-slate-400 text-sm text-center py-4">{t('dashboard.labels.noRecentLeads')}</p>
             ) : (
               stats.recentLeads.slice(0, 5).map((lead: any) => (
                 <Link key={lead.id} href={`/leads/${lead.id}`} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg transition">
@@ -144,7 +158,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
               ))
             )}
             <Link href="/leads" className="flex items-center justify-center gap-1 text-sm text-blue-500 hover:text-blue-600 pt-2 border-t">
-              Ver todos <ArrowRight size={14} />
+               {t('dashboard.labels.viewAll')} <ArrowRight size={14} />
             </Link>
           </div>
         )
@@ -152,7 +166,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
         return (
           <div className="space-y-2">
             {stats.upcomingAppointments.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center py-4">Sin citas proximas</p>
+               <p className="text-slate-400 text-sm text-center py-4">{t('dashboard.labels.noUpcomingAppointments')}</p>
             ) : (
               stats.upcomingAppointments.slice(0, 5).map((apt: any) => (
                 <Link key={apt.id} href={`/appointments/${apt.id}`} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition">
@@ -163,14 +177,14 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-900">{apt.title}</p>
                     <p className="text-xs text-slate-500">
-                      {new Date(apt.start_time).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {formatDate(apt.start_time, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </Link>
               ))
             )}
             <Link href="/appointments" className="flex items-center justify-center gap-1 text-sm text-blue-500 hover:text-blue-600 pt-2 border-t">
-              Ver todas <ArrowRight size={14} />
+               {t('dashboard.labels.viewAllAppointments')} <ArrowRight size={14} />
             </Link>
           </div>
         )
@@ -192,16 +206,16 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
                 <span className="text-3xl font-bold text-slate-900">{rate}%</span>
               </div>
             </div>
-            <p className="text-sm text-slate-500 mt-2">Tasa de Conversion</p>
-            <p className="text-xs text-slate-400">{stats.leads.won} leads ganados de {stats.leads.total}</p>
+             <p className="text-sm text-slate-500 mt-2">{t('dashboard.labels.conversionRate')}</p>
+             <p className="text-xs text-slate-400">{t('dashboard.labels.leadsWon', { won: stats.leads.won, total: stats.leads.total })}</p>
           </div>
         )
       case 'properties-by-type':
         const types = [
-          { name: 'Apartamentos', count: stats.propertiesByType.apartment, color: 'bg-blue-500' },
-          { name: 'Casas', count: stats.propertiesByType.house, color: 'bg-green-500' },
-          { name: 'Terrenos', count: stats.propertiesByType.land, color: 'bg-amber-500' },
-          { name: 'Comercial', count: stats.propertiesByType.commercial, color: 'bg-purple-500' },
+           { name: t('dashboard.labels.apartments'), count: stats.propertiesByType.apartment, color: 'bg-blue-500' },
+           { name: t('dashboard.labels.houses'), count: stats.propertiesByType.house, color: 'bg-green-500' },
+           { name: t('dashboard.labels.land'), count: stats.propertiesByType.land, color: 'bg-amber-500' },
+           { name: t('dashboard.labels.commercial'), count: stats.propertiesByType.commercial, color: 'bg-purple-500' },
         ]
         const maxCount = Math.max(...types.map(t => t.count), 1)
         return (
@@ -223,7 +237,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
           </div>
         )
       default:
-        return <p className="text-slate-400">Widget</p>
+        return <p className="text-slate-400">{t('dashboard.labels.widget')}</p>
     }
   }
 
@@ -234,7 +248,7 @@ function SortableWidget({ widget, onRemove, stats }: SortableWidgetProps) {
       className="bg-white rounded-xl border border-slate-200 p-4 relative group"
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-slate-900">{widget.title}</h3>
+        <h3 className="font-semibold text-slate-900">{getWidgetTitle(widget.id)}</h3>
         <div className="flex items-center gap-1">
           <button
             {...attributes}
@@ -271,6 +285,7 @@ export default function DashboardPage() {
   const [showWidgetMenu, setShowWidgetMenu] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useI18n()
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -428,7 +443,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-500">Cargando...</div>
+        <div className="text-slate-500">{t('dashboard.loading')}</div>
       </div>
     )
   }
@@ -438,7 +453,7 @@ export default function DashboardPage() {
       <header className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <span className="text-slate-900 font-semibold text-lg">Dashboard</span>
+            <span className="text-slate-900 font-semibold text-lg">{t('dashboard.title')}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -446,20 +461,20 @@ export default function DashboardPage() {
               className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
             >
               <Plus size={16} />
-              Agregar Widget
+               {t('dashboard.addWidget')}
             </button>
             <button
               onClick={resetWidgets}
               className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition"
             >
-              Restablecer
+               {t('dashboard.reset')}
             </button>
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition"
             >
               <LogOut size={16} />
-              Cerrar Sesion
+               {t('dashboard.logout')}
             </button>
           </div>
         </div>
@@ -469,14 +484,14 @@ export default function DashboardPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">Agregar Widget</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{t('dashboard.addWidget')}</h3>
               <button onClick={() => setShowWidgetMenu(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
             <div className="space-y-2">
               {availableWidgets.length === 0 ? (
-                <p className="text-slate-500 text-center py-4">Todos los widgets ya estan agregados</p>
+                 <p className="text-slate-500 text-center py-4">{t('dashboard.labels.allWidgetsAdded')}</p>
               ) : (
                 availableWidgets.map(widget => (
                   <button
@@ -490,9 +505,18 @@ export default function DashboardPage() {
                       {widget.type === 'list' && <FileText size={20} className="text-blue-500" />}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">{widget.title}</p>
-                      <p className="text-xs text-slate-500 capitalize">{widget.type}</p>
-                    </div>
+                       <p className="font-medium text-slate-900">
+                         {widget.id.startsWith('properties-count') ? t('dashboard.widgets.propertiesCount') :
+                          widget.id.startsWith('leads-count') ? t('dashboard.widgets.leadsCount') :
+                          widget.id.startsWith('appointments-today') ? t('dashboard.widgets.appointmentsToday') :
+                          widget.id.startsWith('revenue') ? t('dashboard.widgets.revenue') :
+                          widget.id.startsWith('recent-leads') ? t('dashboard.widgets.recentLeads') :
+                          widget.id.startsWith('upcoming-appointments') ? t('dashboard.widgets.upcomingAppointments') :
+                          widget.id.startsWith('conversion-rate') ? t('dashboard.widgets.conversionRate') :
+                          widget.id.startsWith('properties-by-type') ? t('dashboard.widgets.propertiesByType') : widget.title}
+                       </p>
+                       <p className="text-xs text-slate-500 capitalize">{t(`dashboard.widgetType.${widget.type}`)}</p>
+                     </div>
                   </button>
                 ))
               )}
@@ -524,13 +548,13 @@ export default function DashboardPage() {
         {widgets.length === 0 && (
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
             <BarChart3 className="mx-auto text-slate-300 mb-4" size={48} />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Sin widgets</h3>
-            <p className="text-slate-500 mb-4">Agrega widgets para personalizar tu dashboard</p>
+             <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('dashboard.labels.noWidgets')}</h3>
+             <p className="text-slate-500 mb-4">{t('dashboard.labels.customizeDashboard')}</p>
             <button
               onClick={resetWidgets}
               className="px-4 py-2 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition"
             >
-              Restablecer Widgets
+               {t('dashboard.labels.resetWidgets')}
             </button>
           </div>
         )}
@@ -544,8 +568,8 @@ export default function DashboardPage() {
               <Building2 className="text-blue-500" size={24} />
             </div>
             <div>
-              <p className="font-medium text-slate-900">Nueva Propiedad</p>
-              <p className="text-sm text-slate-500">Agregar al inventario</p>
+               <p className="font-medium text-slate-900">{t('dashboard.labels.newProperty')}</p>
+               <p className="text-sm text-slate-500">{t('dashboard.labels.addInventory')}</p>
             </div>
           </Link>
           <Link
@@ -556,8 +580,8 @@ export default function DashboardPage() {
               <UserPlus className="text-amber-500" size={24} />
             </div>
             <div>
-              <p className="font-medium text-slate-900">Nuevo Lead</p>
-              <p className="text-sm text-slate-500">Capturar contacto</p>
+               <p className="font-medium text-slate-900">{t('dashboard.labels.newLead')}</p>
+               <p className="text-sm text-slate-500">{t('dashboard.labels.captureContact')}</p>
             </div>
           </Link>
           <Link
@@ -568,8 +592,8 @@ export default function DashboardPage() {
               <Calendar className="text-green-500" size={24} />
             </div>
             <div>
-              <p className="font-medium text-slate-900">Nueva Cita</p>
-              <p className="text-sm text-slate-500">Programar visita</p>
+               <p className="font-medium text-slate-900">{t('dashboard.labels.newAppointment')}</p>
+               <p className="text-sm text-slate-500">{t('dashboard.labels.scheduleVisit')}</p>
             </div>
           </Link>
           <Link
@@ -580,8 +604,8 @@ export default function DashboardPage() {
               <Calendar className="text-purple-500" size={24} />
             </div>
             <div>
-              <p className="font-medium text-slate-900">Ver Calendario</p>
-              <p className="text-sm text-slate-500">Todas las citas</p>
+               <p className="font-medium text-slate-900">{t('dashboard.labels.viewCalendar')}</p>
+               <p className="text-sm text-slate-500">{t('dashboard.labels.allAppointments')}</p>
             </div>
           </Link>
         </div>

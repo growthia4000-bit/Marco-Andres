@@ -1,3 +1,5 @@
+import LanguageSwitcher from '@/components/LanguageSwitcher'
+
 export default function AuthLayout({
   children,
 }: {
@@ -5,6 +7,9 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen bg-slate-100">
+      <div className="px-6 pt-4">
+        <LanguageSwitcher />
+      </div>
       {children}
     </div>
   )

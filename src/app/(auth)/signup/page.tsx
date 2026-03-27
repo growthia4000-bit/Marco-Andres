@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, UserPlus, CheckCircle, AlertCircle, Building2 } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider'
 
 interface InviteInfo {
   email: string
@@ -28,6 +29,7 @@ function SignupForm() {
   const [invalidInvite, setInvalidInvite] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useI18n()
 
   useEffect(() => {
     const checkInvite = async () => {
@@ -52,11 +54,11 @@ function SignupForm() {
           setEmail(data.invitation.email)
         } else {
           setInvalidInvite(true)
-          setError(data.error || 'Invitation not found or expired')
+          setError(data.error || t('auth.signup.errors.inviteNotFound'))
         }
       } catch (err) {
         setInvalidInvite(true)
-        setError('Failed to verify invitation')
+        setError(t('auth.signup.errors.inviteVerifyFailed'))
       } finally {
         setInviteLoading(false)
       }
@@ -71,7 +73,7 @@ function SignupForm() {
     setLoading(true)
 
     if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
+      setError(t('auth.signup.errors.passwordMin'))
       setLoading(false)
       return
     }
@@ -107,7 +109,7 @@ function SignupForm() {
           .eq('id', data.user.id)
 
         if (profileError) {
-          setError('Error al configurar tu perfil')
+          setError(t('auth.signup.errors.profileSetup'))
           setLoading(false)
           return
         }
@@ -122,7 +124,7 @@ function SignupForm() {
       }
     } else {
       if (!tenantName.trim()) {
-        setError('El nombre de la inmobiliaria es requerido')
+          setError(t('auth.signup.errors.tenantRequired'))
         setLoading(false)
         return
       }
@@ -163,7 +165,7 @@ function SignupForm() {
           .single()
 
         if (!profile?.tenant_id) {
-          setError('Error al crear la inmobiliaria. Por favor contacta a soporte.')
+          setError(t('auth.signup.errors.tenantCreate'))
           await supabase.auth.signOut()
           setLoading(false)
           return
@@ -180,7 +182,7 @@ function SignupForm() {
   if (inviteLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="text-slate-500">Verificando invitación...</div>
+        <div className="text-slate-500">{t('auth.signup.verifyingInvitation')}</div>
       </div>
     )
   }
@@ -192,19 +194,19 @@ function SignupForm() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="text-green-500" size={32} />
           </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Cuenta creada!</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{t('auth.signup.accountCreated')}</h2>
           <p className="text-slate-500 mb-4">
-            Hemos enviado un enlace de confirmacion a:
+            {t('auth.signup.confirmationSent')}
           </p>
           <p className="font-medium text-slate-900 mb-6">{confirmEmail}</p>
           <p className="text-slate-500 text-sm">
-            Revisa tu correo y confirma tu cuenta para comenzar.
+            {t('auth.signup.confirmationHint')}
           </p>
           <Link
             href="/login"
             className="inline-block mt-6 px-6 py-2 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition"
           >
-            Ir al Login
+            {t('auth.signup.goToLogin')}
           </Link>
         </div>
       </div>
@@ -221,7 +223,7 @@ function SignupForm() {
             <span className="text-white font-bold text-2xl">I</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">InmoCRM</h1>
-          <p className="text-slate-500 mt-1">CRM Inmobiliario Multi-Agente</p>
+          <p className="text-slate-500 mt-1">{t('auth.brandSubtitle')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -231,21 +233,21 @@ function SignupForm() {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Building2 className="text-blue-500" size={28} />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900">Únete a {inviteInfo.tenant_name}</h2>
+                <h2 className="text-xl font-semibold text-slate-900">{t('auth.signup.inviteTitle', { tenant: inviteInfo.tenant_name })}</h2>
                 <p className="text-slate-500 mt-2">
-                  Has sido invitado como <span className="font-medium capitalize">{inviteInfo.role}</span>
+                  {t('auth.signup.invitedAs', { role: t(`roles.${inviteInfo.role}`) })}
                 </p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Tu Nombre Completo
+                    {t('auth.signup.fullName')}
                   </label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Juan Garcia"
+                    placeholder={t('auth.signup.fullNamePlaceholder')}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                   />
@@ -253,7 +255,7 @@ function SignupForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Correo electrónico
+                    {t('auth.signup.email')}
                   </label>
                   <input
                     type="email"
@@ -265,14 +267,14 @@ function SignupForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Contraseña
+                    {t('auth.signup.password')}
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
+                        placeholder={t('auth.signup.passwordPlaceholder')}
                       required
                       minLength={6}
                       className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition pr-12"
@@ -304,9 +306,9 @@ function SignupForm() {
                   ) : (
                     <>
                       <UserPlus size={20} />
-                      Unirse al Equipo
-                    </>
-                  )}
+                       {t('auth.signup.joinTeam')}
+                     </>
+                   )}
                 </button>
               </form>
             </>
@@ -316,30 +318,30 @@ function SignupForm() {
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertCircle className="text-red-500" size={28} />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900">Invitación inválida</h2>
+                <h2 className="text-xl font-semibold text-slate-900">{t('auth.signup.invalidInvitation')}</h2>
                 <p className="text-slate-500 mt-2">{error}</p>
               </div>
               <Link
                 href="/signup"
                 className="block w-full text-center bg-blue-500 text-white py-3 rounded-xl font-semibold hover:bg-blue-600 transition"
               >
-                Crear cuenta propia
+                {t('auth.signup.createOwnAccount')}
               </Link>
             </>
           ) : (
             <>
-              <h2 className="text-xl font-semibold text-slate-900 mb-6">Crear Cuenta</h2>
+              <h2 className="text-xl font-semibold text-slate-900 mb-6">{t('auth.signup.createTitle')}</h2>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Nombre de tu Inmobiliaria
+                    {t('auth.signup.companyName')}
                   </label>
                   <input
                     type="text"
                     value={tenantName}
                     onChange={(e) => setTenantName(e.target.value)}
-                    placeholder="Inmobiliaria XYZ"
+                    placeholder={t('auth.signup.companyPlaceholder')}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                   />
@@ -347,13 +349,13 @@ function SignupForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Tu Nombre Completo
+                    {t('auth.signup.fullName')}
                   </label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Juan Garcia"
+                    placeholder={t('auth.signup.fullNamePlaceholder')}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                   />
@@ -361,13 +363,13 @@ function SignupForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Correo electrónico
+                    {t('auth.signup.email')}
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@email.com"
+                    placeholder={t('auth.signup.emailPlaceholder')}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                   />
@@ -375,14 +377,14 @@ function SignupForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Contraseña
+                    {t('auth.signup.password')}
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
+                        placeholder={t('auth.signup.passwordPlaceholder')}
                       required
                       minLength={6}
                       className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition pr-12"
@@ -414,9 +416,9 @@ function SignupForm() {
                   ) : (
                     <>
                       <UserPlus size={20} />
-                      Crear Cuenta
-                    </>
-                  )}
+                       {t('auth.signup.submit')}
+                     </>
+                   )}
                 </button>
               </form>
             </>
@@ -424,9 +426,9 @@ function SignupForm() {
 
           {!isInviteMode && !invalidInvite && (
             <p className="text-center text-slate-500 mt-6">
-              Ya tienes cuenta?{' '}
+              {t('auth.signup.alreadyAccount')}{' '}
               <Link href="/login" className="text-blue-500 font-medium hover:underline">
-                Inicia Sesión
+                {t('auth.signup.loginLink')}
               </Link>
             </p>
           )}
@@ -440,7 +442,7 @@ export default function SignupPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="text-slate-500">Cargando...</div>
+        <div className="text-slate-500">Loading...</div>
       </div>
     }>
       <SignupForm />

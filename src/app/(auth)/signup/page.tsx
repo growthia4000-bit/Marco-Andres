@@ -88,7 +88,7 @@ function SignupForm() {
           setInviteInfo({
             email: data.invitation.email,
             role: data.invitation.role,
-            tenant_name: data.tenant_name || 'Unknown',
+            tenant_name: data.tenant_name || t('auth.signup.unknownTenantName'),
             tenant_id: data.invitation.tenant_id,
           })
           setEmail(data.invitation.email)
@@ -231,11 +231,11 @@ function SignupForm() {
   if (inviteLoading) {
     return (
       <AuthHeroShell
-        eyebrow="Secure Access"
-        title="Preparing your access"
-        description="We are validating your invitation and getting the right onboarding path ready."
+        eyebrow={t('auth.signup.inviteLoadingEyebrow')}
+        title={t('auth.signup.inviteLoadingTitle')}
+        description={t('auth.signup.inviteLoadingDescription')}
         panelTitle={t('auth.signup.verifyingInvitation')}
-        panelDescription="This takes only a moment."
+        panelDescription={t('auth.signup.inviteLoadingPanelDescription')}
       >
         <div className="py-8 text-center text-slate-500">{t('auth.signup.verifyingInvitation')}</div>
       </AuthHeroShell>
@@ -245,9 +245,9 @@ function SignupForm() {
   if (success) {
     return (
       <AuthHeroShell
-        eyebrow="Account Ready"
-        title="Your workspace is almost live"
-        description="We have created your access. Confirm the email to enter a secure real estate workspace."
+        eyebrow={t('auth.signup.successEyebrow')}
+        title={t('auth.signup.successTitle')}
+        description={t('auth.signup.successDescription')}
         panelTitle={t('auth.signup.accountCreated')}
         panelDescription={t('auth.signup.confirmationSent')}
       >
@@ -255,7 +255,7 @@ function SignupForm() {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <CheckCircle size={32} />
           </div>
-          <p className="mb-2 text-sm uppercase tracking-[0.16em] text-slate-400">Confirmation email</p>
+          <p className="mb-2 text-sm uppercase tracking-[0.16em] text-slate-400">{t('auth.signup.confirmationEmailLabel')}</p>
           <p className="mb-6 text-lg font-semibold text-slate-950">{confirmEmail}</p>
           <p className="text-sm leading-6 text-slate-500">{t('auth.signup.confirmationHint')}</p>
           <Link
@@ -270,17 +270,17 @@ function SignupForm() {
   }
 
   const isInviteMode = !!inviteInfo && !invalidInvite
-  const heroEyebrow = isInviteMode ? 'Team Invitation' : invalidInvite ? 'Invitation Issue' : 'Initial Setup'
+  const heroEyebrow = isInviteMode ? t('auth.signup.teamInvitationEyebrow') : invalidInvite ? t('auth.signup.invitationIssueEyebrow') : t('auth.signup.initialSetupEyebrow')
   const heroTitle = isInviteMode
-    ? `Join ${inviteInfo.tenant_name}`
+    ? t('auth.signup.inviteTitle', { tenant: inviteInfo.tenant_name })
     : invalidInvite
-      ? 'This invitation is no longer available'
-      : 'Create your real estate workspace'
+      ? t('auth.signup.invalidHeroTitle')
+      : t('auth.signup.defaultHeroTitle')
   const heroDescription = isInviteMode
-    ? 'Your team has already prepared access. Complete your profile and start collaborating with full context from day one.'
+    ? t('auth.signup.inviteHeroDescription')
     : invalidInvite
-      ? 'The token cannot be used anymore. You can request a new invite or create your own secure workspace.'
-      : 'Set up your tenant, owner account and secure access in a single premium onboarding flow.'
+      ? t('auth.signup.invalidHeroDescription')
+      : t('auth.signup.defaultHeroDescription')
 
   return (
     <AuthHeroShell
@@ -333,7 +333,7 @@ function SignupForm() {
                 <label className="block text-sm font-medium text-slate-700">
                   {t('auth.signup.password')}
                 </label>
-                <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Secure</span>
+                <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{t('auth.signup.passwordMetaSecure')}</span>
               </div>
               <div className="relative">
                 <input
@@ -446,7 +446,7 @@ function SignupForm() {
                 <label className="block text-sm font-medium text-slate-700">
                   {t('auth.signup.password')}
                 </label>
-                <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Owner access</span>
+                <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{t('auth.signup.ownerAccessLabel')}</span>
               </div>
               <div className="relative">
                 <input
@@ -504,16 +504,18 @@ function SignupForm() {
 }
 
 export default function SignupPage() {
+  const { t } = useI18n()
+
   return (
     <Suspense fallback={
       <AuthHeroShell
-        eyebrow="Secure Access"
-        title="Preparing your onboarding"
-        description="We are loading the right access flow for your workspace."
-        panelTitle="Loading"
-        panelDescription="Please wait a moment."
+        eyebrow={t('auth.signup.suspenseEyebrow')}
+        title={t('auth.signup.suspenseTitle')}
+        description={t('auth.signup.suspenseDescription')}
+        panelTitle={t('auth.signup.suspensePanelTitle')}
+        panelDescription={t('auth.signup.suspensePanelDescription')}
       >
-        <div className="py-8 text-center text-slate-500">Loading...</div>
+        <div className="py-8 text-center text-slate-500">{t('common.loading')}</div>
       </AuthHeroShell>
     }>
       <SignupForm />

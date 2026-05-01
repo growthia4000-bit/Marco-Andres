@@ -19,29 +19,51 @@ export default function LoginPage() {
   const { t } = useI18n()
   const inputClassName = 'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-200/60'
 
+  const getLoginErrorMessage = (message: string) => {
+    const normalized = message.toLowerCase()
+
+    if (normalized.includes('invalid login credentials')) {
+      return t('auth.login.errors.invalidCredentials')
+    }
+
+    if (normalized.includes('email not confirmed')) {
+      return t('auth.login.errors.emailNotConfirmed')
+    }
+
+    if (
+      normalized.includes('failed to fetch') ||
+      normalized.includes('fetch failed') ||
+      normalized.includes('networkerror') ||
+      normalized.includes('network request failed')
+    ) {
+      return t('auth.login.errors.connection')
+    }
+
+    return message
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      const msg = error.message
-      if (msg.includes('Invalid login credentials')) {
-        setError(t('auth.login.errors.invalidCredentials'))
-      } else if (msg.includes('Email not confirmed')) {
-        setError(t('auth.login.errors.emailNotConfirmed'))
+      if (error) {
+        setError(getLoginErrorMessage(error.message))
+        setLoading(false)
       } else {
-        setError(msg)
+        router.replace('/')
+        router.refresh()
       }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      setError(getLoginErrorMessage(message || t('auth.login.errors.connection')))
       setLoading(false)
-    } else {
-      router.replace('/')
-      router.refresh()
     }
   }
 

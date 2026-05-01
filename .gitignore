@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.env.local
+.env
+dist/
+build/
+coverage/
+*.log
+.claude/
+supabase/.temp/
+supabase/.branches/
+*.tsbuildinfo
+.mcp.json
+.qa-reports/
+playwright-report/
+test-results/

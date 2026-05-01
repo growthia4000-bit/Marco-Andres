@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 font-sans;
+  }
+}
+
+@layer components {
+  .bento-grid {
+    @apply grid grid-cols-12 gap-4 p-6;
+  }
+
+  .bento-item {
+    @apply bg-white border border-slate-200 rounded-2xl p-6 transition-all duration-200;
+  }
+
+  .bento-item:hover {
+    @apply shadow-lg -translate-y-0.5;
+  }
+
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+  .col-span-4 { grid-column: span 4; }
+  .col-span-6 { grid-column: span 6; }
+  .col-span-8 { grid-column: span 8; }
+  .col-span-12 { grid-column: span 12; }
+
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-xs font-semibold uppercase;
+  }
+
+  .status-lead { @apply bg-blue-100 text-blue-700; }
+  .status-contacted { @apply bg-amber-100 text-amber-700; }
+  .status-visit { @apply bg-green-100 text-green-700; }
+  .status-negotiation { @apply bg-purple-100 text-purple-700; }
+  .status-closed { @apply bg-emerald-100 text-emerald-700; }
+}

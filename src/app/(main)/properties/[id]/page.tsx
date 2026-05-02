@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Edit, MapPin, Bed, Bath, Square, Image as ImageIcon, ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
+import { ArrowLeft, Edit, MapPin, Bed, Bath, Square, Image as ImageIcon, ChevronLeft, ChevronRight, ZoomIn, X, Building2, Home } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider'
 import { getDealTypeLabel, getPropertyStatusLabel, getPropertyTypeLabel } from '@/i18n/pageLabels'
-import { PageHeader } from '@/components/PageHeader'
 
 export default function PropertyDetailPage() {
   const params = useParams()
@@ -85,22 +84,80 @@ export default function PropertyDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <PageHeader
-        title={property.title || t('propertiesExtra.untitled')}
-        breadcrumbs={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: t('propertiesExtra.title'), href: '/properties' },
-          { label: t('propertiesExtra.detail') },
-        ]}
-        actions={
-          <Link href={`/properties/${property.id}/edit`} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition">
-            <Edit size={18} />
-            {t('common.edit')}
-          </Link>
-        }
-      />
+      <main className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+        <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.10),_transparent_40%),linear-gradient(135deg,_#ffffff_0%,_#f8fafc_55%,_#eef2ff_100%)] px-6 py-6 sm:px-8 sm:py-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                    <Home size={14} />
+                    {t('dashboard.title')}
+                  </Link>
+                  <span className="text-slate-300">/</span>
+                  <Link href="/properties" className="font-medium text-slate-600 transition hover:text-slate-900">{t('propertiesExtra.title')}</Link>
+                  <span className="text-slate-300">/</span>
+                  <span className="font-medium text-slate-900">{t('propertiesExtra.detail')}</span>
+                </div>
 
-      <main className="p-6 max-w-5xl mx-auto space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-br from-blue-500 via-sky-400 to-cyan-300 text-white shadow-lg shadow-sky-400/15">
+                    <Building2 size={24} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">{t('propertiesExtra.detail')}</p>
+                    <div className="space-y-1.5">
+                      <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                        {property.title || t('propertiesExtra.untitled')}
+                      </h1>
+                      <p className="max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{t('propertiesExtra.detailSubtitle')}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2.5">
+                  <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${property.deal_type === 'sale' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'}`}>
+                    {getDealTypeLabel(t, property.deal_type)}
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-medium text-slate-700">
+                    {getPropertyStatusLabel(t, property.status)}
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-medium text-slate-700">
+                    {getPropertyTypeLabel(t, property.property_type)}
+                  </span>
+                  {(property.city || property.address) && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-medium text-slate-700">
+                      <MapPin size={13} />
+                      {[property.city, property.address].filter(Boolean).join(', ')}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex w-full max-w-sm flex-col gap-3 xl:items-end">
+                <div className="w-full rounded-[24px] border border-slate-200/80 bg-white/90 p-4 shadow-sm xl:max-w-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t('propertyForm.price', { currency: property.currency_code ?? currencyCode })}</p>
+                  <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                    {formatCurrency(property.price_amount ?? property.price, property.currency_code ?? currencyCode)}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row xl:w-full xl:justify-end">
+                  <Link href="/properties" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">
+                    <ArrowLeft size={18} />
+                    {t('propertyForm.backToProperties')}
+                  </Link>
+                  <Link href={`/properties/${property.id}/edit`} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700">
+                    <Edit size={18} />
+                    {t('common.edit')}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="space-y-6">
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="h-80 bg-slate-100 relative">
             {property.images?.length ? (
@@ -172,6 +229,7 @@ export default function PropertyDetailPage() {
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm flex items-center gap-2"><ZoomIn size={16} />{galleryIndex + 1} / {property.images.length}</div>
           </div>
         )}
+        </div>
       </main>
     </div>
   )

@@ -1,16 +1,27 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { type ReactNode, Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Save, Calendar, Clock, MapPin, AlertCircle, CheckCircle, User } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  ChevronLeft,
+  Clock,
+  Home,
+  MapPin,
+  Save,
+  User,
+} from 'lucide-react'
 import { APPOINTMENT_TYPES, APPOINTMENT_STATUSES, type AppointmentType } from '@/features/appointments/types'
 import { useI18n } from '@/i18n/I18nProvider'
 import { getAppointmentStatusLabel, getAppointmentTypeLabel } from '@/i18n/pageLabels'
-import { PageHeader } from '@/components/PageHeader'
 import { createAppointmentAction } from '../actions'
 import { buildSlotFromDateAndTime } from '@/features/conversations/scheduling-engine'
+
+const inputClassName = 'w-full rounded-2xl border border-slate-200 bg-white/75 px-4 py-3 text-sm text-slate-700 outline-none transition focus:bg-white focus:ring-2'
 
 function NewAppointmentForm() {
   const router = useRouter()
@@ -39,26 +50,23 @@ function NewAppointmentForm() {
   }
 
   const getOccupiedSlots = (date: string) => {
-    const dayAppointments = appointments.filter(a => {
-      const aptDate = new Date(a.start_time)
+    const dayAppointments = appointments.filter((appointment) => {
+      const aptDate = new Date(appointment.start_time)
       const targetDate = new Date(date)
-      return aptDate.getDate() === targetDate.getDate() &&
-        aptDate.getMonth() === targetDate.getMonth() &&
-        aptDate.getFullYear() === targetDate.getFullYear()
+      return aptDate.getDate() === targetDate.getDate()
+        && aptDate.getMonth() === targetDate.getMonth()
+        && aptDate.getFullYear() === targetDate.getFullYear()
     })
-    
+
     const occupied = new Set<string>()
-    dayAppointments.forEach(apt => {
-      const start = new Date(apt.start_time)
-      const end = new Date(apt.end_time)
-      const startHour = start.getHours()
-      const startMin = start.getMinutes()
+    dayAppointments.forEach((appointment) => {
+      const start = new Date(appointment.start_time)
+      const end = new Date(appointment.end_time)
+      let currentHour = start.getHours()
+      let currentMin = start.getMinutes()
       const endHour = end.getHours()
       const endMin = end.getMinutes()
-      
-      let currentHour = startHour
-      let currentMin = startMin
-      
+
       while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
         occupied.add(`${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`)
         currentMin += 30
@@ -68,7 +76,7 @@ function NewAppointmentForm() {
         }
       }
     })
-    
+
     return occupied
   }
 
@@ -86,12 +94,13 @@ function NewAppointmentForm() {
     status: 'scheduled' as const,
     start_date: prefillDate || new Date().toISOString().split('T')[0],
     start_time: prefillTime || '',
-    end_time: prefillTime ? `${String(parseInt(prefillTime.split(':')[0]) + 1).padStart(2, '0')}:${prefillTime.split(':')[1]}` : '',
+    end_time: prefillTime ? `${String(parseInt(prefillTime.split(':')[0], 10) + 1).padStart(2, '0')}:${prefillTime.split(':')[1]}` : '',
     location: '',
     lead_id: prefillLeadId || '',
     property_id: '',
     notes: prefillLeadPhone ? t('appointmentForm.prefillPhone', { phone: prefillLeadPhone }) : '',
   })
+
   const selectedLead = leads.find((lead) => lead.id === form.lead_id) || null
 
   useEffect(() => {
@@ -100,7 +109,9 @@ function NewAppointmentForm() {
 
   const loadData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) {
         router.push('/login')
         return
@@ -255,245 +266,321 @@ function NewAppointmentForm() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <PageHeader
-        title={appointmentTitle}
-        breadcrumbs={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: t('appointmentsPage.title'), href: '/appointments' },
-          ...(prefillLeadId && prefillLeadName ? [{ label: prefillLeadName, href: `/leads/${prefillLeadId}` }] : []),
-          { label: t('appointmentsPage.new') },
-        ]}
-      />
+      <main className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+        <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.10),_transparent_40%),linear-gradient(135deg,_#ffffff_0%,_#f8fafc_55%,_#eef2ff_100%)] px-6 py-6 sm:px-8 sm:py-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                    <Home size={14} />
+                    {t('dashboard.title')}
+                  </Link>
+                  <span className="text-slate-300">/</span>
+                  <Link href="/appointments" className="font-medium text-slate-600 transition hover:text-slate-900">{t('appointmentsPage.title')}</Link>
+                  {prefillLeadId && prefillLeadName ? (
+                    <>
+                      <span className="text-slate-300">/</span>
+                      <Link href={`/leads/${prefillLeadId}`} className="font-medium text-slate-600 transition hover:text-slate-900">{prefillLeadName}</Link>
+                    </>
+                  ) : null}
+                  <span className="text-slate-300">/</span>
+                  <span className="font-medium text-slate-900">{appointmentTitle}</span>
+                </div>
 
-      {/* Form */}
-      <main className="p-6 max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} noValidate className="bg-white rounded-xl border border-slate-200 p-6">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 flex items-start gap-2">
-              <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-br from-sky-500 via-cyan-400 to-blue-300 text-white shadow-lg shadow-sky-400/15">
+                    <Calendar size={24} />
+                  </div>
+                  <div className="space-y-2">
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{appointmentTitle}</h1>
+                    <p className="max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{t('appointmentForm.subtitle')}</p>
+                  </div>
+                </div>
+
+                {prefillLeadName ? (
+                  <div className="flex flex-wrap gap-2.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-800">
+                      <User size={13} />
+                      {prefillLeadName}
+                    </span>
+                    {prefillLeadPhone ? (
+                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-medium text-slate-700">
+                        {t('appointmentForm.prefillPhone', { phone: prefillLeadPhone })}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              <Link href="/appointments" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">
+                <ChevronLeft size={18} />
+                {t('appointmentForm.backToAppointments')}
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <form onSubmit={handleSubmit} noValidate className="space-y-6">
+          {error ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-600 flex items-start gap-2">
+              <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
               <span>{error}</span>
             </div>
-          )}
+          ) : null}
 
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 flex items-center gap-2">
+          {success ? (
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-green-600 flex items-center gap-2">
               <CheckCircle size={18} />
               <span>{t('appointmentForm.success')}</span>
             </div>
-          )}
+          ) : null}
 
-          {/* Basic Info */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('appointmentForm.infoTitle')}</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.title')}</label>
+          <SectionCard icon={<Calendar size={18} />} title={t('appointmentForm.infoTitle')} tone="blue">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Field label={t('appointmentForm.title')} className="md:col-span-2">
                 <input
                   type="text"
                   value={form.title}
-                  onChange={(e) => setForm({...form, title: e.target.value})}
-                    placeholder={t('appointmentForm.titlePlaceholder')}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder={t('appointmentForm.titlePlaceholder')}
+                  className={`${inputClassName} border-blue-100 focus:border-blue-400 focus:ring-blue-100`}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.type')}</label>
+              </Field>
+              <Field label={t('appointmentForm.type')}>
                 <select
                   value={form.appointment_type}
-                  onChange={(e) => setForm({...form, appointment_type: e.target.value as AppointmentType})}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  onChange={(e) => setForm({ ...form, appointment_type: e.target.value as AppointmentType })}
+                  className={`${inputClassName} border-blue-100 focus:border-blue-400 focus:ring-blue-100`}
                 >
                   {APPOINTMENT_TYPES.map((item) => (
                     <option key={item.value} value={item.value}>{getAppointmentTypeLabel(t, item.value)}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.status')}</label>
+              </Field>
+              <Field label={t('appointmentForm.status')}>
                 <select
                   value={form.status}
-                  onChange={(e) => setForm({...form, status: e.target.value as any})}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })}
+                  className={`${inputClassName} border-blue-100 focus:border-blue-400 focus:ring-blue-100`}
                 >
                   {APPOINTMENT_STATUSES.map((item) => (
                     <option key={item.value} value={item.value}>{getAppointmentStatusLabel(t, item.value)}</option>
                   ))}
                 </select>
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.description')}</label>
+              </Field>
+              <Field label={t('appointmentForm.description')} className="md:col-span-2">
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={form.description}
-                  onChange={(e) => setForm({...form, description: e.target.value})}
-                    placeholder={t('appointmentForm.descriptionPlaceholder')}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder={t('appointmentForm.descriptionPlaceholder')}
+                  className={`${inputClassName} resize-none border-blue-100 focus:border-blue-400 focus:ring-blue-100`}
                 />
-              </div>
+              </Field>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Date & Time */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('appointmentForm.dateTime')}</h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.date')}</label>
+          <SectionCard icon={<Clock size={18} />} title={t('appointmentForm.dateTime')} tone="emerald">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Field label={t('appointmentForm.date')}>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input
                     type="date"
                     value={form.start_date}
-                    onChange={(e) => setForm({...form, start_date: e.target.value})}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                    onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                    className={`${inputClassName} pl-11 border-emerald-100 focus:border-emerald-400 focus:ring-emerald-100`}
                   />
                 </div>
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.startTime')}</label>
+              </Field>
+              <Field label={t('appointmentForm.startTime')}>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10" size={18} />
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10" size={16} />
                   <select
                     value={form.start_time}
                     onChange={(e) => {
                       const slot = e.target.value
                       if (slot) {
                         const [h, m] = slot.split(':')
-                        const endHour = parseInt(h) + 1
+                        const endHour = parseInt(h, 10) + 1
                         setForm({
                           ...form,
                           start_time: slot,
-                          end_time: `${String(endHour).padStart(2, '0')}:${m}`
+                          end_time: `${String(endHour).padStart(2, '0')}:${m}`,
                         })
                       } else {
-                        setForm({...form, start_time: slot})
+                        setForm({ ...form, start_time: slot })
                       }
                     }}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white"
+                    className={`${inputClassName} appearance-none pl-11 border-emerald-100 focus:border-emerald-400 focus:ring-emerald-100`}
                   >
                     <option value="">{t('appointmentForm.selectHour')}</option>
-                    {generateTimeSlots().map(slot => {
+                    {generateTimeSlots().map((slot) => {
                       const occupied = getOccupiedSlots(form.start_date).has(slot)
-                      const hour = parseInt(slot.split(':')[0])
-                      const isPast = form.start_date === new Date().toISOString().split('T')[0] && 
-                        (hour < new Date().getHours() || (hour === new Date().getHours() && parseInt(slot.split(':')[1]) <= new Date().getMinutes()))
+                      const hour = parseInt(slot.split(':')[0], 10)
+                      const isPast = form.start_date === new Date().toISOString().split('T')[0]
+                        && (hour < new Date().getHours() || (hour === new Date().getHours() && parseInt(slot.split(':')[1], 10) <= new Date().getMinutes()))
                       return (
-                        <option key={slot} value={slot} disabled={occupied || isPast} className={occupied ? 'text-slate-400' : isPast ? 'text-slate-300' : ''}>
+                        <option key={slot} value={slot} disabled={occupied || isPast}>
                           {slot} {occupied ? t('appointmentForm.occupied') : isPast ? t('appointmentForm.past') : ''}
                         </option>
                       )
                     })}
                   </select>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.endTime')}</label>
+              </Field>
+              <Field label={t('appointmentForm.endTime')}>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input
                     type="time"
                     value={form.end_time}
-                    onChange={(e) => setForm({...form, end_time: e.target.value})}
+                    onChange={(e) => setForm({ ...form, end_time: e.target.value })}
                     placeholder={t('appointmentForm.optional')}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                    className={`${inputClassName} pl-11 border-emerald-100 focus:border-emerald-400 focus:ring-emerald-100`}
                   />
                 </div>
-              </div>
+              </Field>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Related */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('appointmentForm.related')}</h3>
-            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-              <p>{t('appointmentForm.whatsAppInfo')}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <Link href="/leads/new" className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 font-medium text-blue-700 transition hover:bg-blue-100">
-                  <User size={16} />
-                  {t('appointmentForm.createLeadWithPhone')}
-                </Link>
-                {selectedLead?.phone ? (
-                  <span className="font-medium text-blue-800">{t('appointmentForm.whatsAppPhone', { phone: selectedLead.phone })}</span>
-                ) : selectedLead ? (
-                  <span className="font-medium text-amber-700">{t('appointmentForm.whatsAppMissingPhone')}</span>
-                ) : null}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.lead')}</label>
-                <select
-                  value={form.lead_id}
-                  onChange={(e) => setForm({...form, lead_id: e.target.value})}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  <option value="">{t('appointmentForm.selectLead')}</option>
-                  {leads.map(l => (
-                    <option key={l.id} value={l.id}>{l.first_name} {l.last_name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.property')}</label>
-                <select
-                  value={form.property_id}
-                  onChange={(e) => setForm({...form, property_id: e.target.value})}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  <option value="">{t('appointmentForm.selectProperty')}</option>
-                  {properties.map(p => (
-                    <option key={p.id} value={p.id}>{p.title}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.location')}</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input
-                    type="text"
-                    value={form.location}
-                    onChange={(e) => setForm({...form, location: e.target.value})}
-                    placeholder={t('appointmentForm.locationPlaceholder')}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+          <SectionCard icon={<User size={18} />} title={t('appointmentForm.related')} tone="violet">
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-blue-900">{t('appointmentForm.leadContextTitle')}</p>
+                    <p className="text-sm leading-6 text-blue-700">{t('appointmentForm.whatsAppInfo')}</p>
+                    {selectedLead?.phone ? <p className="text-sm font-medium text-blue-800">{t('appointmentForm.whatsAppPhone', { phone: selectedLead.phone })}</p> : null}
+                    {!selectedLead?.phone && selectedLead ? <p className="text-sm font-medium text-amber-700">{t('appointmentForm.whatsAppMissingPhone')}</p> : null}
+                  </div>
+                  <Link href="/leads/new" className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100">
+                    <User size={16} />
+                    {t('appointmentForm.createLeadWithPhone')}
+                  </Link>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Field label={t('appointmentForm.lead')}>
+                  <select
+                    value={form.lead_id}
+                    onChange={(e) => setForm({ ...form, lead_id: e.target.value })}
+                    className={`${inputClassName} border-violet-100 focus:border-violet-400 focus:ring-violet-100`}
+                  >
+                    <option value="">{t('appointmentForm.selectLead')}</option>
+                    {leads.map((lead) => (
+                      <option key={lead.id} value={lead.id}>{lead.first_name} {lead.last_name}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label={t('appointmentForm.property')}>
+                  <select
+                    value={form.property_id}
+                    onChange={(e) => setForm({ ...form, property_id: e.target.value })}
+                    className={`${inputClassName} border-violet-100 focus:border-violet-400 focus:ring-violet-100`}
+                  >
+                    <option value="">{t('appointmentForm.selectProperty')}</option>
+                    {properties.map((property) => (
+                      <option key={property.id} value={property.id}>{property.title}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Notes */}
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.notes')}</label>
-            <textarea
-              rows={3}
-              value={form.notes}
-              onChange={(e) => setForm({...form, notes: e.target.value})}
-               placeholder={t('appointmentForm.notesPlaceholder')}
-              className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-            />
-          </div>
+          <SectionCard icon={<MapPin size={18} />} title={t('appointmentForm.location')} tone="amber">
+            <Field label={t('appointmentForm.location')}>
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input
+                  type="text"
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  placeholder={t('appointmentForm.locationPlaceholder')}
+                  className={`${inputClassName} pl-11 border-amber-100 focus:border-amber-400 focus:ring-amber-100`}
+                />
+              </div>
+            </Field>
+          </SectionCard>
 
-          {/* Submit */}
-          <div className="flex justify-end gap-4">
-            <Link
-              href="/appointments"
-              className="px-6 py-2 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition"
-            >
-              {t('appointmentForm.cancel')}
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition disabled:opacity-50 flex items-center gap-2"
-            >
-              <Save size={18} />
-              {saving ? t('appointmentForm.saving') : t('appointmentForm.save')}
-            </button>
+          <SectionCard icon={<AlertCircle size={18} />} title={t('appointmentForm.notes')} tone="slate">
+            <Field label={t('appointmentForm.notes')}>
+              <textarea
+                rows={4}
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder={t('appointmentForm.notesPlaceholder')}
+                className={`${inputClassName} resize-none border-slate-200 focus:border-slate-400 focus:ring-slate-200`}
+              />
+            </Field>
+          </SectionCard>
+
+          <div className="sticky bottom-0 z-10 rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <Link href="/appointments" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                {t('appointmentForm.cancel')}
+              </Link>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+              >
+                <Save size={18} />
+                {saving ? t('appointmentForm.saving') : t('appointmentForm.save')}
+              </button>
+            </div>
           </div>
         </form>
       </main>
     </div>
+  )
+}
+
+function SectionCard({ icon, title, children, tone }: { icon: ReactNode; title: string; children: ReactNode; tone: 'blue' | 'emerald' | 'violet' | 'amber' | 'slate' }) {
+  const tones = {
+    blue: {
+      shell: 'border-blue-100 bg-blue-50/45',
+      icon: 'bg-blue-500/12 text-blue-700 ring-1 ring-blue-100',
+    },
+    emerald: {
+      shell: 'border-emerald-100 bg-emerald-50/45',
+      icon: 'bg-emerald-500/12 text-emerald-700 ring-1 ring-emerald-100',
+    },
+    violet: {
+      shell: 'border-violet-100 bg-violet-50/45',
+      icon: 'bg-violet-500/12 text-violet-700 ring-1 ring-violet-100',
+    },
+    amber: {
+      shell: 'border-amber-100 bg-amber-50/45',
+      icon: 'bg-amber-500/12 text-amber-700 ring-1 ring-amber-100',
+    },
+    slate: {
+      shell: 'border-slate-200 bg-slate-50/55',
+      icon: 'bg-slate-500/12 text-slate-700 ring-1 ring-slate-200',
+    },
+  } as const
+
+  const palette = tones[tone]
+  return (
+    <section className={`rounded-3xl border p-5 shadow-sm sm:p-6 ${palette.shell}`}>
+      <div className="mb-5 flex items-center gap-3">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm ${palette.icon}`}>{icon}</div>
+        <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Field({ label, children, className = '' }: { label: string; children: ReactNode; className?: string }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
+      {children}
+    </label>
   )
 }
 

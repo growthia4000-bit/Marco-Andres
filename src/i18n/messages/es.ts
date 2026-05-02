@@ -463,6 +463,7 @@ const es = {
   appointmentForm: {
     success: '¡Cita guardada correctamente!',
     infoTitle: 'Información de la Cita',
+    subtitle: 'Coordina una nueva cita con horario, contexto comercial y datos relacionados listos para el seguimiento operativo.',
     title: 'Título *',
     titlePlaceholder: 'Ej: Visita con Juan Garcia',
     type: 'Tipo de Cita',
@@ -491,7 +492,9 @@ const es = {
     whatsAppInfo: 'El WhatsApp de confirmación se enviará al teléfono guardado en el lead seleccionado.',
     whatsAppPhone: 'Teléfono para WhatsApp: {phone}',
     whatsAppMissingPhone: 'Este lead no tiene teléfono. La cita se puede guardar, pero no se enviará WhatsApp.',
+    leadContextTitle: 'Contexto del lead y confirmación',
     createLeadWithPhone: 'Crear lead con teléfono',
+    backToAppointments: 'Volver a Citas',
     cancel: 'Cancelar',
     saving: 'Guardando...',
     save: 'Guardar Cita',

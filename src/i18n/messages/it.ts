@@ -201,6 +201,7 @@ const it = {
       revenueMixed: 'Valute miste',
     },
     roles: {
+      owner: 'Proprietario',
       superadmin: 'Superadmin',
       admin: 'Amministratore',
       coordinator: 'Coordinatore',

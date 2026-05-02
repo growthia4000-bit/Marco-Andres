@@ -201,6 +201,7 @@ const es = {
       revenueMixed: 'Monedas mixtas',
     },
     roles: {
+      owner: 'Propietario',
       superadmin: 'Superadmin',
       admin: 'Administrador',
       coordinator: 'Coordinador',

@@ -272,18 +272,18 @@ function FlowCard({ node, statusLabel, t }: { node: DiagramNode; statusLabel: st
 
   const content = (
     <>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between gap-1.5">
-          <span className={`inline-flex h-[18px] w-[18px] items-center justify-center rounded-md border text-slate-600 [&_svg]:size-[11px] ${isClickable ? 'border-slate-200 bg-slate-50' : 'border-slate-200/70 bg-slate-50/70'}`}>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className={`inline-flex h-[20px] w-[20px] items-center justify-center rounded-md border text-slate-600 [&_svg]:size-[12px] ${isClickable ? 'border-slate-200 bg-slate-50' : 'border-slate-200/70 bg-slate-50/70'}`}>
             {node.icon}
           </span>
           <div className="flex items-center gap-1">
             <CompactStatusDot status={node.status} label={statusLabel} />
-            {isClickable ? <ArrowUpRight size={8} className="text-slate-400 transition-transform group-hover:-translate-y-px group-hover:translate-x-px" /> : null}
+            {isClickable ? <ArrowUpRight size={9} className="text-slate-400 transition-transform group-hover:-translate-y-px group-hover:translate-x-px" /> : null}
           </div>
         </div>
         <div className="min-w-0">
-          <h3 className={`truncate text-[9px] font-semibold leading-3 ${isClickable ? 'text-slate-900' : 'text-slate-800'}`} title={node.title}>
+          <h3 className={`truncate text-[10px] font-semibold leading-[1.3] ${isClickable ? 'text-slate-900' : 'text-slate-800'}`} title={node.title}>
             {getShortLabel(t, node.id, node.title)}
           </h3>
         </div>
@@ -890,7 +890,7 @@ export default function FlowMapPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-4 py-2">
+      <header className="border-b border-slate-200 bg-white px-4 py-3">
         <div className="mx-auto flex max-w-7xl items-center gap-3 text-sm">
           <Link href="/dashboard" className="text-slate-500 transition hover:text-slate-700">
             {t('dashboard.title')}
@@ -902,16 +902,16 @@ export default function FlowMapPage() {
 
       <main className="flex w-full max-w-none flex-col gap-2 px-4 py-2.5">
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 bg-[linear-gradient(135deg,#fbfdff_0%,#ffffff_60%,#f8fafc_100%)] px-3 py-2.5">
-            <div className="flex flex-col gap-1.5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="border-b border-slate-200 bg-[linear-gradient(135deg,#fbfdff_0%,#ffffff_60%,#f8fafc_100%)] px-5 py-4">
+            <div className="flex flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
               <div className="max-w-3xl">
-                <span className="inline-flex rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <span className="inline-flex rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                   {t('flowMap.eyebrow')}
                 </span>
-                <h1 className="mt-1.5 text-[1.2rem] font-semibold tracking-tight text-slate-900 sm:text-[1.35rem]">{t('flowMap.title')}</h1>
-                <p className="mt-1 text-[10px] leading-4 text-slate-600">{t('flowMap.description')}</p>
+                <h1 className="mt-2 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{t('flowMap.title')}</h1>
+                <p className="mt-1.5 text-sm leading-5 text-slate-600">{t('flowMap.description')}</p>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
                 <LegendBadge status="validated" label={t('flowMap.legend.validated')} />
                 <LegendBadge status="implemented" label={t('flowMap.legend.implemented')} />
                 <LegendBadge status="sandbox" label={sandboxLegendLabel} />
@@ -928,13 +928,13 @@ export default function FlowMapPage() {
               </div>
             </div>
           </div>
-          <div className="px-3 py-1.5 text-[10px] leading-4 text-slate-600">{t('flowMap.note')}</div>
+          <div className="px-5 py-3 text-sm leading-5 text-slate-600">{t('flowMap.note')}</div>
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-3 py-2">
-            <h2 className="text-sm font-semibold text-slate-900">{t('flowMap.canvas.title')}</h2>
-            <p className="mt-0.5 text-[10px] leading-4 text-slate-600">{t('flowMap.canvas.subtitle')}</p>
+          <div className="border-b border-slate-200 px-5 py-4">
+            <h2 className="text-base font-semibold text-slate-900">{t('flowMap.canvas.title')}</h2>
+            <p className="mt-1 text-sm leading-5 text-slate-600">{t('flowMap.canvas.subtitle')}</p>
           </div>
 
           <div className="overflow-visible p-2 md:p-3">
@@ -966,9 +966,9 @@ export default function FlowMapPage() {
                     onMouseLeave={() => handleStageHover(null)}
                     title={activeStage === lane.id ? t('flowMap.stageClickToClear') : t('flowMap.stageClickToFilter')}
                   >
-                    <div className={`rounded-[16px] border border-slate-200/80 bg-gradient-to-b ${lane.tone} px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${(activeStage || hoveredStage) === lane.id ? 'border-blue-300 bg-blue-50/50' : ''}`}>
-                      <div className="text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-500">{lane.title}</div>
-                      <div className="mt-0.5 text-[9px] leading-3 text-slate-600">{lane.subtitle}</div>
+                    <div className={`rounded-[16px] border border-slate-200/80 bg-gradient-to-b ${lane.tone} px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${(activeStage || hoveredStage) === lane.id ? 'border-blue-300 bg-blue-50/50' : ''}`}>
+                      <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-500">{lane.title}</div>
+                      <div className="mt-1 text-[10px] leading-3.5 text-slate-600">{lane.subtitle}</div>
                     </div>
                   </div>
                 ))}

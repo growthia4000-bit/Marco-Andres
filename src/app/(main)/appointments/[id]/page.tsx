@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { type ReactNode, useEffect, useState, useTransition } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Edit, Trash2, Calendar, Clock, MapPin, Home, User, AlertCircle, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Calendar, Clock, MapPin, Home, User, AlertCircle, MessageCircle, Building2, BadgeInfo, Tag } from 'lucide-react'
 import { APPOINTMENT_STATUSES, APPOINTMENT_TYPES, type Appointment } from '@/features/appointments/types'
 import { useI18n } from '@/i18n/I18nProvider'
 import { getAppointmentStatusLabel, getAppointmentTypeLabel } from '@/i18n/pageLabels'
@@ -18,6 +18,8 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
   no_show: { bg: 'bg-amber-100', text: 'text-amber-700' },
 }
+
+const inputClassName = 'w-full rounded-2xl border border-slate-200 bg-white/85 px-4 py-3 text-sm text-slate-700 outline-none transition focus:bg-white focus:ring-2 focus:ring-blue-500'
 
 export default function AppointmentDetailPage() {
   const router = useRouter()
@@ -248,196 +250,265 @@ export default function AppointmentDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center gap-4">
-                <Link href="/appointments" className="text-slate-500 hover:text-slate-700"><ArrowLeft size={20} /></Link>
-                <span className="text-slate-900 font-medium">{t('appointmentDetail.detail')}</span>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/appointments" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
-                  <ArrowLeft size={16} />
-                  {t('appointmentDetail.back')}
-                </Link>
-                <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                  <Home size={16} />
-                  {t('appointmentDetail.backToDashboard')}
-                </Link>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              {!editing ? (
-                <>
-                  <button onClick={handleSendWhatsApp} disabled={sendingWhatsApp} className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50">
-                    <MessageCircle size={18} />
-                    {sendingWhatsApp ? t('appointmentDetail.sendingWhatsApp') : t('appointmentDetail.sendWhatsApp')}
-                  </button>
-                  <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition">
-                    <Edit size={18} />
-                    {t('appointmentDetail.edit')}
-                  </button>
-                  <button onClick={handleDelete} disabled={deleting} className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition disabled:opacity-50">
-                    <Trash2 size={18} />
-                    {deleting ? t('appointmentDetail.deleting') : t('appointmentDetail.delete')}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => setEditing(false)} className="px-4 py-2 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition">{t('appointmentDetail.cancel')}</button>
-                  <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition disabled:opacity-50">
-                    {saving ? t('appointmentDetail.saving') : t('appointmentDetail.save')}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          {whatsAppFeedback ? (
-            <div className={`rounded-xl border px-4 py-3 text-sm font-medium ${whatsAppFeedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>
-              {whatsAppFeedback.message}
-            </div>
-          ) : null}
-          </div>
-      </header>
+      <main className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
+        <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.10),_transparent_40%),linear-gradient(135deg,_#ffffff_0%,_#f8fafc_55%,_#eef2ff_100%)] px-6 py-6 sm:px-8 sm:py-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                    <Home size={14} />
+                    {t('dashboard.title')}
+                  </Link>
+                  <span className="text-slate-300">/</span>
+                  <Link href="/appointments" className="font-medium text-slate-600 transition hover:text-slate-900">{t('appointmentsPage.title')}</Link>
+                  <span className="text-slate-300">/</span>
+                  <span className="font-medium text-slate-900">{t('appointmentDetail.detail')}</span>
+                </div>
 
-      <main className="p-6 max-w-3xl mx-auto">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-br from-sky-500 via-cyan-400 to-blue-300 text-white shadow-lg shadow-sky-400/15">
+                    <Calendar size={24} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">{t('appointmentDetail.detail')}</p>
+                    <div className="space-y-1.5">
+                      <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{appointment.title || t('appointmentDetail.emptyTitle')}</h1>
+                      <p className="max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{t('appointmentDetail.detailSubtitle')}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2.5">
+                  <Badge className={`${STATUS_COLORS[appointment.status].bg} ${STATUS_COLORS[appointment.status].text}`}>{getAppointmentStatusLabel(t, appointment.status)}</Badge>
+                  <Badge className="border border-slate-200 bg-white/85 text-slate-700">{getAppointmentTypeLabel(t, appointment.appointment_type)}</Badge>
+                  <Badge className="border border-slate-200 bg-white/85 text-slate-700"><Calendar size={13} />{formatDate(appointment.start_time, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</Badge>
+                  <Badge className="border border-slate-200 bg-white/85 text-slate-700"><Clock size={13} />{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</Badge>
+                  {appointment.leads ? <Badge className="border border-slate-200 bg-white/85 text-slate-700"><User size={13} />{appointment.leads.first_name} {appointment.leads.last_name}</Badge> : null}
+                  {appointment.properties ? <Badge className="border border-slate-200 bg-white/85 text-slate-700"><Building2 size={13} />{appointment.properties.title}</Badge> : null}
+                </div>
+              </div>
+
+              <div className="flex w-full flex-col gap-3 xl:max-w-md xl:items-end">
+                <div className="flex w-full flex-col gap-3 sm:flex-row xl:justify-end">
+                  <Link href="/appointments" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">
+                    <ArrowLeft size={18} />
+                    {t('appointmentDetail.back')}
+                  </Link>
+                  <Link href="/dashboard" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">
+                    <Home size={18} />
+                    {t('appointmentDetail.backToDashboard')}
+                  </Link>
+                </div>
+
+                <div className="flex w-full flex-col gap-3 sm:flex-row xl:justify-end">
+                  {!editing ? (
+                    <>
+                      <button onClick={handleSendWhatsApp} disabled={sendingWhatsApp} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100 disabled:opacity-50">
+                        <MessageCircle size={18} />
+                        {sendingWhatsApp ? t('appointmentDetail.sendingWhatsApp') : t('appointmentDetail.sendWhatsApp')}
+                      </button>
+                      <button onClick={() => setEditing(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700">
+                        <Edit size={18} />
+                        {t('appointmentDetail.edit')}
+                      </button>
+                      <button onClick={handleDelete} disabled={deleting} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-50 px-5 py-3 text-sm font-medium text-red-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-100 disabled:opacity-50">
+                        <Trash2 size={18} />
+                        {deleting ? t('appointmentDetail.deleting') : t('appointmentDetail.delete')}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => setEditing(false)} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">{t('appointmentDetail.cancel')}</button>
+                      <button onClick={handleSave} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:opacity-50">
+                        <Edit size={18} />
+                        {saving ? t('appointmentDetail.saving') : t('appointmentDetail.save')}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {whatsAppFeedback ? (
+          <div className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-medium ${whatsAppFeedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>
+            {whatsAppFeedback.message}
+          </div>
+        ) : null}
+
+        <div className="mx-auto max-w-5xl">
         {editing ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-6">{t('appointmentDetail.editTitle')}</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentForm.title')}</label>
-                <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/12 text-blue-700 ring-1 ring-blue-100 shadow-sm"><Edit size={18} /></div>
+              <h2 className="text-lg font-semibold text-slate-900">{t('appointmentDetail.editTitle')}</h2>
+            </div>
+            <div className="space-y-5">
+              <Field label={t('appointmentForm.title')}>
+                <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClassName} />
+              </Field>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentDetail.fields.type')}</label>
-                  <select value={form.appointment_type} onChange={(e) => setForm({ ...form, appointment_type: e.target.value as typeof form.appointment_type })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Field label={t('appointmentDetail.fields.type')}>
+                  <select value={form.appointment_type} onChange={(e) => setForm({ ...form, appointment_type: e.target.value as typeof form.appointment_type })} className={inputClassName}>
                     {APPOINTMENT_TYPES.map((item) => <option key={item.value} value={item.value}>{getAppointmentTypeLabel(t, item.value)}</option>)}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentDetail.fields.status')}</label>
-                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                </Field>
+                <Field label={t('appointmentDetail.fields.status')}>
+                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as typeof form.status })} className={inputClassName}>
                     {APPOINTMENT_STATUSES.map((item) => <option key={item.value} value={item.value}>{getAppointmentStatusLabel(t, item.value)}</option>)}
                   </select>
-                </div>
+                </Field>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentDetail.fields.date')}</label>
-                  <input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentDetail.fields.startTime')}</label>
-                  <input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentDetail.fields.endTime')}</label>
-                  <input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <Field label={t('appointmentDetail.fields.date')}>
+                  <input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} className={inputClassName} />
+                </Field>
+                <Field label={t('appointmentDetail.fields.startTime')}>
+                  <input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} className={inputClassName} />
+                </Field>
+                <Field label={t('appointmentDetail.fields.endTime')}>
+                  <input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} className={inputClassName} />
+                </Field>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentDetail.fields.location')}</label>
-                <input type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder={t('appointmentDetail.placeholders.location')} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
+              <Field label={t('appointmentDetail.fields.location')}>
+                <input type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder={t('appointmentDetail.placeholders.location')} className={inputClassName} />
+              </Field>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t('appointmentDetail.fields.notes')}</label>
-                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
-              </div>
+              <Field label={t('appointmentDetail.fields.notes')}>
+                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={4} className={`${inputClassName} resize-none`} />
+              </Field>
             </div>
-          </div>
+          </section>
         ) : (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 mb-2">{appointment.title || t('appointmentDetail.emptyTitle')}</h1>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[appointment.status].bg} ${STATUS_COLORS[appointment.status].text}`}>
-                    {getAppointmentStatusLabel(t, appointment.status)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><Calendar size={20} className="text-blue-500" /></div>
-                  <div>
-                    <p className="text-sm text-slate-500">{t('appointmentDetail.fields.date')}</p>
-                    <p className="font-medium text-slate-900 capitalize">{formatDate(appointment.start_time, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-[linear-gradient(180deg,_rgba(248,250,252,0.95),_rgba(255,255,255,0.98))] px-6 py-5 sm:px-7">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{t('appointmentDetail.detail')}</p>
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{appointment.title || t('appointmentDetail.emptyTitle')}</h2>
+                    <p className="max-w-2xl text-sm text-slate-500">{t('appointmentDetail.detailSubtitle')}</p>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"><Clock size={20} className="text-green-500" /></div>
-                  <div>
-                    <p className="text-sm text-slate-500">{t('appointmentDetail.fields.time')}</p>
-                    <p className="font-medium text-slate-900">{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</p>
-                  </div>
-                </div>
-
-                {appointment.location && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center"><MapPin size={20} className="text-purple-500" /></div>
-                    <div>
-                      <p className="text-sm text-slate-500">{t('appointmentDetail.fields.location')}</p>
-                      <p className="font-medium text-slate-900">{appointment.location}</p>
-                    </div>
-                  </div>
-                )}
-
-                {appointment.leads && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center"><User size={20} className="text-amber-500" /></div>
-                    <div>
-                      <p className="text-sm text-slate-500">{t('appointmentDetail.fields.lead')}</p>
-                      <p className="font-medium text-slate-900">{appointment.leads.first_name} {appointment.leads.last_name}</p>
-                      {appointment.leads.phone && <p className="text-sm text-slate-500">{appointment.leads.phone}</p>}
-                    </div>
-                  </div>
-                )}
-
-                {appointment.properties && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center"><Home size={20} className="text-slate-500" /></div>
-                    <div>
-                      <p className="text-sm text-slate-500">{t('appointmentDetail.fields.property')}</p>
-                      <p className="font-medium text-slate-900">{appointment.properties.title}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center"><Edit size={20} className="text-slate-500" /></div>
-                  <div>
-                    <p className="text-sm text-slate-500">{t('appointmentDetail.fields.type')}</p>
-                    <p className="font-medium text-slate-900">{getAppointmentTypeLabel(t, appointment.appointment_type)}</p>
+                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t('appointmentDetail.fields.time')}</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-950">{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</p>
                   </div>
                 </div>
               </div>
 
-              {appointment.description && (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <p className="text-sm text-slate-500 mb-2">{t('appointmentDetail.fields.description')}</p>
-                  <p className="text-slate-700">{appointment.description}</p>
-                </div>
-              )}
+              <div className="p-6 sm:p-7">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <InfoTile icon={<Calendar size={18} className="text-blue-600" />} label={t('appointmentDetail.fields.date')} value={formatDate(appointment.start_time, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} tone="blue" />
+                  <InfoTile icon={<Clock size={18} className="text-emerald-600" />} label={t('appointmentDetail.fields.time')} value={`${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}`} tone="emerald" />
+                  <InfoTile icon={<Tag size={18} className="text-violet-600" />} label={t('appointmentDetail.fields.type')} value={getAppointmentTypeLabel(t, appointment.appointment_type)} tone="violet" />
 
-              {appointment.notes && (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <p className="text-sm text-slate-500 mb-2">{t('appointmentDetail.fields.notes')}</p>
-                  <p className="text-slate-700">{appointment.notes}</p>
+                  {appointment.location ? (
+                    <InfoTile icon={<MapPin size={18} className="text-amber-600" />} label={t('appointmentDetail.fields.location')} value={appointment.location} tone="amber" />
+                  ) : null}
+
+                  {appointment.leads ? (
+                    <InfoTile
+                      icon={<User size={18} className="text-sky-600" />}
+                      label={t('appointmentDetail.fields.lead')}
+                      value={`${appointment.leads.first_name} ${appointment.leads.last_name}`}
+                      meta={appointment.leads.email || undefined}
+                      tone="sky"
+                    />
+                  ) : null}
+
+                  {appointment.leads?.phone ? (
+                    <InfoTile icon={<MessageCircle size={18} className="text-cyan-600" />} label={t('appointmentDetail.fields.leadPhone')} value={appointment.leads.phone} tone="cyan" />
+                  ) : null}
+
+                  {appointment.properties ? (
+                    <InfoTile icon={<Building2 size={18} className="text-slate-600" />} label={t('appointmentDetail.fields.property')} value={appointment.properties.title} tone="slate" />
+                  ) : null}
                 </div>
-              )}
-            </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  {appointment.description ? (
+                    <DetailSection icon={<BadgeInfo size={18} />} title={t('appointmentDetail.fields.description')} tone="blue">
+                      <p className="text-sm leading-7 text-slate-700">{appointment.description}</p>
+                    </DetailSection>
+                  ) : null}
+
+                  {appointment.notes ? (
+                    <DetailSection icon={<Edit size={18} />} title={t('appointmentDetail.fields.notes')} tone="violet">
+                      <p className="text-sm leading-7 text-slate-700">{appointment.notes}</p>
+                    </DetailSection>
+                  ) : null}
+
+                  {!appointment.description && !appointment.notes ? (
+                    <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center text-sm text-slate-500 lg:col-span-2">
+                      {t('appointmentDetail.emptySupplemental')}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </section>
           </div>
         )}
+        </div>
       </main>
     </div>
+  )
+}
+
+function Badge({ children, className }: { children: ReactNode; className: string }) {
+  return <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${className}`}>{children}</span>
+}
+
+function InfoTile({ icon, label, value, meta, tone }: { icon: ReactNode; label: string; value: string; meta?: string; tone: 'blue' | 'emerald' | 'violet' | 'amber' | 'sky' | 'cyan' | 'slate' }) {
+  const tones = {
+    blue: 'border-blue-100 bg-blue-50/60',
+    emerald: 'border-emerald-100 bg-emerald-50/60',
+    violet: 'border-violet-100 bg-violet-50/60',
+    amber: 'border-amber-100 bg-amber-50/60',
+    sky: 'border-sky-100 bg-sky-50/60',
+    cyan: 'border-cyan-100 bg-cyan-50/60',
+    slate: 'border-slate-200 bg-slate-50/80',
+  } as const
+
+  return (
+    <div className={`rounded-3xl border p-4 shadow-sm ${tones[tone]}`}>
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm">{icon}</div>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-base font-semibold leading-6 text-slate-950">{value}</p>
+      {meta ? <p className="mt-1 text-sm text-slate-500">{meta}</p> : null}
+    </div>
+  )
+}
+
+function DetailSection({ icon, title, children, tone }: { icon: ReactNode; title: string; children: ReactNode; tone: 'blue' | 'violet' }) {
+  const tones = {
+    blue: 'border-blue-100 bg-blue-50/45 text-blue-700 ring-blue-100',
+    violet: 'border-violet-100 bg-violet-50/45 text-violet-700 ring-violet-100',
+  } as const
+
+  const palette = tones[tone]
+  const [borderClass, bgClass, textClass, ringClass] = palette.split(' ')
+
+  return (
+    <section className={`rounded-3xl border p-5 shadow-sm sm:p-6 ${borderClass} ${bgClass}`}>
+      <div className="mb-4 flex items-center gap-3">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ${textClass} ${ringClass}`}>{icon}</div>
+        <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
+      {children}
+    </label>
   )
 }

@@ -437,6 +437,7 @@ const es = {
     back: 'Volver a Citas',
     backToDashboard: 'Volver al Panel',
     detail: 'Detalle de Cita',
+    detailSubtitle: 'Consulta la agenda, el contexto comercial y el seguimiento asociado sin perder visibilidad operativa.',
     sendWhatsApp: 'Enviar WhatsApp',
     sendingWhatsApp: 'Enviando...',
     whatsAppSuccess: 'WhatsApp enviado correctamente',
@@ -449,6 +450,7 @@ const es = {
     editTitle: 'Editar Cita',
     deleteConfirm: '¿Eliminar esta cita? No se puede deshacer.',
     emptyTitle: 'Sin título',
+    emptySupplemental: 'Esta cita no tiene descripcion ni notas adicionales registradas.',
     errors: {
       profile: 'Error al cargar tu perfil.',
       load: 'Error al cargar la cita.',
@@ -457,7 +459,7 @@ const es = {
       missingLeadPhone: 'El lead asociado no tiene teléfono.',
       sendWhatsApp: 'No se pudo enviar el WhatsApp.',
     },
-    fields: { type: 'Tipo', status: 'Estado', date: 'Fecha', startTime: 'Hora inicio', endTime: 'Hora fin', location: 'Ubicación', notes: 'Notas', lead: 'Lead', property: 'Propiedad', description: 'Descripción', time: 'Hora' },
+    fields: { type: 'Tipo', status: 'Estado', date: 'Fecha', startTime: 'Hora inicio', endTime: 'Hora fin', location: 'Ubicación', notes: 'Notas', lead: 'Lead', leadPhone: 'Telefono del lead', property: 'Propiedad', description: 'Descripción', time: 'Hora' },
     placeholders: { location: 'Dirección o enlace' },
   },
   appointmentForm: {

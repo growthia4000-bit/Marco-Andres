@@ -967,8 +967,8 @@ export default function FlowMapPage() {
                     title={activeStage === lane.id ? t('flowMap.stageClickToClear') : t('flowMap.stageClickToFilter')}
                   >
                     <div className={`rounded-[16px] border border-slate-200/80 bg-gradient-to-b ${lane.tone} px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${(activeStage || hoveredStage) === lane.id ? 'border-blue-300 bg-blue-50/50' : ''}`}>
-                      <div className="text-[7px] font-semibold uppercase tracking-[0.18em] text-slate-500">{lane.title}</div>
-                      <div className="mt-0.5 text-[8px] leading-3 text-slate-600">{lane.subtitle}</div>
+                      <div className="text-[8px] font-semibold uppercase tracking-[0.18em] text-slate-500">{lane.title}</div>
+                      <div className="mt-0.5 text-[9px] leading-3 text-slate-600">{lane.subtitle}</div>
                     </div>
                   </div>
                 ))}

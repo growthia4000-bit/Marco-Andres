@@ -338,7 +338,7 @@ export default function AppointmentDetailPage() {
           </div>
         ) : null}
 
-        <div className="mx-auto max-w-5xl">
+        <div className="w-full">
         {editing ? (
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
             <div className="mb-6 flex items-center gap-3">
@@ -386,23 +386,23 @@ export default function AppointmentDetailPage() {
           </section>
         ) : (
           <div className="space-y-6">
-            <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 bg-[linear-gradient(180deg,_rgba(248,250,252,0.95),_rgba(255,255,255,0.98))] px-6 py-5 sm:px-7">
+            <section className="mx-auto w-full max-w-[1100px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-[linear-gradient(180deg,_rgba(248,250,252,0.95),_rgba(255,255,255,0.98))] px-5 py-4 sm:px-6 sm:py-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                   <div className="space-y-2">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{t('appointmentDetail.detail')}</p>
                     <h2 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{appointment.title || t('appointmentDetail.emptyTitle')}</h2>
                     <p className="max-w-2xl text-sm text-slate-500">{t('appointmentDetail.detailSubtitle')}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t('appointmentDetail.fields.time')}</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-950">{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</p>
+                    <p className="mt-1 text-base font-semibold text-slate-950 sm:text-lg">{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 sm:p-7">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="p-5 sm:p-6">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <InfoTile icon={<Calendar size={18} className="text-blue-600" />} label={t('appointmentDetail.fields.date')} value={formatDate(appointment.start_time, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} tone="blue" />
                   <InfoTile icon={<Clock size={18} className="text-emerald-600" />} label={t('appointmentDetail.fields.time')} value={`${formatTime(appointment.start_time)} - ${formatTime(appointment.end_time)}`} tone="emerald" />
                   <InfoTile icon={<Tag size={18} className="text-violet-600" />} label={t('appointmentDetail.fields.type')} value={getAppointmentTypeLabel(t, appointment.appointment_type)} tone="violet" />
@@ -430,7 +430,7 @@ export default function AppointmentDetailPage() {
                   ) : null}
                 </div>
 
-                <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {appointment.description ? (
                     <DetailSection icon={<BadgeInfo size={18} />} title={t('appointmentDetail.fields.description')} tone="blue">
                       <p className="text-sm leading-7 text-slate-700">{appointment.description}</p>
@@ -444,7 +444,7 @@ export default function AppointmentDetailPage() {
                   ) : null}
 
                   {!appointment.description && !appointment.notes ? (
-                    <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center text-sm text-slate-500 lg:col-span-2">
+                    <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-8 text-center text-sm text-slate-500 xl:col-span-2">
                       {t('appointmentDetail.emptySupplemental')}
                     </div>
                   ) : null}
@@ -475,11 +475,11 @@ function InfoTile({ icon, label, value, meta, tone }: { icon: ReactNode; label: 
   } as const
 
   return (
-    <div className={`rounded-3xl border p-4 shadow-sm ${tones[tone]}`}>
-      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm">{icon}</div>
+    <div className={`rounded-[26px] border px-4 py-3.5 shadow-sm ${tones[tone]}`}>
+      <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm">{icon}</div>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
-      <p className="mt-2 text-base font-semibold leading-6 text-slate-950">{value}</p>
-      {meta ? <p className="mt-1 text-sm text-slate-500">{meta}</p> : null}
+      <p className="mt-1.5 text-sm font-semibold leading-6 text-slate-950 sm:text-[15px]">{value}</p>
+      {meta ? <p className="mt-0.5 text-sm text-slate-500">{meta}</p> : null}
     </div>
   )
 }
@@ -494,10 +494,10 @@ function DetailSection({ icon, title, children, tone }: { icon: ReactNode; title
   const [borderClass, bgClass, textClass, ringClass] = palette.split(' ')
 
   return (
-    <section className={`rounded-3xl border p-5 shadow-sm sm:p-6 ${borderClass} ${bgClass}`}>
-      <div className="mb-4 flex items-center gap-3">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ${textClass} ${ringClass}`}>{icon}</div>
-        <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+    <section className={`rounded-3xl border p-5 shadow-sm ${borderClass} ${bgClass}`}>
+      <div className="mb-3 flex items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ${textClass} ${ringClass}`}>{icon}</div>
+        <h3 className="text-base font-semibold text-slate-950 sm:text-lg">{title}</h3>
       </div>
       {children}
     </section>

@@ -549,60 +549,81 @@ useEffect(() => {
   }
 
   return (
-    <div className="h-[calc(100vh-60px)] flex flex-col">
-      <header className="px-6 py-4 border-b border-slate-200 bg-white">
-        <div className="mb-4 flex items-center gap-3 text-sm text-slate-500">
-          <Link href="/dashboard" className="hover:text-slate-700">{t('dashboard.title')}</Link>
-          <ChevronRight size={14} />
-          <span className="font-medium text-slate-900">{t('conversations.title')}</span>
-        </div>
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-slate-900">{t('conversations.title')}</h1>
-            <p className="text-sm text-slate-500 mt-0.5">{t('conversations.subtitle')}</p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/leads"
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
-              >
-                <ArrowLeft size={16} />
-                {t('conversations.navigation.backToLeads')}
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-              >
-                <Home size={16} />
-                {t('conversations.navigation.backToDashboard')}
-              </Link>
-              {leadContextId && (
-                <Link
-                  href={`/leads/${leadContextId}`}
-                  className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
-                >
-                  <User size={16} />
-                  {t('conversations.navigation.backToLead')}
-                </Link>
-              )}
+    <div className="flex h-[calc(100vh-60px)] flex-col bg-slate-50">
+      <header className="border-b border-slate-200 bg-slate-50 px-4 py-4 sm:px-6 sm:py-6">
+        <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.12),_transparent_40%),linear-gradient(135deg,_#ffffff_0%,_#f8fafc_55%,_#eef2ff_100%)] px-6 py-6 sm:px-8 sm:py-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                    <Home size={14} />
+                    {t('dashboard.title')}
+                  </Link>
+                  <ChevronRight size={14} className="text-slate-300" />
+                  <span className="font-medium text-slate-900">{t('conversations.title')}</span>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-br from-sky-500 via-cyan-400 to-blue-300 text-white shadow-lg shadow-sky-400/15">
+                    <MessageSquare size={24} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Inbox CRM</p>
+                    <div className="space-y-1.5">
+                      <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t('conversations.title')}</h1>
+                      <p className="max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{t('conversations.subtitle')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex w-full flex-col gap-3 xl:max-w-2xl xl:items-end">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap xl:justify-end">
+                  <Link
+                    href="/channels"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <ShieldAlert size={18} />
+                    {t('conversations.channelsPanel.open')}
+                  </Link>
+                  <button
+                    onClick={() => setShowNewForm(true)}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700"
+                  >
+                    <Plus size={18} />
+                    {t('conversations.new')}
+                  </button>
+                </div>
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap xl:justify-end">
+                  <Link
+                    href="/leads"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <ArrowLeft size={18} />
+                    {t('conversations.navigation.backToLeads')}
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <Home size={18} />
+                    {t('conversations.navigation.backToDashboard')}
+                  </Link>
+                  {leadContextId && (
+                    <Link
+                      href={`/leads/${leadContextId}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-50 px-5 py-3 text-sm font-medium text-sky-700 shadow-sm ring-1 ring-sky-100 transition hover:-translate-y-0.5 hover:bg-sky-100"
+                    >
+                      <User size={18} />
+                      {t('conversations.navigation.backToLead')}
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-            <Link
-              href="/channels"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 bg-white text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium"
-            >
-              <ShieldAlert size={16} />
-              {t('conversations.channelsPanel.open')}
-            </Link>
-            <button
-              onClick={() => setShowNewForm(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-            >
-              <Plus size={16} />
-              {t('conversations.new')}
-            </button>
-          </div>
-        </div>
+        </section>
       </header>
 
       {error && (
@@ -613,16 +634,27 @@ useEffect(() => {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden px-4 pb-4 sm:px-6 sm:pb-6">
         {/* Conversation list */}
-        <div className={`w-full md:w-96 border-r border-slate-200 bg-white overflow-y-auto ${selectedId ? 'hidden md:block' : ''}`}>
+        <div className={`w-full overflow-y-auto rounded-l-[28px] border border-slate-200 bg-white shadow-sm md:w-96 md:border-r ${selectedId ? 'hidden md:block' : ''}`}>
           {loading ? (
             <div className="p-6 text-center text-slate-500">{t('common.loading')}</div>
           ) : conversations.length === 0 ? (
-            <div className="p-12 text-center">
-              <MessageSquare className="mx-auto mb-3 text-slate-300" size={36} />
-              <p className="text-slate-500">{t('conversations.empty')}</p>
-              <p className="text-sm text-slate-400 mt-1">{t('conversations.emptyHint')}</p>
+            <div className="flex min-h-full items-center justify-center p-6">
+              <div className="w-full rounded-[26px] border border-dashed border-slate-200 bg-[linear-gradient(180deg,_rgba(248,250,252,0.9),_rgba(255,255,255,1))] px-6 py-10 text-center shadow-sm">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[20px] bg-sky-50 text-sky-700 ring-1 ring-sky-100">
+                  <MessageSquare size={24} />
+                </div>
+                <p className="text-base font-semibold text-slate-900">{t('conversations.empty')}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">{t('conversations.emptyHint')}</p>
+                <button
+                  onClick={() => setShowNewForm(true)}
+                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700"
+                >
+                  <Plus size={16} />
+                  {t('conversations.new')}
+                </button>
+              </div>
             </div>
           ) : (
             conversations.map(conv => (
@@ -665,12 +697,31 @@ useEffect(() => {
         </div>
 
         {/* Message view */}
-        <div className={`flex-1 flex flex-col bg-slate-50 ${!selectedId ? 'hidden md:flex' : ''}`}>
+        <div className={`flex-1 flex-col overflow-hidden rounded-r-[28px] border-y border-r border-slate-200 bg-[linear-gradient(180deg,_rgba(248,250,252,0.72),_rgba(241,245,249,0.95))] shadow-sm ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
           {!selectedId ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-slate-400">
-                <MessageSquare className="mx-auto mb-3" size={40} />
-                <p>{t('conversations.selectHint')}</p>
+            <div className="flex flex-1 items-center justify-center p-6 sm:p-10">
+              <div className="w-full max-w-xl rounded-[30px] border border-slate-200 bg-white/95 px-8 py-12 text-center shadow-sm backdrop-blur">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[22px] bg-sky-50 text-sky-700 ring-1 ring-sky-100">
+                  <MessageSquare size={28} />
+                </div>
+                <p className="text-lg font-semibold text-slate-950">{t('conversations.selectHint')}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">{t('conversations.subtitle')}</p>
+                <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                  <button
+                    onClick={() => setShowNewForm(true)}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700"
+                  >
+                    <Plus size={16} />
+                    {t('conversations.new')}
+                  </button>
+                  <Link
+                    href="/channels"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <ShieldAlert size={16} />
+                    {t('conversations.channelsPanel.open')}
+                  </Link>
+                </div>
               </div>
             </div>
           ) : (

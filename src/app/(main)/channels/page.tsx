@@ -21,6 +21,20 @@ type ChannelDiagnostics = {
     presentVars: string[]
     missingVars: string[]
     latestTest: LatestTest | null
+    graph: {
+      configured: boolean
+      presentVars: string[]
+      missingVars: string[]
+      dbConfig: {
+        activeConfig: boolean
+        emailAddress: string | null
+        status: string | null
+        expiresAt: string | null
+        lastSendAt: string | null
+        lastSyncAt: string | null
+        requiresReconnect: boolean
+      } | null
+    }
     inbound: {
       configured: boolean
       presentVars: string[]
@@ -395,6 +409,41 @@ export default function ChannelsPage() {
                     <span key={key} className="inline-flex rounded-full bg-rose-100 px-2 py-1 text-rose-700">{key}</span>
                   ))}
                 </div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Microsoft Graph (OAuth)</p>
+                    <p className="mt-1 text-sm text-slate-900">
+                      {diagnostics?.email.graph?.dbConfig?.activeConfig
+                        ? `Conectado: ${diagnostics.email.graph.dbConfig.emailAddress || 'outlook.com'}`
+                        : 'No conectado'}
+                    </p>
+                    {diagnostics?.email.graph?.dbConfig?.expiresAt && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Token vence: {new Date(diagnostics.email.graph.dbConfig.expiresAt).toLocaleString('es-ES')}
+                      </p>
+                    )}
+                    {diagnostics?.email.graph?.dbConfig?.requiresReconnect && (
+                      <p className="mt-1 text-xs text-rose-600">Requires reconnect</p>
+                    )}
+                  </div>
+                  {diagnostics?.email.graph?.configured && (
+                    <a
+                      href="/api/email/microsoft/connect"
+                      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      Conectar Outlook
+                    </a>
+                  )}
+                </div>
+                {(!diagnostics?.email.graph?.configured) && diagnostics?.email.graph && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    {diagnostics.email.graph.missingVars?.length > 0
+                      ? `Faltan vars: ${diagnostics.email.graph.missingVars.join(', ')}`
+                      : 'Graph no habilitado'}
+                  </p>
+                )}
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                 <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.test')}</p>

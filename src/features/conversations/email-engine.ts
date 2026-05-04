@@ -29,7 +29,7 @@ export interface EmailMetadata {
   email_references?: string[]
   email_thread_id?: string
   reply_type?: 'human' | 'auto'
-  email_delivery_provider?: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp'
+  email_delivery_provider?: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp' | 'microsoft_graph'
   email_delivery_status?: 'pending' | 'sent' | 'failed'
   email_delivery_error?: string
   email_delivery_response?: string
@@ -39,7 +39,7 @@ export interface EmailMetadata {
 }
 
 export interface EmailDeliveryConfig {
-  provider: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp'
+  provider: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp' | 'microsoft_graph'
   configured: boolean
   reason?: string
   smtp?: {
@@ -50,6 +50,12 @@ export interface EmailDeliveryConfig {
     pass: string
     fromEmail: string
     fromName: string
+  }
+  graph?: {
+    accessToken: string
+    refreshToken: string
+    expiresAt: string
+    emailAddress: string
   }
 }
 
@@ -398,4 +404,316 @@ export async function sendEmailViaSmtp(params: {
     accepted: (info.accepted || []).map((value) => String(value)),
     rejected: (info.rejected || []).map((value) => String(value)),
   }
+}
+
+export interface MicrosoftGraphConfig {
+  configured: boolean
+  reason?: string
+  clientId?: string
+  clientSecret?: string
+  redirectUri?: string
+  scopes?: string[]
+}
+
+export interface MicrosoftGraphSendResult {
+  provider: 'microsoft_graph'
+  status: 'sent'
+  messageId?: string
+  response?: string
+  accepted: string[]
+  rejected: string[]
+}
+
+export function detectMicrosoftGraphConfig(env: Record<string, string | undefined>): MicrosoftGraphConfig {
+  const clientId = env.MICROSOFT_GRAPH_CLIENT_ID?.trim()
+  const clientSecret = env.MICROSOFT_GRAPH_CLIENT_SECRET?.trim()
+  const redirectUri = env.MICROSOFT_GRAPH_REDIRECT_URI?.trim()
+  const enabled = env.EMAIL_GRAPH_ENABLED?.trim() === 'true'
+
+  if (!enabled) {
+    return { configured: false, reason: 'Microsoft Graph is not enabled (EMAIL_GRAPH_ENABLED != true)' }
+  }
+
+  if (!clientId) {
+    return { configured: false, reason: 'MICROSOFT_GRAPH_CLIENT_ID is not configured' }
+  }
+
+  if (!clientSecret) {
+    return { configured: false, reason: 'MICROSOFT_GRAPH_CLIENT_SECRET is not configured' }
+  }
+
+  if (!redirectUri) {
+    return { configured: false, reason: 'MICROSOFT_GRAPH_REDIRECT_URI is not configured' }
+  }
+
+  const scopes = [
+    'openid',
+    'offline_access',
+    'User.Read',
+    'Mail.Send',
+    'Mail.Read',
+  ]
+
+  return {
+    configured: true,
+    clientId,
+    clientSecret,
+    redirectUri,
+    scopes,
+  }
+}
+
+export function buildMicrosoftGraphAuthUrl(config: MicrosoftGraphConfig, tenantId: string): string {
+  if (!config.configured || !config.clientId || !config.redirectUri) {
+    throw new Error('Microsoft Graph config is not complete')
+  }
+
+  const params = new URLSearchParams({
+    client_id: config.clientId,
+    response_type: 'code',
+    redirect_uri: config.redirectUri,
+    response_mode: 'query',
+    scope: config.scopes?.join(' ') || 'openid offline_access User.Read Mail.Send',
+    state: tenantId,
+  })
+
+  return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params.toString()}`
+}
+
+export async function exchangeMicrosoftGraphCode(
+  config: MicrosoftGraphConfig,
+  code: string
+): Promise<{ accessToken: string; refreshToken: string; expiresIn: number; email: string }> {
+  if (!config.configured || !config.clientId || !config.clientSecret || !config.redirectUri) {
+    throw new Error('Microsoft Graph config is not complete')
+  }
+
+  const tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+
+  const body = new URLSearchParams({
+    client_id: config.clientId,
+    client_secret: config.clientSecret,
+    code,
+    redirect_uri: config.redirectUri,
+    grant_type: 'authorization_code',
+    scope: config.scopes?.join(' ') || 'openid offline_access User.Read Mail.Send',
+  })
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Microsoft Graph token exchange failed: ${response.status} - ${errorText}`)
+  }
+
+  const data = await response.json() as {
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    id_token?: string
+    token_type: string
+  }
+
+  let email = ''
+  try {
+    if (data.id_token) {
+      const parts = data.id_token.split('.')
+      if (parts.length >= 2) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString())
+        email = payload.email || payload.preferred_username || ''
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresIn: data.expires_in,
+    email,
+  }
+}
+
+export async function refreshMicrosoftGraphToken(
+  config: MicrosoftGraphConfig,
+  refreshToken: string
+): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+  if (!config.configured || !config.clientId || !config.clientSecret) {
+    throw new Error('Microsoft Graph config is not complete')
+  }
+
+  const tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+
+  const body = new URLSearchParams({
+    client_id: config.clientId,
+    client_secret: config.clientSecret,
+    refresh_token: refreshToken,
+    grant_type: 'refresh_token',
+    scope: config.scopes?.join(' ') || 'openid offline_access User.Read Mail.Send',
+  })
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Microsoft Graph token refresh failed: ${response.status} - ${errorText}`)
+  }
+
+  const data = await response.json() as {
+    access_token: string
+    refresh_token: string
+    expires_in: number
+  }
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresIn: data.expires_in,
+  }
+}
+
+export async function sendEmailViaMicrosoftGraph(
+  accessToken: string,
+  params: {
+    from: string
+    to: string
+    subject: string
+    text: string
+    html?: string
+    messageId?: string
+    inReplyTo?: string
+    references?: string[]
+  }
+): Promise<MicrosoftGraphSendResult> {
+  const { from, to, subject, text, html, messageId, inReplyTo, references } = params
+
+  const message: Record<string, unknown> = {
+    subject,
+    body: {
+      contentType: html ? 'HTML' : 'text',
+      content: html || text,
+    },
+    toRecipients: [
+      {
+        emailAddress: {
+          address: to,
+        },
+      },
+    ],
+    from: {
+      emailAddress: {
+        address: from,
+      },
+    },
+  }
+
+  if (messageId) {
+    message.messageId = messageId
+  }
+
+  if (inReplyTo) {
+    message.inReplyTo = [inReplyTo]
+  }
+
+  if (references && references.length > 0) {
+    message.references = references.join(' ')
+  }
+
+  const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Microsoft Graph sendMail failed: ${response.status} - ${errorText}`)
+  }
+
+  const location = response.headers.get('Location') || undefined
+  const sentMessageId = messageId || location?.split('/').pop() || `<${Date.now()}@graph.local>`
+
+  return {
+    provider: 'microsoft_graph',
+    status: 'sent',
+    messageId: sentMessageId,
+    response: location,
+    accepted: [to],
+    rejected: [],
+  }
+}
+
+export async function fetchEmailsViaMicrosoftGraph(
+  accessToken: string,
+  params: {
+    mailbox: string
+    maxFetch: number
+  }
+): Promise<ImapInboundEmail[]> {
+  const { mailbox, maxFetch } = params
+
+  const query = new URLSearchParams({
+    $top: String(maxFetch),
+    $select: 'id,subject,from,to,bodyPreview,body,receivedDateTime,inReplyTo,references,internetMessageId',
+    $orderby: 'receivedDateTime desc',
+  })
+
+  const response = await fetch(`https://graph.microsoft.com/v1.0/me/mailfolders('${mailbox}')/messages?${query.toString()}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Microsoft Graph fetch failed: ${response.status} - ${errorText}`)
+  }
+
+  const data = await response.json() as {
+    value: Array<{
+      id: string
+      subject: string
+      from: { emailAddress: { address: string; name?: string } }
+      toRecipients: Array<{ emailAddress: { address: string; name?: string } }>
+      bodyPreview?: string
+      body?: { contentType: string; content: string }
+      receivedDateTime: string
+      inReplyTo?: string
+      references?: string
+      internetMessageId: string
+    }>
+  }
+
+  return (data.value || []).map((msg) => ({
+    uid: parseInt(msg.id.replace(/[^0-9]/g, '').slice(0, 8)) || 0,
+    from: msg.from?.emailAddress?.name
+      ? `${msg.from.emailAddress.name} <${msg.from.emailAddress.address}>`
+      : msg.from?.emailAddress?.address || '',
+    to: msg.toRecipients
+      ?.map((r) => r.emailAddress?.name
+        ? `${r.emailAddress.name} <${r.emailAddress.address}>`
+        : r.emailAddress?.address || '')
+      .join(', ') || '',
+    subject: msg.subject || '',
+    text: msg.body?.contentType === 'text' ? msg.body.content : msg.bodyPreview || '',
+    html: msg.body?.contentType === 'HTML' ? msg.body.content : undefined,
+    date: msg.receivedDateTime,
+    message_id: msg.internetMessageId,
+    in_reply_to: msg.inReplyTo,
+    references: msg.references?.split(/\s+/).filter(Boolean) || [],
+  }))
 }

@@ -10,7 +10,8 @@ import { classifyMessage } from './intent-engine'
 import { generateReply } from './reply-engine'
 import { findAvailableSlots, suggestSlotsMessage } from './scheduling-engine'
 import { generateHumanSuggestion } from './human-engine'
-import { detectEmailDeliveryConfig, detectEmailInboundConfig, fetchInboundEmailsViaImap, generateEmailSubject, normalizeEmailSubject, parseEmailAddress, resolveInboundTenantSlug, sendEmailViaSmtp } from './email-engine'
+import { detectEmailDeliveryConfig, detectEmailInboundConfig, detectMicrosoftGraphConfig, fetchEmailsViaMicrosoftGraph, fetchInboundEmailsViaImap, generateEmailSubject, normalizeEmailSubject, parseEmailAddress, refreshMicrosoftGraphToken, resolveInboundTenantSlug, sendEmailViaMicrosoftGraph, sendEmailViaSmtp } from './email-engine'
+import { decryptToken, encryptToken, hasValidEncryptionKey } from '@/lib/email-token-encryption'
 import { detectWhatsAppDeliveryConfig, normalizeWhatsAppRecipient, renderTemplate, sendWhatsAppViaMeta, validateWhatsAppNumber, WHATSAPP_TEMPLATES, getTemplateByName, resolveTemplateByKeyAndLocale } from './whatsapp-engine'
 import { getRuleTemplate, RULE_TEMPLATES } from './automation-engine'
 import { AI_MODELS, getOpenRouterProvider, hasAiProviderConfig } from '@/lib/ai/openrouter'
@@ -25,6 +26,226 @@ import type { WhatsAppTemplateVariable } from './whatsapp-templates'
 import type { MetaTemplateSyncRecord } from './whatsapp-template-meta'
 
 type ConversationsSupabaseClient = Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createServiceRoleClient>
+
+type TenantEmailConfigRow = {
+  id: string
+  tenant_id: string
+  provider: string
+  email_address: string
+  access_token_encrypted: string | null
+  refresh_token_encrypted: string | null
+  expires_at: string | null
+  scopes: string[] | null
+  status: string
+  last_sync_at: string | null
+  last_send_at: string | null
+}
+
+async function getTenantEmailGraphConfig(
+  supabase: ConversationsSupabaseClient,
+  tenantId: string
+): Promise<TenantEmailConfigRow | null> {
+  const { data, error } = await supabase
+    .from('tenant_email_configs')
+    .select('id, tenant_id, provider, email_address, access_token_encrypted, refresh_token_encrypted, expires_at, scopes, status, last_sync_at, last_send_at')
+    .eq('tenant_id', tenantId)
+    .eq('provider', 'microsoft_graph')
+    .eq('status', 'active')
+    .maybeSingle<TenantEmailConfigRow>()
+
+  if (error || !data) return null
+
+  const expiresAt = data.expires_at
+  if (expiresAt && new Date(expiresAt) <= new Date()) {
+    return data
+  }
+
+  return data
+}
+
+interface SyncResult {
+  success: boolean
+  error?: string
+  fetched?: number
+  imported?: number
+  skipped?: number
+  duplicates?: number
+  threaded?: number
+  created?: number
+  irrelevant?: number
+  failed?: number
+  reason?: string | null
+  skipped_reasons?: Record<string, number>
+  failed_reasons?: Record<string, number>
+}
+
+async function performEmailInboxSyncViaGraph(args: {
+  supabase: ConversationsSupabaseClient
+  tenantId: string
+  actorUserId?: string
+  source: 'manual' | 'auto'
+  emailConfig: TenantEmailConfigRow
+  graphConfig: ReturnType<typeof detectMicrosoftGraphConfig>
+}): Promise<SyncResult> {
+  const { supabase, tenantId, actorUserId, source, emailConfig, graphConfig } = args
+
+  const encryptionKey = process.env.EMAIL_TOKEN_ENCRYPTION_KEY?.trim()
+  if (!encryptionKey) {
+    return { success: false, error: 'Encryption key not configured' }
+  }
+
+  let accessToken: string | null = null
+
+  const expiresAt = emailConfig.expires_at
+  if (expiresAt && new Date(expiresAt) <= new Date()) {
+    try {
+      const refreshToken = decryptToken(emailConfig.refresh_token_encrypted!, encryptionKey)
+      const refreshed = await refreshMicrosoftGraphToken(graphConfig, refreshToken)
+
+      accessToken = refreshed.accessToken
+
+      const encryptedAccess = encryptToken(refreshed.accessToken, encryptionKey)
+      const newExpiresAt = new Date(Date.now() + refreshed.expiresIn * 1000).toISOString()
+
+      await supabase.from('tenant_email_configs').update({
+        access_token_encrypted: encryptedAccess,
+        refresh_token_encrypted: encryptToken(refreshed.refreshToken, encryptionKey),
+        expires_at: newExpiresAt,
+        updated_at: new Date().toISOString(),
+      }).eq('id', emailConfig.id)
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Token refresh failed' }
+    }
+  } else {
+    try {
+      accessToken = decryptToken(emailConfig.access_token_encrypted!, encryptionKey)
+    } catch {
+      return { success: false, error: 'Failed to decrypt access token' }
+    }
+  }
+
+  if (!accessToken) {
+    return { success: false, error: 'No access token available' }
+  }
+
+  try {
+    const emails = await fetchEmailsViaMicrosoftGraph(accessToken, {
+      mailbox: 'INBOX',
+      maxFetch: 25,
+    })
+
+    let summaryTenantId = tenantId
+    let imported = 0
+    let skipped = 0
+    let duplicates = 0
+    const failures: string[] = []
+    const skippedReasons: Record<string, number> = {}
+    const failedReasons: Record<string, number> = {}
+    let threaded = 0
+    let created = 0
+    let irrelevant = 0
+
+    for (const email of emails) {
+      const payload = source === 'manual'
+        ? { ...email, tenant_id: tenantId }
+        : email
+
+      const result = await processInboundEmailAction(payload, { supabase })
+
+      if ('tenantId' in result && typeof result.tenantId === 'string' && result.tenantId) {
+        summaryTenantId = result.tenantId
+      }
+
+      if (result.status === 'ok') {
+        imported += 1
+        if (result.isNewConversation) created += 1
+        else threaded += 1
+      } else if (result.status === 'duplicate') {
+        duplicates += 1
+        skipped += 1
+        skippedReasons.duplicate = (skippedReasons.duplicate || 0) + 1
+      } else if (result.status === 'skipped') {
+        skipped += 1
+      } else if (result.status === 'failed') {
+        const reason = result.reason || 'failed'
+        failures.push(reason)
+        failedReasons[reason] = (failedReasons[reason] || 0) + 1
+      }
+
+      if (result.status === 'skipped' && result.reason) {
+        skippedReasons[result.reason] = (skippedReasons[result.reason] || 0) + 1
+        if (result.reason.startsWith('Irrelevant inbox email:')) irrelevant += 1
+      }
+    }
+
+    console.info('[email sync scheduler] Graph sync summary', {
+      source,
+      tenantId,
+      summaryTenantId,
+    })
+
+    await insertChannelEvent(supabase, {
+      tenantId: summaryTenantId,
+      actorUserId,
+      eventType: failures.length > 0 ? 'email.inbound.sync.failed' : 'email.inbound.sync.completed',
+      payload: {
+        source,
+        provider: 'microsoft_graph',
+        configured_tenant_id: tenantId,
+        summary_tenant_id: summaryTenantId,
+        lock: 'server_file',
+        fetched: emails.length,
+        imported,
+        skipped,
+        duplicates,
+        threaded,
+        created,
+        irrelevant,
+        failed: failures.length,
+        reason: failures[0] || null,
+        skipped_reasons: skippedReasons,
+        failed_reasons: failedReasons,
+      },
+    })
+
+    await supabase.from('tenant_email_configs').update({
+      last_sync_at: new Date().toISOString(),
+    }).eq('id', emailConfig.id)
+
+    return {
+      success: true,
+      fetched: emails.length,
+      imported,
+      skipped,
+      duplicates,
+      threaded,
+      created,
+      irrelevant,
+      failed: failures.length,
+      reason: failures[0] || null,
+      skipped_reasons: skippedReasons,
+      failed_reasons: failedReasons,
+    }
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : 'Graph fetch failed'
+
+    await insertChannelEvent(supabase, {
+      tenantId,
+      actorUserId,
+      eventType: 'email.inbound.sync.failed',
+      payload: {
+        provider: 'microsoft_graph',
+        reason,
+        source,
+        configured_tenant_id: tenantId,
+        summary_tenant_id: tenantId,
+        lock: 'server_file',
+      },
+    })
+
+    return { success: false, error: reason }
+  }
+}
 
 function describeSupabaseFetchFailure(context: string, error: unknown) {
   let message = 'Unknown error'
@@ -431,6 +652,7 @@ function buildChannelDiagnosticsBase() {
   const emailConfig = detectEmailDeliveryConfig(process.env)
   const emailInboundConfig = detectEmailInboundConfig(process.env)
   const whatsappConfig = detectWhatsAppDeliveryConfig(process.env)
+  const graphConfig = detectMicrosoftGraphConfig(process.env)
 
   const emailPresence = getEnvPresence(process.env, EMAIL_ENV_KEYS)
   const emailImapPresence = getEnvPresence(process.env, EMAIL_IMAP_ENV_KEYS)
@@ -444,6 +666,20 @@ function buildChannelDiagnosticsBase() {
       presentVars: emailPresence.present,
       missingVars: emailPresence.missing,
       latestTest: null,
+      graph: {
+        configured: graphConfig.configured,
+        presentVars: graphConfig.configured ? (graphConfig.scopes || []) : [],
+        missingVars: !graphConfig.configured ? ['MICROSOFT_GRAPH_CLIENT_ID', 'MICROSOFT_GRAPH_CLIENT_SECRET', 'MICROSOFT_GRAPH_REDIRECT_URI'].filter(k => !process.env[k]?.trim()) : [],
+        dbConfig: null as {
+          activeConfig: boolean
+          emailAddress: string | null
+          status: string | null
+          expiresAt: string | null
+          lastSendAt: string | null
+          lastSyncAt: string | null
+          requiresReconnect: boolean
+        } | null,
+      },
       inbound: {
         configured: emailInboundConfig.configured,
         presentVars: emailImapPresence.present,
@@ -1003,16 +1239,28 @@ export async function getChannelDiagnosticsAction() {
     }
   }
 
-  const [emailTest, emailInboundSyncManual, emailInboundSyncAuto, emailInboundSyncAutoImported, whatsappTest, whatsappDbResponse] = await Promise.all([
+const [emailTest, emailInboundSyncManual, emailInboundSyncAuto, emailInboundSyncAutoImported, whatsappTest, whatsappDbResponse, emailGraphDbResponse] = await Promise.all([
     getLatestChannelTestEvent(supabase, tenantId, ['channel.test.email.sent', 'channel.test.email.failed']),
     getLatestChannelEventBySource(supabase, tenantId, ['email.inbound.sync.completed', 'email.inbound.sync.failed'], 'manual'),
     getLatestAutomaticEmailSyncEventForDiagnostics(supabase, tenantId),
     getLatestAutomaticEmailSyncImportEventForDiagnostics(supabase, tenantId),
-    getLatestChannelTestEvent(admin, tenantId, ['channel.test.whatsapp.sent', 'channel.test.whatsapp.failed']),
+    getLatestChannelEventBySource(admin, tenantId, ['channel.test.whatsapp.sent', 'channel.test.whatsapp.failed']),
     admin.from('tenant_whatsapp_configs').select('phone_number_id,display_phone_number,status,verified_at,mode,access_token_encrypted,whatsapp_business_account_id').eq('tenant_id', tenantId).eq('status', 'active').maybeSingle<{ phone_number_id: string; display_phone_number: string; status: string; verified_at: string | null; mode: string; access_token_encrypted: string | null; whatsapp_business_account_id: string | null }>(),
+    admin.from('tenant_email_configs').select('id,email_address,status,expires_at,last_send_at,last_sync_at').eq('tenant_id', tenantId).eq('provider', 'microsoft_graph').maybeSingle<{ id: string; email_address: string; status: string; expires_at: string | null; last_send_at: string | null; last_sync_at: string | null }>(),
   ])
 
   const whatsappDbConfig = whatsappDbResponse?.data ?? null
+  const emailGraphDbConfig = emailGraphDbResponse?.data ?? null
+
+  const emailGraphDbConfigParsed = emailGraphDbConfig ? {
+    activeConfig: emailGraphDbConfig.status === 'active',
+    emailAddress: emailGraphDbConfig.email_address,
+    status: emailGraphDbConfig.status,
+    expiresAt: emailGraphDbConfig.expires_at,
+    lastSendAt: emailGraphDbConfig.last_send_at,
+    lastSyncAt: emailGraphDbConfig.last_sync_at,
+    requiresReconnect: emailGraphDbConfig.status === 'reconnect_required',
+  } : null
   const resolvedEnvironment = whatsappDbConfig?.mode === 'production' ? 'production' as const : 'sandbox' as const
   const accessTokenConfigured = !!whatsappDbConfig?.access_token_encrypted?.trim()
   const storedDisplayPhoneNumber = whatsappDbConfig?.display_phone_number || null
@@ -1075,6 +1323,10 @@ export async function getChannelDiagnosticsAction() {
     email: {
       ...base.email,
       latestTest: emailTest,
+      graph: {
+        ...base.email.graph,
+        dbConfig: emailGraphDbConfigParsed,
+      },
       inbound: {
         ...base.email.inbound,
         latestSync: emailInboundSyncManual || emailInboundSyncAuto || null,
@@ -1119,6 +1371,30 @@ async function performEmailInboxSync(args: {
   source: 'manual' | 'auto'
 }) {
   const { supabase, tenantId, actorUserId, source } = args
+  const graphEnvConfig = detectMicrosoftGraphConfig(process.env)
+  const useGraph = graphEnvConfig.configured && hasValidEncryptionKey()
+
+  if (useGraph) {
+    const emailGraphConfig = await getTenantEmailGraphConfig(supabase, tenantId)
+
+    if (emailGraphConfig?.access_token_encrypted && emailGraphConfig.status === 'active') {
+      const syncResult = await performEmailInboxSyncViaGraph({
+        supabase,
+        tenantId,
+        actorUserId,
+        source,
+        emailConfig: emailGraphConfig,
+        graphConfig: graphEnvConfig,
+      })
+
+      if (syncResult.success) {
+        return syncResult
+      }
+
+      console.warn('[email sync] Graph sync failed, falling back to IMAP', { error: syncResult.error })
+    }
+  }
+
   const inboundConfig = detectEmailInboundConfig(process.env)
 
   if (!inboundConfig.configured || !inboundConfig.imap) {
@@ -1297,9 +1573,83 @@ export async function testEmailChannelAction(formData: FormData) {
   const to = String(formData.get('to') || '').trim()
   if (!to) throw new Error('El destinatario es obligatorio')
 
-  const deliveryConfig = detectEmailDeliveryConfig(process.env)
   const subject = `InmoCRM test · ${new Date().toISOString()}`
   const text = 'Prueba controlada de canal Email desde InmoCRM.'
+
+  const emailGraphConfig = await getTenantEmailGraphConfig(supabase, tenantId)
+  const graphEnvConfig = detectMicrosoftGraphConfig(process.env)
+
+  if (emailGraphConfig?.access_token_encrypted && graphEnvConfig.configured && hasValidEncryptionKey()) {
+    const expiresAt = emailGraphConfig.expires_at
+
+    let accessToken: string | null = null
+
+    if (expiresAt && new Date(expiresAt) <= new Date()) {
+      try {
+        const encryptionKey = process.env.EMAIL_TOKEN_ENCRYPTION_KEY!.trim()
+        const refreshToken = decryptToken(emailGraphConfig.refresh_token_encrypted!, encryptionKey)
+        const refreshed = await refreshMicrosoftGraphToken(graphEnvConfig, refreshToken)
+
+        const encryptedAccess = encryptToken(refreshed.accessToken, encryptionKey)
+        const newExpiresAt = new Date(Date.now() + refreshed.expiresIn * 1000).toISOString()
+
+        await supabase.from('tenant_email_configs').update({
+          access_token_encrypted: encryptedAccess,
+          refresh_token_encrypted: encryptToken(refreshed.refreshToken, encryptionKey),
+          expires_at: newExpiresAt,
+          updated_at: new Date().toISOString(),
+        }).eq('id', emailGraphConfig.id)
+
+        accessToken = refreshed.accessToken
+      } catch {
+        // Token expired and refresh failed, fall through to SMTP
+      }
+    } else {
+      try {
+        const encryptionKey = process.env.EMAIL_TOKEN_ENCRYPTION_KEY!.trim()
+        accessToken = decryptToken(emailGraphConfig.access_token_encrypted!, encryptionKey)
+      } catch {
+        // Decryption failed
+      }
+    }
+
+    if (accessToken) {
+      try {
+        const result = await sendEmailViaMicrosoftGraph(accessToken, {
+          from: emailGraphConfig.email_address,
+          to,
+          subject,
+          text,
+          html: `<p>${text}</p>`,
+        })
+
+        await insertChannelEvent(supabase, {
+          tenantId,
+          actorUserId: user?.id,
+          eventType: 'channel.test.email.sent',
+          payload: {
+            to,
+            provider: 'microsoft_graph',
+            status: result.status,
+            response: result.response,
+            message_id: result.messageId,
+            accepted: result.accepted,
+            rejected: result.rejected,
+          },
+        })
+
+        await supabase.from('tenant_email_configs').update({
+          last_send_at: new Date().toISOString(),
+        }).eq('id', emailGraphConfig.id)
+
+        return { ok: true, provider: 'microsoft_graph', status: result.status }
+      } catch (err) {
+        console.error('[email test] Graph send failed, falling back to SMTP', err)
+      }
+    }
+  }
+
+  const deliveryConfig = detectEmailDeliveryConfig(process.env)
 
   if (!deliveryConfig.configured || deliveryConfig.provider !== 'smtp' || !deliveryConfig.smtp) {
     const reason = 'SMTP no esta configurado completamente para ejecutar la prueba.'

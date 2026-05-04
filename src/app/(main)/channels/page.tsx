@@ -141,12 +141,6 @@ function summarizeLatestTest(t: (key: string, vars?: Record<string, string | num
   }
 }
 
-function isMicrosoftBasicAuth(error: string | null | undefined): boolean {
-  if (!error) return false
-  const lower = error.toLowerCase()
-  return lower.includes('535') || lower.includes('basic authentication') || lower.includes('authentication unsuccessful')
-}
-
 export default function ChannelsPage() {
   const { t, formatDate } = useI18n()
   const [loading, setLoading] = useState(true)
@@ -458,18 +452,7 @@ export default function ChannelsPage() {
                 <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastTest')}</p>
                 <p className="mt-1 text-sm text-slate-900">{emailLatest?.line || t('conversations.channelsPanel.noData')}</p>
                 {emailLatest?.provider ? <p className="mt-1 text-xs text-slate-500">{t('conversations.delivery.provider', { provider: emailLatest.provider })}</p> : null}
-                {emailLatest?.error ? (
-                  <p className="mt-2 text-xs text-rose-600">
-                    {isMicrosoftBasicAuth(emailLatest.error) ? (
-                      <>
-                        {t('conversations.channelsPanel.errors.microsoftBasicAuth')}
-                        <span className="mt-1 block text-[10px] text-slate-500">{t('conversations.channelsPanel.errors.microsoftBasicAuthDetail', { detail: emailLatest.error })}</span>
-                      </>
-                    ) : (
-                      emailLatest.error
-                    )}
-                  </p>
-                ) : null}
+                {emailLatest?.error ? <p className="mt-2 text-xs text-rose-600">{emailLatest.error}</p> : null}
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                 <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncAuto')}</p>
@@ -564,22 +547,20 @@ export default function ChannelsPage() {
               {diagnostics?.whatsapp.configSource === 'db_config' && diagnostics?.whatsapp.dbConfig ? (
                 <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${toneClass(whatsappProductionTone)}`}>
                   {whatsappEnvironment === 'production'
-                    ? (diagnostics.whatsapp.dbConfig.productionReady
-                      ? t('conversations.channelsPanel.labels.productionReadyBadge')
-                      : t('conversations.channelsPanel.labels.productionPendingBadge'))
-                    : t('conversations.channelsPanel.labels.sandboxBadge')}
+                    ? (diagnostics.whatsapp.dbConfig.productionReady ? 'Produccion lista' : 'Produccion pendiente')
+                    : 'Entorno de prueba'}
                 </span>
               ) : diagnostics?.whatsapp.configSource === 'db_config' && diagnostics?.whatsapp.dbConfig?.canTest ? (
                 <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  {t('conversations.channelsPanel.labels.activeCheck')}
+                  Activa ✓
                 </span>
               ) : diagnostics?.whatsapp.configSource === 'env_fallback' ? (
                 <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                  {t('conversations.channelsPanel.labels.envFallbackShort')}
+                  Fallback
                 </span>
               ) : (
                 <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700">
-                  {t('conversations.channelsPanel.labels.noConfig')}
+                  Sin Configurar
                 </span>
               )}
             </div>
@@ -654,7 +635,7 @@ export default function ChannelsPage() {
                       <p className={`mt-1 text-sm font-medium ${diagnostics.whatsapp.dbConfig.isTestNumber ? 'text-amber-700' : 'text-emerald-700'}`}>
                         {diagnostics.whatsapp.dbConfig.isTestNumber ? 'Numero de prueba / sandbox' : 'Numero real de produccion'}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.whatsapp.fields.accessTokenLabel')}: {diagnostics.whatsapp.dbConfig.accessTokenConfigured ? t('conversations.channelsPanel.labels.configured') : t('conversations.channelsPanel.labels.pending')}</p>
+                      <p className="mt-1 text-xs text-slate-500">Access Token: {diagnostics.whatsapp.dbConfig.accessTokenConfigured ? 'Configurado' : 'Pendiente'}</p>
                     </div>
                   </div>
                   {diagnostics.whatsapp.dbConfig.displayNumberMismatch ? (

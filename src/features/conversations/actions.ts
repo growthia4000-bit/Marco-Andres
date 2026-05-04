@@ -258,13 +258,13 @@ async function performEmailInboxSyncViaDemo(args: {
   const mockInboundEmails = [
     {
       uid: Date.now(),
-      from: 'cliente demo <cliente@demo.inmocrm.local>',
+      from: 'Juan Pérez <juan.perez@gmail.com>',
       to: 'agente@inmocrm.com',
-      subject: 'Consulta de prueba - Demo Mode',
-      text: 'Este es un email simulador para probar el flujo de inbound en modo demo. No es un email real.',
-      html: '<p>Este es un email simulador para probar el flujo de inbound en modo demo. No es un email real.</p>',
+      subject: 'Consulta sobre propiedad en venta',
+      text: 'Hola, me interesa saber más sobre el apartamento en el centro. Tengo presupuesto hasta 200.000 euros y necesito 2 habitaciones. Gracias.',
+      html: '<p>Hola, me interesa saber más sobre el apartamento en el centro. Tengo presupuesto hasta 200.000 euros y necesito 2 habitaciones. Gracias.</p>',
       date: new Date().toISOString(),
-      message_id: `<demo-${Date.now()}-${Math.random().toString(36).slice(2, 11)}@inmocrm.demo>`,
+      message_id: `<demo-${Date.now()}-${Math.random().toString(36).slice(2, 11)}@gmail.com>`,
       in_reply_to: undefined,
       references: [],
     },

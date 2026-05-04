@@ -597,6 +597,18 @@ const it = {
           manual: 'Fonte: manuale',
         },
       },
+      demo: {
+        title: 'Modalità Demo',
+        active: 'Attivo',
+        inactive: 'Inattivo',
+        badge: 'Demo',
+        description: 'Questa è una modalità demo che non invia email reali fuori dal CRM.',
+        descriptionDisabled: 'Per abilitare la modalità demo, imposta EMAIL_DEMO_MODE=true in Vercel.',
+        syncButton: 'Simula email in arrivo',
+        syncSuccess: 'Email demo simulata correttamente. Non proveniva da un server esterno reale.',
+        testSuccess: 'Email demo generata correttamente. Non è stata inviata fuori dal CRM.',
+        testError: 'Nessun provider email configurato e la modalità demo è disattivata.',
+      },
       whatsapp: {
         title: 'WhatsApp',
         badge: 'Verificato in sandbox',

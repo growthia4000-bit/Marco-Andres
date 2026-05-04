@@ -10,7 +10,7 @@ import { classifyMessage } from './intent-engine'
 import { generateReply } from './reply-engine'
 import { findAvailableSlots, suggestSlotsMessage } from './scheduling-engine'
 import { generateHumanSuggestion } from './human-engine'
-import { detectEmailDeliveryConfig, detectEmailInboundConfig, detectMicrosoftGraphConfig, fetchEmailsViaMicrosoftGraph, fetchInboundEmailsViaImap, generateEmailSubject, normalizeEmailSubject, parseEmailAddress, refreshMicrosoftGraphToken, resolveInboundTenantSlug, sendEmailViaMicrosoftGraph, sendEmailViaSmtp } from './email-engine'
+import { detectEmailDeliveryConfig, detectEmailDemoConfig, detectEmailInboundConfig, detectMicrosoftGraphConfig, fetchEmailsViaMicrosoftGraph, fetchInboundEmailsViaImap, generateEmailSubject, normalizeEmailSubject, parseEmailAddress, refreshMicrosoftGraphToken, resolveInboundTenantSlug, sendEmailViaDemo, sendEmailViaMicrosoftGraph, sendEmailViaSmtp } from './email-engine'
 import { decryptToken, encryptToken, hasValidEncryptionKey } from '@/lib/email-token-encryption'
 import { detectWhatsAppDeliveryConfig, normalizeWhatsAppRecipient, renderTemplate, sendWhatsAppViaMeta, validateWhatsAppNumber, WHATSAPP_TEMPLATES, getTemplateByName, resolveTemplateByKeyAndLocale } from './whatsapp-engine'
 import { getRuleTemplate, RULE_TEMPLATES } from './automation-engine'
@@ -244,6 +244,120 @@ async function performEmailInboxSyncViaGraph(args: {
     })
 
     return { success: false, error: reason }
+  }
+}
+
+async function performEmailInboxSyncViaDemo(args: {
+  supabase: ConversationsSupabaseClient
+  tenantId: string
+  actorUserId?: string
+  source: 'manual' | 'auto'
+}): Promise<SyncResult> {
+  const { supabase, tenantId, actorUserId, source } = args
+
+  const mockInboundEmails = [
+    {
+      uid: Date.now(),
+      from: 'cliente demo <cliente@demo.inmocrm.local>',
+      to: 'agente@inmocrm.com',
+      subject: 'Consulta de prueba - Demo Mode',
+      text: 'Este es un email simulador para probar el flujo de inbound en modo demo. No es un email real.',
+      html: '<p>Este es un email simulador para probar el flujo de inbound en modo demo. No es un email real.</p>',
+      date: new Date().toISOString(),
+      message_id: `<demo-${Date.now()}-${Math.random().toString(36).slice(2, 11)}@inmocrm.demo>`,
+      in_reply_to: undefined,
+      references: [],
+    },
+  ]
+
+  let summaryTenantId = tenantId
+  let imported = 0
+  let skipped = 0
+  let duplicates = 0
+  const failures: string[] = []
+  const skippedReasons: Record<string, number> = {}
+  const failedReasons: Record<string, number> = {}
+  let threaded = 0
+  let created = 0
+  let irrelevant = 0
+
+  for (const email of mockInboundEmails) {
+    const payload = source === 'manual'
+      ? { ...email, tenant_id: tenantId }
+      : email
+
+    const result = await processInboundEmailAction(payload, { supabase })
+
+    if ('tenantId' in result && typeof result.tenantId === 'string' && result.tenantId) {
+      summaryTenantId = result.tenantId
+    }
+
+    if (result.status === 'ok') {
+      imported += 1
+      if (result.isNewConversation) created += 1
+      else threaded += 1
+    } else if (result.status === 'duplicate') {
+      duplicates += 1
+      skipped += 1
+      skippedReasons.duplicate = (skippedReasons.duplicate || 0) + 1
+    } else if (result.status === 'skipped') {
+      skipped += 1
+    } else if (result.status === 'failed') {
+      const reason = result.reason || 'failed'
+      failures.push(reason)
+      failedReasons[reason] = (failedReasons[reason] || 0) + 1
+    }
+
+    if (result.status === 'skipped' && result.reason) {
+      skippedReasons[result.reason] = (skippedReasons[result.reason] || 0) + 1
+      if (result.reason.startsWith('Irrelevant inbox email:')) irrelevant += 1
+    }
+  }
+
+  console.info('[email sync scheduler] demo sync summary', {
+    source,
+    tenantId,
+    summaryTenantId,
+  })
+
+  await insertChannelEvent(supabase, {
+    tenantId: summaryTenantId,
+    actorUserId,
+    eventType: failures.length > 0 ? 'email.inbound.sync.failed' : 'email.inbound.sync.completed',
+    payload: {
+      source,
+      provider: 'email_demo',
+      configured_tenant_id: tenantId,
+      summary_tenant_id: summaryTenantId,
+      lock: 'server_file',
+      fetched: mockInboundEmails.length,
+      imported,
+      skipped,
+      duplicates,
+      threaded,
+      created,
+      irrelevant,
+      failed: failures.length,
+      reason: failures[0] || null,
+      skipped_reasons: skippedReasons,
+      failed_reasons: failedReasons,
+      simulated: true,
+    },
+  })
+
+  return {
+    success: true,
+    fetched: mockInboundEmails.length,
+    imported,
+    skipped,
+    duplicates,
+    threaded,
+    created,
+    irrelevant,
+    failed: failures.length,
+    reason: failures[0] || null,
+    skipped_reasons: skippedReasons,
+    failed_reasons: failedReasons,
   }
 }
 
@@ -653,6 +767,7 @@ function buildChannelDiagnosticsBase() {
   const emailInboundConfig = detectEmailInboundConfig(process.env)
   const whatsappConfig = detectWhatsAppDeliveryConfig(process.env)
   const graphConfig = detectMicrosoftGraphConfig(process.env)
+  const demoConfig = detectEmailDemoConfig(process.env)
 
   const emailPresence = getEnvPresence(process.env, EMAIL_ENV_KEYS)
   const emailImapPresence = getEnvPresence(process.env, EMAIL_IMAP_ENV_KEYS)
@@ -679,6 +794,9 @@ function buildChannelDiagnosticsBase() {
           lastSyncAt: string | null
           requiresReconnect: boolean
         } | null,
+      },
+      demo: {
+        enabled: demoConfig.enabled,
       },
       inbound: {
         configured: emailInboundConfig.configured,
@@ -1398,6 +1516,17 @@ async function performEmailInboxSync(args: {
   const inboundConfig = detectEmailInboundConfig(process.env)
 
   if (!inboundConfig.configured || !inboundConfig.imap) {
+    const demoConfig = detectEmailDemoConfig(process.env)
+
+    if (demoConfig.enabled) {
+      return performEmailInboxSyncViaDemo({
+        supabase,
+        tenantId,
+        actorUserId,
+        source,
+      })
+    }
+
     const reason = inboundConfig.reason || 'IMAP inbound email is not fully configured.'
     await insertChannelEvent(supabase, {
       tenantId,
@@ -1652,6 +1781,43 @@ export async function testEmailChannelAction(formData: FormData) {
   const deliveryConfig = detectEmailDeliveryConfig(process.env)
 
   if (!deliveryConfig.configured || deliveryConfig.provider !== 'smtp' || !deliveryConfig.smtp) {
+    const demoConfig = detectEmailDemoConfig(process.env)
+
+    if (demoConfig.enabled) {
+      try {
+        const result = await sendEmailViaDemo({
+          to,
+          subject,
+          text,
+          html: `<p>${text}</p>`,
+        })
+
+        await insertChannelEvent(supabase, {
+          tenantId,
+          actorUserId: user?.id,
+          eventType: 'channel.test.email.sent',
+          payload: {
+            to,
+            provider: 'email_demo',
+            status: result.status,
+            message_id: result.messageId,
+            simulated: true,
+            delivered: false,
+          },
+        })
+
+        return {
+          ok: true,
+          provider: 'email_demo',
+          status: result.status,
+          demo: true,
+          message: 'Email demo generado correctamente. No se envió fuera del CRM.',
+        }
+      } catch (demoErr) {
+        console.error('[email test] Demo mode failed', demoErr)
+      }
+    }
+
     const reason = 'SMTP no esta configurado completamente para ejecutar la prueba.'
     await insertChannelEvent(supabase, {
       tenantId,

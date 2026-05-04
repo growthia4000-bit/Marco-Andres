@@ -35,6 +35,9 @@ type ChannelDiagnostics = {
         requiresReconnect: boolean
       } | null
     }
+    demo: {
+      enabled: boolean
+    }
     inbound: {
       configured: boolean
       presentVars: string[]
@@ -445,6 +448,31 @@ export default function ChannelsPage() {
                   </p>
                 )}
               </div>
+              {diagnostics?.email.demo?.enabled && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 sm:col-span-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-amber-700">{t('conversations.channelsPanel.demo.title')}</p>
+                      <p className="mt-1 text-sm text-slate-900">
+                        {t('conversations.channelsPanel.demo.active')}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {t('conversations.channelsPanel.demo.description')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleEmailSync}
+                      disabled={syncingInbox}
+                      className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                    >
+                      {syncingInbox ? '...' : t('conversations.channelsPanel.demo.syncButton')}
+                    </button>
+                  </div>
+                  {emailSyncMessage?.includes('demo') ? (
+                    <p className="mt-2 text-xs text-amber-700">{emailSyncMessage}</p>
+                  ) : null}
+                </div>
+              )}
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                 <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.test')}</p>
                 <div className="mt-2 flex gap-2">

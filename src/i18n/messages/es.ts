@@ -831,10 +831,22 @@ const es = {
         schedulerIdle: 'en espera',
         schedulerState: 'Estado {status} · cada {interval} min',
         schedulerHeartbeat: 'Ultimo heartbeat del servidor: {date}',
-        source: {
+source: {
           auto: 'Fuente: automatico',
           manual: 'Fuente: manual',
         },
+      },
+      demo: {
+        title: 'Modo Demo',
+        active: 'Activo',
+        inactive: 'Inactivo',
+        badge: 'Demo',
+        description: 'Este es un modo de demostración que no envía correos reales fuera del CRM.',
+        descriptionDisabled: 'Para activar el modo demo, configura la variable EMAIL_DEMO_MODE=true en Vercel.',
+        syncButton: 'Simular email entrante',
+        syncSuccess: 'Email demo simulado correctamente. No provino de un servidor externo real.',
+        testSuccess: 'Email demo generado correctamente. No se envió fuera del CRM.',
+        testError: 'No hay proveedor de email configurado y el modo demo está desactivado.',
       },
       whatsapp: {
         title: 'WhatsApp',

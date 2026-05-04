@@ -29,7 +29,7 @@ export interface EmailMetadata {
   email_references?: string[]
   email_thread_id?: string
   reply_type?: 'human' | 'auto'
-  email_delivery_provider?: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp' | 'microsoft_graph'
+  email_delivery_provider?: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp' | 'microsoft_graph' | 'email_demo'
   email_delivery_status?: 'pending' | 'sent' | 'failed'
   email_delivery_error?: string
   email_delivery_response?: string
@@ -39,7 +39,7 @@ export interface EmailMetadata {
 }
 
 export interface EmailDeliveryConfig {
-  provider: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp' | 'microsoft_graph'
+  provider: 'none' | 'resend' | 'sendgrid' | 'postmark' | 'smtp' | 'microsoft_graph' | 'email_demo'
   configured: boolean
   reason?: string
   smtp?: {
@@ -360,6 +360,42 @@ export function detectEmailDeliveryConfig(env: Record<string, string | undefined
     provider: 'none',
     configured: false,
     reason: 'No outbound email provider credentials were found in the server environment.',
+  }
+}
+
+export interface EmailDemoConfig {
+  enabled: boolean
+}
+
+export function detectEmailDemoConfig(env: Record<string, string | undefined>): EmailDemoConfig {
+  const enabled = env.EMAIL_DEMO_MODE?.trim() === 'true'
+  return { enabled }
+}
+
+export interface EmailDemoSendResult {
+  provider: 'email_demo'
+  status: 'sent'
+  messageId: string
+  simulated: boolean
+  delivered: boolean
+}
+
+export async function sendEmailViaDemo(params: {
+  to: string
+  subject: string
+  text: string
+  html?: string
+}): Promise<EmailDemoSendResult> {
+  const { to, subject, text, html } = params
+
+  const messageId = `<demo-${Date.now()}-${Math.random().toString(36).slice(2, 11)}@inmocrm.demo>`
+
+  return {
+    provider: 'email_demo',
+    status: 'sent',
+    messageId,
+    simulated: true,
+    delivered: false,
   }
 }
 

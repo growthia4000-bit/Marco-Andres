@@ -848,7 +848,7 @@ export default function ChannelsPage() {
                 <p className="text-xs uppercase tracking-wide text-slate-500">Configuración por Tenant</p>
                 <div className="mt-2 flex items-center gap-2 text-xs">
                   <span className={`inline-flex rounded-full px-2 py-1 ${diagnostics?.whatsapp.configSource === 'db_config' ? 'bg-emerald-100 text-emerald-800' : diagnostics?.whatsapp.configSource === 'env_fallback' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>
-                    {diagnostics?.whatsapp.configSource === 'db_config' ? 'DB Config' : diagnostics?.whatsapp.configSource === 'env_fallback' ? 'Env Fallback' : 'Sin Config'}
+                    {diagnostics?.whatsapp.configSource === 'db_config' ? t('conversations.whatsapp.configDb') : diagnostics?.whatsapp.configSource === 'env_fallback' ? t('conversations.whatsapp.configEnv') : t('conversations.whatsapp.configNone')}
                   </span>
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">

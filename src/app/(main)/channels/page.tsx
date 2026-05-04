@@ -290,16 +290,20 @@ export default function ChannelsPage() {
     setSyncingInbox(true)
     setEmailSyncMessage('')
     try {
-      const result = await syncEmailInboxAction() as { fetched: number; imported: number; skipped: number; duplicates: number; failed: number; threaded: number; created: number; irrelevant: number; reason?: string | null }
-      setEmailSyncMessage(t('conversations.channelsPanel.email.syncSuccess', {
-        fetched: result.fetched,
-        imported: result.imported,
-        skipped: result.skipped,
-        failed: result.failed,
-        threaded: result.threaded,
-        created: result.created,
-        irrelevant: result.irrelevant,
-      }))
+      const result = await syncEmailInboxAction() as { fetched: number; imported: number; skipped: number; duplicates: number; failed: number; threaded: number; created: number; irrelevant: number; reason?: string | null; simulated?: boolean }
+      if (result.simulated) {
+        setEmailSyncMessage(t('conversations.channelsPanel.demo.syncSuccess'))
+      } else {
+        setEmailSyncMessage(t('conversations.channelsPanel.email.syncSuccess', {
+          fetched: result.fetched,
+          imported: result.imported,
+          skipped: result.skipped,
+          failed: result.failed,
+          threaded: result.threaded,
+          created: result.created,
+          irrelevant: result.irrelevant,
+        }))
+      }
       await loadDiagnostics()
     } catch (e: unknown) {
       setEmailSyncMessage(e instanceof Error ? e.message : t('common.error'))

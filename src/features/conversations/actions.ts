@@ -1489,6 +1489,37 @@ async function performEmailInboxSync(args: {
   source: 'manual' | 'auto'
 }) {
   const { supabase, tenantId, actorUserId, source } = args
+  const demoConfig = detectEmailDemoConfig(process.env)
+
+  if (demoConfig.enabled) {
+    const emailGraphConfig = await getTenantEmailGraphConfig(supabase, tenantId)
+    const graphEnvConfig = detectMicrosoftGraphConfig(process.env)
+
+    if (emailGraphConfig?.access_token_encrypted && emailGraphConfig.status === 'active' && graphEnvConfig.configured && hasValidEncryptionKey()) {
+      const syncResult = await performEmailInboxSyncViaGraph({
+        supabase,
+        tenantId,
+        actorUserId,
+        source,
+        emailConfig: emailGraphConfig,
+        graphConfig: graphEnvConfig,
+      })
+
+      if (syncResult.success) {
+        return syncResult
+      }
+
+      console.warn('[email sync] Graph sync failed, falling back to Demo', { error: syncResult.error })
+    }
+
+    return performEmailInboxSyncViaDemo({
+      supabase,
+      tenantId,
+      actorUserId,
+      source,
+    })
+  }
+
   const graphEnvConfig = detectMicrosoftGraphConfig(process.env)
   const useGraph = graphEnvConfig.configured && hasValidEncryptionKey()
 

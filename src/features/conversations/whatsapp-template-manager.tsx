@@ -107,13 +107,14 @@ function templateStateKind(template: TemplateRecord): { kind: TemplateStateKind;
 }
 
 export function WhatsAppTemplateManager() {
-  const { t } = useI18n()
+  const { t, localeCode } = useI18n()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [search, setSearch] = useState('')
-  const [languageFilter, setLanguageFilter] = useState('all')
+  const [languageFilter, setLanguageFilter] = useState<string>(localeCode || 'es')
+  const [hasManualLanguageFilter, setHasManualLanguageFilter] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<'all' | TemplateStateKind>('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -143,6 +144,12 @@ export function WhatsAppTemplateManager() {
   useEffect(() => {
     void loadCatalog()
   }, [])
+
+  useEffect(() => {
+    if (!hasManualLanguageFilter && localeCode) {
+      setLanguageFilter(localeCode)
+    }
+  }, [localeCode, hasManualLanguageFilter])
 
   const filteredTemplates = useMemo(() => {
     return catalog.templates.filter((template) => {
@@ -438,7 +445,7 @@ export function WhatsAppTemplateManager() {
           placeholder={t('conversations.templateManager.filters.searchPlaceholder')}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
         />
-        <select value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+        <select value={languageFilter} onChange={(event) => { setLanguageFilter(event.target.value); setHasManualLanguageFilter(true); }} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
           <option value="all">{t('conversations.templateManager.filters.allLanguages')}</option>
           {languages.map((language) => <option key={language} value={language}>{language}</option>)}
         </select>
@@ -563,12 +570,10 @@ export function WhatsAppTemplateManager() {
       </div>
 
       {hasHorizontalOverflow && floatingScrollbar.visible ? (
-        <div className="pointer-events-none fixed bottom-4 z-40" style={{ left: floatingScrollbar.left, width: floatingScrollbar.width }}>
-          <div className="pointer-events-auto rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur">
-            <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">{t('conversations.templateManager.table.horizontalScroll')}</div>
-            <div ref={floatingScrollRef} className="overflow-x-auto overflow-y-hidden" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
-              <div style={{ width: tableScrollMetrics.scrollWidth, height: 1 }} />
-            </div>
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+          <div className="mb-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">{t('conversations.templateManager.table.horizontalScroll')}</div>
+          <div ref={floatingScrollRef} className="overflow-x-auto overflow-y-hidden" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
+            <div style={{ width: tableScrollMetrics.scrollWidth, height: 8 }} />
           </div>
         </div>
       ) : null}

@@ -498,7 +498,8 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
 
     for (let attempt = 0; attempt < MAX_AI_DRAFT_ATTEMPTS; attempt += 1) {
       try {
-        const { text } = await generateText({
+        const aiStartTime = Date.now()
+        const aiResult = await generateText({
           model: openrouter(AI_MODELS.balanced),
           system: copy.system,
           prompt: [
@@ -513,12 +514,29 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
           temperature: 0.4,
           maxOutputTokens: 420,
         })
+        const aiDuration = Date.now() - aiStartTime
+
+        const text = aiResult.text
+        console.log(`[lead ai email] attempt ${attempt + 1}: duration=${aiDuration}ms, textLength=${text?.length || 0}, textPreview=${text?.slice(0, 100)}`)
 
         lastRawText = text
         const parsed = parseDraft(text)
         lastParseStrategy = parsed ? 'json' : 'failed'
 
         if (!parsed) {
+          console.log(`[lead ai email] parse failed, trying aggressive`)
+          const aggressive = parseDraftAggressive(text)
+          if (aggressive) {
+            lastParseStrategy = 'aggressive'
+            if (!hasUnsafeDraftContent(aggressive.subject, aggressive.body)) {
+              return {
+                subject: aggressive.subject,
+                body: aggressive.body,
+                mode: 'ai',
+                source: `openrouter_balanced:${variant.key}:aggressive`,
+              }
+            }
+          }
           lastParseFailure = true
           continue
         }
@@ -536,6 +554,7 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
           source: `openrouter_balanced:${variant.key}`,
         }
       } catch (error) {
+        console.error(`[lead ai email] attempt ${attempt + 1} failed:`, error instanceof Error ? error.message : error)
         if (attempt === MAX_AI_DRAFT_ATTEMPTS - 1) {
           throw error
         }

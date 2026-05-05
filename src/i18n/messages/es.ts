@@ -984,6 +984,9 @@ source: {
       filters: {
         searchPlaceholder: 'Buscar por nombre o texto',
         allLanguages: 'Todos los idiomas',
+        langEs: 'Español',
+        langEn: 'Inglés',
+        langIt: 'Italiano',
         allCategories: 'Todas las categorías',
         allStatuses: 'Todos los estados',
         categoryMarketing: 'Marketing',

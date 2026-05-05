@@ -745,6 +745,9 @@ const en = {
       filters: {
         searchPlaceholder: 'Search by name or text',
         allLanguages: 'All languages',
+        langEs: 'Spanish',
+        langEn: 'English',
+        langIt: 'Italian',
         allCategories: 'All categories',
         allStatuses: 'All statuses',
         categoryMarketing: 'Marketing',

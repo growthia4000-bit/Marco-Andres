@@ -745,6 +745,9 @@ const it = {
       filters: {
         searchPlaceholder: 'Cerca per nome o testo',
         allLanguages: 'Tutte le lingue',
+        langEs: 'Spagnolo',
+        langEn: 'Inglese',
+        langIt: 'Italiano',
         allCategories: 'Tutte le categorie',
         allStatuses: 'Tutti gli stati',
         categoryMarketing: 'Marketing',

@@ -449,7 +449,11 @@ export function WhatsAppTemplateManager() {
         />
         <select value={languageFilter} onChange={(event) => { setLanguageFilter(event.target.value); setHasManualLanguageFilter(true); }} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
           <option value="all">{t('conversations.templateManager.filters.allLanguages')}</option>
-          {languages.map((language) => <option key={language} value={language}>{language}</option>)}
+          {languages.map((language) => (
+            <option key={language} value={language}>
+              {language.toLowerCase() === 'es' ? t('conversations.templateManager.filters.langEs') : language.toLowerCase() === 'en' ? t('conversations.templateManager.filters.langEn') : language.toLowerCase() === 'it' ? t('conversations.templateManager.filters.langIt') : language}
+            </option>
+          ))}
         </select>
         <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
           <option value="all">{t('conversations.templateManager.filters.allCategories')}</option>
@@ -570,6 +574,15 @@ export function WhatsAppTemplateManager() {
           </tbody>
         </table>
       </div>
+
+      {hasHorizontalOverflow ? (
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">{t('conversations.templateManager.table.horizontalScroll')}</span>
+          <div ref={floatingScrollRef} className="flex-1 cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
+            <div style={{ width: tableScrollMetrics.scrollWidth, height: 6 }} />
+          </div>
+        </div>
+      ) : null}
 
       {showEditor ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-8">

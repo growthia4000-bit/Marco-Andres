@@ -373,6 +373,12 @@ export default function LeadDetailPage() {
                     </div>
                   ) : null}
 
+                  {aiDraft && aiDraft.mode === 'ai' && aiDraftSource ? (
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      {aiDraftSource}
+                    </div>
+                  ) : null}
+
                   {aiDraftError ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{aiDraftError}</div> : null}
 
                   {generatingAiDraft ? (

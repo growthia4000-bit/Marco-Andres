@@ -515,44 +515,59 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
           maxOutputTokens: 420,
         })
         const aiDuration = Date.now() - aiStartTime
-
         const text = aiResult.text
-        console.log(`[lead ai email] attempt ${attempt + 1}: duration=${aiDuration}ms, textLength=${text?.length || 0}, textPreview=${text?.slice(0, 100)}`)
-
         lastRawText = text
+
+        console.log(`[lead ai email] attempt ${attempt + 1}: duration=${aiDuration}ms, textLength=${text?.length || 0}, textPreview="${text?.slice(0, 120).replace(/\n/g, ' ')}"`)
+
+        if (!text || text.trim().length < 40) {
+          console.log(`[lead ai email] text too short, continuing`)
+          continue
+        }
+
         const parsed = parseDraft(text)
         lastParseStrategy = parsed ? 'json' : 'failed'
 
-        if (!parsed) {
-          console.log(`[lead ai email] parse failed, trying aggressive`)
-          const aggressive = parseDraftAggressive(text)
-          if (aggressive) {
-            lastParseStrategy = 'aggressive'
-            if (!hasUnsafeDraftContent(aggressive.subject, aggressive.body)) {
-              return {
-                subject: aggressive.subject,
-                body: aggressive.body,
-                mode: 'ai',
-                source: `openrouter_balanced:${variant.key}:aggressive`,
-              }
+        if (parsed && !hasUnsafeDraftContent(parsed.subject, parsed.body)) {
+          console.log(`[lead ai email] parsed successfully with json`)
+          return {
+            subject: parsed.subject,
+            body: parsed.body,
+            mode: 'ai',
+            source: `openrouter_balanced:${variant.key}:json`,
+          }
+        }
+
+        const aggressive = parseDraftAggressive(text)
+        if (aggressive && !hasUnsafeDraftContent(aggressive.subject, aggressive.body)) {
+          console.log(`[lead ai email] parsed successfully with aggressive`)
+          lastParseStrategy = 'aggressive'
+          return {
+            subject: aggressive.subject,
+            body: aggressive.body,
+            mode: 'ai',
+            source: `openrouter_balanced:${variant.key}:aggressive`,
+          }
+        }
+
+        const trimmedText = text.trim()
+        const lines = trimmedText.split('\n').filter(l => l.trim().length > 0)
+        if (lines.length >= 1) {
+          const subject = (lines[0].length < 100 ? lines[0] : trimmedText.slice(0, 80)).trim() || 'Seguimiento de tu búsqueda'
+          const body = lines.length > 1 ? lines.slice(1).join('\n').trim() : trimmedText
+          if (body.length > 20 && !hasUnsafeDraftContent(subject, body)) {
+            console.log(`[lead ai email] using raw text fallback`)
+            lastParseStrategy = 'raw_text'
+            return {
+              subject,
+              body,
+              mode: 'ai',
+              source: `openrouter_balanced:${variant.key}:raw_text`,
             }
           }
-          lastParseFailure = true
-          continue
         }
 
-        if (hasUnsafeDraftContent(parsed.subject, parsed.body)) {
-          lastGuardrailFailure = true
-          lastParseStrategy = 'guardrail'
-          continue
-        }
-
-        return {
-          subject: parsed.subject,
-          body: parsed.body,
-          mode: 'ai',
-          source: `openrouter_balanced:${variant.key}`,
-        }
+        console.log(`[lead ai email] all parsing strategies failed, trying next attempt`)
       } catch (error) {
         console.error(`[lead ai email] attempt ${attempt + 1} failed:`, error instanceof Error ? error.message : error)
         if (attempt === MAX_AI_DRAFT_ATTEMPTS - 1) {
@@ -561,37 +576,21 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
       }
     }
 
-    // DEFENSE: If raw text has useful content (>40 chars), construct IA result from it
-    const usefulText = lastRawText.trim()
-    if (usefulText.length > 40) {
-      // Try to extract subject/body with aggressive parsing
-      const aggressiveParsed = parseDraftAggressive(usefulText)
-      if (aggressiveParsed && !hasUnsafeDraftContent(aggressiveParsed.subject, aggressiveParsed.body)) {
-        return {
-          subject: aggressiveParsed.subject,
-          body: aggressiveParsed.body,
-          mode: 'ai',
-          source: `openrouter_balanced:${variant.key}:aggressive_parse`,
-        }
-      }
-      // If aggressive parsing failed but we have useful text, use it directly
-      const lines = usefulText.split('\n').filter(l => l.trim().length > 0)
-      if (lines.length >= 1) {
-        const subject = lines[0].slice(0, 80).trim() || 'Seguimiento de tu búsqueda'
-        const body = lines.slice(1).join('\n').trim() || usefulText
-        if (body.length > 20 && !hasUnsafeDraftContent(subject, body)) {
-          return {
-            subject,
-            body,
-            mode: 'ai',
-            source: `openrouter_balanced:${variant.key}:raw_text_fallback`,
-          }
-        }
+    const finalText = lastRawText.trim()
+    if (finalText.length >= 40) {
+      console.log(`[lead ai email] FINAL DEFENSE: using raw text ${finalText.length} chars`)
+      const lines = finalText.split('\n').filter(l => l.trim().length > 0)
+      const subject = (lines[0]?.length < 100 ? lines[0] : finalText.slice(0, 80))?.trim() || 'Seguimiento de tu búsqueda'
+      const body = lines.length > 1 ? lines.slice(1).join('\n').trim() : finalText
+      return {
+        subject,
+        body,
+        mode: 'ai',
+        source: `openrouter_balanced:${variant.key}:final_defense`,
       }
     }
 
-    if (lastGuardrailFailure) return buildFallbackDraft(input, 'fallback_guardrail_error')
-    if (lastParseFailure) return buildFallbackDraft(input, `fallback_parse_error:${lastParseStrategy}`)
+    console.log(`[lead ai email] no useful text from OpenRouter, using fallback`)
     return buildFallbackDraft(input, 'fallback_ai_error:no_valid_output')
   } catch (error) {
     console.error('[lead ai email] generation failed', error)

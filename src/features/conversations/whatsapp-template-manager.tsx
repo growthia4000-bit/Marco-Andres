@@ -490,7 +490,7 @@ export function WhatsAppTemplateManager() {
 
       <div
         ref={tableScrollRef}
-        className="mt-4 overflow-x-auto rounded-xl border border-slate-200 pb-3"
+        className="mt-4 overflow-x-scroll rounded-xl border border-slate-200 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <table className="w-full min-w-[1480px] bg-white">
           <colgroup>

@@ -575,14 +575,12 @@ export function WhatsAppTemplateManager() {
         </table>
       </div>
 
-      {hasHorizontalOverflow ? (
-        <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">{t('conversations.templateManager.table.horizontalScroll')}</span>
-          <div ref={floatingScrollRef} className="flex-1 cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
-            <div style={{ width: tableScrollMetrics.scrollWidth, height: 6 }} />
-          </div>
+      <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 shrink-0">{t('conversations.templateManager.table.horizontalScroll')}</span>
+        <div ref={floatingScrollRef} className="flex-1 cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
+          <div style={{ width: Math.max(tableScrollMetrics.scrollWidth, 1480), height: 6 }} />
         </div>
-      ) : null}
+      </div>
 
       {showEditor ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-8">

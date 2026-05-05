@@ -237,9 +237,9 @@ export default function ChannelsPage() {
   const schedulerStatusLine = !diagnostics
     ? t('common.loading')
     : scheduler?.started && scheduler?.mechanism === 'server_process'
-    ? `${t('conversations.channelsPanel.email.schedulerServer')} · started`
+    ? t('conversations.channelsPanel.email.schedulerServer')
     : scheduler?.mechanism === 'server_process'
-    ? 'Server poller configured but not started in this process'
+    ? t('conversations.channelsPanel.email.schedulerDisabled')
     : scheduler?.mechanism === 'external_scheduler_only'
     ? t('conversations.channelsPanel.email.schedulerExternal')
     : diagnostics.runtimeError
@@ -327,7 +327,7 @@ export default function ChannelsPage() {
       fd.set('mode', waMode)
       fd.set('status', waStatus)
       await saveWhatsAppConfigAction(fd)
-      setWaConfigMessage('Configuración guardada correctamente')
+      setWaConfigMessage(t('conversations.channelsPanel.whatsapp.configSaved'))
       await loadDiagnostics()
     } catch (e: unknown) {
       setWaConfigMessage(e instanceof Error ? e.message : t('common.error'))
@@ -420,19 +420,19 @@ export default function ChannelsPage() {
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Microsoft Graph (OAuth)</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.graphTitle')}</p>
                     <p className="mt-1 text-sm text-slate-900">
                       {diagnostics?.email.graph?.dbConfig?.activeConfig
-                        ? `Conectado: ${diagnostics.email.graph.dbConfig.emailAddress || 'outlook.com'}`
-                        : 'No conectado'}
+                        ? t('conversations.channelsPanel.graphConnected', { email: diagnostics.email.graph.dbConfig.emailAddress || 'outlook.com' })
+                        : t('conversations.channelsPanel.graphNotConnected')}
                     </p>
                     {diagnostics?.email.graph?.dbConfig?.expiresAt && (
                       <p className="mt-1 text-xs text-slate-500">
-                        Token vence: {new Date(diagnostics.email.graph.dbConfig.expiresAt).toLocaleString('es-ES')}
+                        {t('conversations.channelsPanel.graphTokenExpires', { date: formatDate(diagnostics.email.graph.dbConfig.expiresAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) })}
                       </p>
                     )}
                     {diagnostics?.email.graph?.dbConfig?.requiresReconnect && (
-                      <p className="mt-1 text-xs text-rose-600">Requires reconnect</p>
+                      <p className="mt-1 text-xs text-rose-600">{t('conversations.channelsPanel.graphRequiresReconnect')}</p>
                     )}
                   </div>
                   {diagnostics?.email.graph?.configured && (
@@ -440,15 +440,15 @@ export default function ChannelsPage() {
                       href="/api/email/microsoft/connect"
                       className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
                     >
-                      Conectar Outlook
+                      {t('conversations.channelsPanel.graphConnectButton')}
                     </a>
                   )}
                 </div>
                 {(!diagnostics?.email.graph?.configured) && diagnostics?.email.graph && (
                   <p className="mt-2 text-xs text-slate-500">
                     {diagnostics.email.graph.missingVars?.length > 0
-                      ? `Faltan vars: ${diagnostics.email.graph.missingVars.join(', ')}`
-                      : 'Graph no habilitado'}
+                      ? t('conversations.channelsPanel.graphMissingVars', { vars: diagnostics.email.graph.missingVars.join(', ') })
+                      : t('conversations.channelsPanel.graphNotEnabled')}
                   </p>
                 )}
               </div>
@@ -523,96 +523,132 @@ export default function ChannelsPage() {
                     interval: String(Math.round((scheduler?.intervalMs || 0) / 60000)),
                   })}
                 </p>
-                {scheduler?.startedAt ? <p className="mt-1 text-xs text-slate-500">Started: {formatDate(scheduler.startedAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p> : null}
-                {scheduler?.lastStartedBy ? <p className="mt-1 text-xs text-slate-500">Trigger: {scheduler.lastStartedBy}</p> : null}
-                <p className="mt-1 text-xs text-slate-500">Ticks: {scheduler?.tickCount || 0}</p>
+                {scheduler?.startedAt ? <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.schedulerStarted', { date: formatDate(scheduler.startedAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }) })}</p> : null}
+                {scheduler?.lastStartedBy ? <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.schedulerTrigger', { source: scheduler.lastStartedBy })}</p> : null}
+                <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.schedulerTicks', { count: String(scheduler?.tickCount || 0) })}</p>
                 {scheduler?.lastHeartbeatAt ? <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.email.schedulerHeartbeat', { date: formatDate(scheduler.lastHeartbeatAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</p> : null}
                 {scheduler?.lastError ? <p className="mt-2 text-xs text-rose-600">{scheduler.lastError}</p> : null}
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
-                <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastTest')}</p>
-                <p className="mt-1 text-sm text-slate-900">{emailLatest?.line || t('conversations.channelsPanel.noData')}</p>
-                {emailLatest?.provider ? <p className="mt-1 text-xs text-slate-500">{t('conversations.delivery.provider', { provider: emailLatest.provider })}</p> : null}
-                {emailLatest?.error ? <p className="mt-2 text-xs text-rose-600">{emailLatest.error}</p> : null}
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
-                <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncAuto')}</p>
-                <p className="mt-1 text-sm text-slate-900">{emailInboundAuto?.line || t('conversations.channelsPanel.noData')}</p>
-                {emailInboundAuto?.source ? <p className="mt-1 text-xs text-slate-500">{t(`conversations.channelsPanel.email.source.${emailInboundAuto.source}`)}</p> : null}
-                {emailInboundAuto?.fetched !== null ? (
-                  <p className="mt-1 text-xs text-slate-500">
-                    {t('conversations.channelsPanel.email.syncStats', {
-                      fetched: emailInboundAuto?.fetched || 0,
-                      imported: emailInboundAuto?.imported || 0,
-                      skipped: emailInboundAuto?.skipped || 0,
-                      failed: emailInboundAuto?.failed || 0,
-                      threaded: emailInboundAuto?.threaded || 0,
-                      created: emailInboundAuto?.created || 0,
-                      irrelevant: emailInboundAuto?.irrelevant || 0,
-                    })}
-                  </p>
-                ) : null}
-                {emailInboundAutoImported && emailInboundAutoImported.date !== emailInboundAuto?.date ? (
-                  <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-                    <p className="font-medium">Ultima importacion automatica con actividad</p>
-                    <p className="mt-1">{emailInboundAutoImported.line}</p>
-                    <p className="mt-1">
-                      {t('conversations.channelsPanel.email.syncStats', {
-                        fetched: emailInboundAutoImported.fetched || 0,
-                        imported: emailInboundAutoImported.imported || 0,
-                        skipped: emailInboundAutoImported.skipped || 0,
-                        failed: emailInboundAutoImported.failed || 0,
-                        threaded: emailInboundAutoImported.threaded || 0,
-                        created: emailInboundAutoImported.created || 0,
-                        irrelevant: emailInboundAutoImported.irrelevant || 0,
-                      })}
-                    </p>
+              {diagnostics?.email.demo?.enabled ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:col-span-2">
+                  <p className="text-sm font-medium text-emerald-800">{t('conversations.channelsPanel.demoMainMessage')}</p>
+                </div>
+              ) : null}
+
+              {diagnostics?.email.demo?.enabled ? (
+                <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2 opacity-60">
+                  <summary className="cursor-pointer text-xs uppercase tracking-wide text-slate-500 select-none">{t('conversations.channelsPanel.technicalHistory')}</summary>
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastTest')}</p>
+                      <p className="mt-1 text-sm text-slate-900">{emailLatest?.line || t('conversations.channelsPanel.noData')}</p>
+                      {emailLatest?.provider ? <p className="mt-1 text-xs text-slate-500">{t('conversations.delivery.provider', { provider: emailLatest.provider })}</p> : null}
+                      {emailLatest?.error ? <p className="mt-2 text-xs text-rose-600">{emailLatest.error}</p> : null}
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncAuto')}</p>
+                      <p className="mt-1 text-sm text-slate-900">{emailInboundAuto?.line || t('conversations.channelsPanel.noData')}</p>
+                      {emailInboundAuto?.error ? <p className="mt-2 text-xs text-rose-600">{emailInboundAuto.error}</p> : null}
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncManual')}</p>
+                      <p className="mt-1 text-sm text-slate-900">{emailInboundManual?.line || t('conversations.channelsPanel.noData')}</p>
+                      {emailInboundManual?.error ? <p className="mt-2 text-xs text-rose-600">{emailInboundManual.error}</p> : null}
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSync')}</p>
+                      <p className="mt-1 text-sm text-slate-900">{emailInboundLatest?.line || t('conversations.channelsPanel.noData')}</p>
+                    </div>
                   </div>
-                ) : null}
-                {emailInboundAuto?.skippedReasons && Object.keys(emailInboundAuto.skippedReasons).length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    {Object.entries(emailInboundAuto.skippedReasons).map(([reason, count]) => (
-                      <span key={reason} className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-slate-700">
-                        {reason}: {String(count)}
-                      </span>
-                    ))}
+                </details>
+              ) : (
+                <>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastTest')}</p>
+                    <p className="mt-1 text-sm text-slate-900">{emailLatest?.line || t('conversations.channelsPanel.noData')}</p>
+                    {emailLatest?.provider ? <p className="mt-1 text-xs text-slate-500">{t('conversations.delivery.provider', { provider: emailLatest.provider })}</p> : null}
+                    {emailLatest?.error ? <p className="mt-2 text-xs text-rose-600">{emailLatest.error}</p> : null}
                   </div>
-                ) : null}
-                {emailInboundAuto?.failedReasons && Object.keys(emailInboundAuto.failedReasons).length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    {Object.entries(emailInboundAuto.failedReasons).map(([reason, count]) => (
-                      <span key={reason} className="inline-flex rounded-full bg-rose-100 px-2 py-1 text-rose-700">
-                        {reason}: {String(count)}
-                      </span>
-                    ))}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncAuto')}</p>
+                    <p className="mt-1 text-sm text-slate-900">{emailInboundAuto?.line || t('conversations.channelsPanel.noData')}</p>
+                    {emailInboundAuto?.source ? <p className="mt-1 text-xs text-slate-500">{t(`conversations.channelsPanel.email.source.${emailInboundAuto.source}`)}</p> : null}
+                    {emailInboundAuto?.fetched !== null ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {t('conversations.channelsPanel.email.syncStats', {
+                          fetched: emailInboundAuto?.fetched || 0,
+                          imported: emailInboundAuto?.imported || 0,
+                          skipped: emailInboundAuto?.skipped || 0,
+                          failed: emailInboundAuto?.failed || 0,
+                          threaded: emailInboundAuto?.threaded || 0,
+                          created: emailInboundAuto?.created || 0,
+                          irrelevant: emailInboundAuto?.irrelevant || 0,
+                        })}
+                      </p>
+                    ) : null}
+                    {emailInboundAutoImported && emailInboundAutoImported.date !== emailInboundAuto?.date ? (
+                      <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                        <p className="font-medium">{t('conversations.channelsPanel.lastAutoImport')}</p>
+                        <p className="mt-1">{emailInboundAutoImported.line}</p>
+                        <p className="mt-1">
+                          {t('conversations.channelsPanel.email.syncStats', {
+                            fetched: emailInboundAutoImported.fetched || 0,
+                            imported: emailInboundAutoImported.imported || 0,
+                            skipped: emailInboundAutoImported.skipped || 0,
+                            failed: emailInboundAutoImported.failed || 0,
+                            threaded: emailInboundAutoImported.threaded || 0,
+                            created: emailInboundAutoImported.created || 0,
+                            irrelevant: emailInboundAutoImported.irrelevant || 0,
+                          })}
+                        </p>
+                      </div>
+                    ) : null}
+                    {emailInboundAuto?.skippedReasons && Object.keys(emailInboundAuto.skippedReasons).length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                        {Object.entries(emailInboundAuto.skippedReasons).map(([reason, count]) => (
+                          <span key={reason} className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-slate-700">
+                            {reason}: {String(count)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {emailInboundAuto?.failedReasons && Object.keys(emailInboundAuto.failedReasons).length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                        {Object.entries(emailInboundAuto.failedReasons).map(([reason, count]) => (
+                          <span key={reason} className="inline-flex rounded-full bg-rose-100 px-2 py-1 text-rose-700">
+                            {reason}: {String(count)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {emailInboundAuto?.error ? <p className="mt-2 text-xs text-rose-600">{emailInboundAuto.error}</p> : null}
                   </div>
-                ) : null}
-                {emailInboundAuto?.error ? <p className="mt-2 text-xs text-rose-600">{emailInboundAuto.error}</p> : null}
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
-                <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncManual')}</p>
-                <p className="mt-1 text-sm text-slate-900">{emailInboundManual?.line || t('conversations.channelsPanel.noData')}</p>
-                {emailInboundManual?.source ? <p className="mt-1 text-xs text-slate-500">{t(`conversations.channelsPanel.email.source.${emailInboundManual.source}`)}</p> : null}
-                {emailInboundManual?.fetched !== null ? (
-                  <p className="mt-1 text-xs text-slate-500">
-                    {t('conversations.channelsPanel.email.syncStats', {
-                      fetched: emailInboundManual?.fetched || 0,
-                      imported: emailInboundManual?.imported || 0,
-                      skipped: emailInboundManual?.skipped || 0,
-                      failed: emailInboundManual?.failed || 0,
-                      threaded: emailInboundManual?.threaded || 0,
-                      created: emailInboundManual?.created || 0,
-                      irrelevant: emailInboundManual?.irrelevant || 0,
-                    })}
-                  </p>
-                ) : null}
-                {emailInboundManual?.error ? <p className="mt-2 text-xs text-rose-600">{emailInboundManual.error}</p> : null}
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
-                <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSync')}</p>
-                <p className="mt-1 text-sm text-slate-900">{emailInboundLatest?.line || t('conversations.channelsPanel.noData')}</p>
-                {emailInboundLatest?.source ? <p className="mt-1 text-xs text-slate-500">{t(`conversations.channelsPanel.email.source.${emailInboundLatest.source}`)}</p> : null}
-              </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncManual')}</p>
+                    <p className="mt-1 text-sm text-slate-900">{emailInboundManual?.line || t('conversations.channelsPanel.noData')}</p>
+                    {emailInboundManual?.source ? <p className="mt-1 text-xs text-slate-500">{t(`conversations.channelsPanel.email.source.${emailInboundManual.source}`)}</p> : null}
+                    {emailInboundManual?.fetched !== null ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {t('conversations.channelsPanel.email.syncStats', {
+                          fetched: emailInboundManual?.fetched || 0,
+                          imported: emailInboundManual?.imported || 0,
+                          skipped: emailInboundManual?.skipped || 0,
+                          failed: emailInboundManual?.failed || 0,
+                          threaded: emailInboundManual?.threaded || 0,
+                          created: emailInboundManual?.created || 0,
+                          irrelevant: emailInboundManual?.irrelevant || 0,
+                        })}
+                      </p>
+                    ) : null}
+                    {emailInboundManual?.error ? <p className="mt-2 text-xs text-rose-600">{emailInboundManual.error}</p> : null}
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSync')}</p>
+                    <p className="mt-1 text-sm text-slate-900">{emailInboundLatest?.line || t('conversations.channelsPanel.noData')}</p>
+                    {emailInboundLatest?.source ? <p className="mt-1 text-xs text-slate-500">{t(`conversations.channelsPanel.email.source.${emailInboundLatest.source}`)}</p> : null}
+                  </div>
+                </>
+              )}
             </div>
           </section>
 
@@ -628,46 +664,46 @@ export default function ChannelsPage() {
               {diagnostics?.whatsapp.configSource === 'db_config' && diagnostics?.whatsapp.dbConfig ? (
                 <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${toneClass(whatsappProductionTone)}`}>
                   {whatsappEnvironment === 'production'
-                    ? (diagnostics.whatsapp.dbConfig.productionReady ? 'Produccion lista' : 'Produccion pendiente')
-                    : 'Entorno de prueba'}
+                    ? (diagnostics.whatsapp.dbConfig.productionReady ? t('conversations.channelsPanel.whatsapp.productionReady') : t('conversations.channelsPanel.whatsapp.productionPending'))
+                    : t('conversations.channelsPanel.whatsapp.testEnvironment')}
                 </span>
               ) : diagnostics?.whatsapp.configSource === 'db_config' && diagnostics?.whatsapp.dbConfig?.canTest ? (
                 <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  Activa ✓
+                  {t('conversations.channelsPanel.whatsapp.activeActive')}
                 </span>
               ) : diagnostics?.whatsapp.configSource === 'env_fallback' ? (
                 <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                  Fallback
+                  {t('conversations.channelsPanel.whatsapp.fallback')}
                 </span>
               ) : (
                 <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700">
-                  Sin Configurar
+                  {t('conversations.channelsPanel.whatsapp.notConfigured')}
                 </span>
               )}
             </div>
 
             {diagnostics?.whatsapp.configSource === 'env_fallback' ? (
               <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                <strong>Modo compatibilidad:</strong> Usando configuración global (env vars). 
-                Configura tu WhatsApp propio abajo para usar tu propia cuenta de WhatsApp Business.
+                <strong>{t('conversations.channelsPanel.whatsapp.compatibilityModeTitle')}:</strong>{' '}
+                {t('conversations.channelsPanel.whatsapp.compatibilityModeDesc')}
               </div>
             ) : null}
 
             {diagnostics?.whatsapp.configSource === 'db_config' && !diagnostics?.whatsapp.dbConfig?.isComplete ? (
               <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-                <strong>Configuración incompleta:</strong> Falta el Access Token. 
-                Completa todos los campos y guarda para poder probar.
+                <strong>{t('conversations.channelsPanel.whatsapp.incompleteConfigTitle')}:</strong>{' '}
+                {t('conversations.channelsPanel.whatsapp.incompleteConfigDesc')}
               </div>
             ) : null}
 
             {diagnostics?.whatsapp.dbConfig ? (
               <div className={`mt-3 rounded-lg border px-4 py-3 text-sm ${toneClass(whatsappProductionTone)}`}>
-                <strong>Estado de producción WhatsApp:</strong>{' '}
+                <strong>{t('conversations.channelsPanel.whatsapp.productionStatusTitle')}:</strong>{' '}
                 {whatsappEnvironment === 'production'
                   ? (diagnostics.whatsapp.dbConfig.productionReady
-                    ? 'Configurado para Produccion real.'
-                    : 'Marcado como Produccion, pero todavia faltan validaciones antes de vender la app.')
-                  : 'Entorno de prueba. No listo para produccion hasta conectar un numero real de WhatsApp Business.'}
+                    ? t('conversations.channelsPanel.whatsapp.productionStatusDescReady')
+                    : t('conversations.channelsPanel.whatsapp.productionStatusDescPending'))
+                  : t('conversations.channelsPanel.whatsapp.productionStatusDescSandbox')}
               </div>
             ) : null}
 
@@ -676,62 +712,62 @@ export default function ChannelsPage() {
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Estado de producción WhatsApp</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.productionStatusTitle')}</p>
                       <p className="mt-1 text-sm font-medium text-slate-900">
-                        {whatsappEnvironment === 'production' ? 'Produccion real' : 'Sandbox / Test'}
+                        {whatsappEnvironment === 'production' ? t('conversations.channelsPanel.whatsapp.productionStatusReal') : t('conversations.channelsPanel.whatsapp.productionStatusSandbox')}
                       </p>
                     </div>
                     <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${toneClass(whatsappProductionTone)}`}>
-                      {diagnostics.whatsapp.dbConfig.productionReady ? 'Listo para produccion' : 'No listo para produccion'}
+                      {diagnostics.whatsapp.dbConfig.productionReady ? t('conversations.channelsPanel.whatsapp.productionReadyBadge') : t('conversations.channelsPanel.whatsapp.productionNotReadyBadge')}
                     </span>
                   </div>
                   <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Numero guardado en InmoCRM</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{diagnostics.whatsapp.dbConfig.displayPhoneNumber || 'No configurado'}</p>
-                      <p className="mt-1 text-xs text-slate-500">Phone Number ID: {diagnostics.whatsapp.dbConfig.phoneNumberId || 'No configurado'}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.numberSavedLabel')}</p>
+                      <p className="mt-1 text-sm font-medium text-slate-900">{diagnostics.whatsapp.dbConfig.displayPhoneNumber || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
+                      <p className="mt-1 text-xs text-slate-500">Phone Number ID: {diagnostics.whatsapp.dbConfig.phoneNumberId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Numero real devuelto por Meta</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaPhone?.displayPhoneNumber || 'No disponible'}</p>
-                      <p className="mt-1 text-xs text-slate-500">Verified name: {whatsappMetaPhone?.verifiedName || 'No disponible'}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.numberMetaLabel')}</p>
+                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaPhone?.displayPhoneNumber || t('conversations.channelsPanel.whatsapp.notAvailable')}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.whatsapp.verifiedNameLabel')}: {whatsappMetaPhone?.verifiedName || t('conversations.channelsPanel.whatsapp.notAvailable')}</p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">WABA activo</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaWaba?.name || diagnostics.whatsapp.dbConfig.businessAccountId || 'No configurado'}</p>
-                      <p className="mt-1 text-xs text-slate-500">ID: {whatsappMetaWaba?.id || diagnostics.whatsapp.dbConfig.businessAccountId || 'No configurado'}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.wabaActiveLabel')}</p>
+                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaWaba?.name || diagnostics.whatsapp.dbConfig.businessAccountId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
+                      <p className="mt-1 text-xs text-slate-500">ID: {whatsappMetaWaba?.id || diagnostics.whatsapp.dbConfig.businessAccountId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Calidad / verificacion</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaPhone?.qualityRating || 'No disponible'}</p>
-                      <p className="mt-1 text-xs text-slate-500">Code verification: {whatsappMetaPhone?.codeVerificationStatus || 'No disponible'}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.qualityLabel')}</p>
+                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaPhone?.qualityRating || t('conversations.channelsPanel.whatsapp.notAvailable')}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.whatsapp.codeVerification')}: {whatsappMetaPhone?.codeVerificationStatus || t('conversations.channelsPanel.whatsapp.notAvailable')}</p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Nombre / estado en Meta</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaPhone?.verifiedName || 'No disponible'}</p>
-                      <p className="mt-1 text-xs text-slate-500">Name status: {whatsappMetaPhone?.nameStatus || 'No disponible'}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.nameStatusLabel')}</p>
+                      <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaPhone?.verifiedName || t('conversations.channelsPanel.whatsapp.notAvailable')}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.whatsapp.nameStatus')}: {whatsappMetaPhone?.nameStatus || t('conversations.channelsPanel.whatsapp.notAvailable')}</p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Tipo de entorno</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.environmentType')}</p>
                       <p className={`mt-1 text-sm font-medium ${diagnostics.whatsapp.dbConfig.isTestNumber ? 'text-amber-700' : 'text-emerald-700'}`}>
-                        {diagnostics.whatsapp.dbConfig.isTestNumber ? 'Numero de prueba / sandbox' : 'Numero real de produccion'}
+                        {diagnostics.whatsapp.dbConfig.isTestNumber ? t('conversations.channelsPanel.whatsapp.testNumberLabel') : t('conversations.channelsPanel.whatsapp.realNumberLabel')}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">Access Token: {diagnostics.whatsapp.dbConfig.accessTokenConfigured ? 'Configurado' : 'Pendiente'}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.whatsapp.accessTokenStatus')}: {diagnostics.whatsapp.dbConfig.accessTokenConfigured ? t('conversations.channelsPanel.whatsapp.configured') : t('conversations.channelsPanel.whatsapp.pendingConfig')}</p>
                     </div>
                   </div>
                   {diagnostics.whatsapp.dbConfig.displayNumberMismatch ? (
                     <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-                      Advertencia: el numero guardado en InmoCRM no coincide con el numero real devuelto por Meta.
+                      {t('conversations.channelsPanel.whatsapp.numberMismatchWarning')}
                     </div>
                   ) : null}
                   {diagnostics.whatsapp.dbConfig.metaDiagnosticsError ? (
                     <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                      No se pudo validar Meta en tiempo real: {diagnostics.whatsapp.dbConfig.metaDiagnosticsError}
+                      {t('conversations.channelsPanel.whatsapp.metaDiagnosticsError')}: {diagnostics.whatsapp.dbConfig.metaDiagnosticsError}
                     </div>
                   ) : null}
                   {diagnostics.whatsapp.dbConfig.productionChecklist.length > 0 ? (
                     <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900">
-                      <p className="font-medium uppercase tracking-wide">Pendientes para produccion</p>
+                      <p className="font-medium uppercase tracking-wide">{t('conversations.channelsPanel.whatsapp.pendingForProduction')}</p>
                       <div className="mt-2 space-y-1">
                         {diagnostics.whatsapp.dbConfig.productionChecklist.map((item) => (
                           <p key={item}>- {item}</p>
@@ -743,26 +779,26 @@ export default function ChannelsPage() {
               ) : null}
 
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Fuente de Configuración</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.configSourceLabel')}</p>
                 <p className="mt-1 text-sm font-medium">
                   {diagnostics?.whatsapp.configSource === 'db_config' ? (
-                    <span className="text-emerald-700">Configuración del Tenant</span>
+                    <span className="text-emerald-700">{t('conversations.channelsPanel.whatsapp.tenantConfig')}</span>
                   ) : diagnostics?.whatsapp.configSource === 'env_fallback' ? (
-                    <span className="text-amber-700">Variables de Entorno (Compatibilidad)</span>
+                    <span className="text-amber-700">{t('conversations.channelsPanel.whatsapp.envVarsCompat')}</span>
                   ) : (
-                    <span className="text-slate-500">No configurado</span>
+                    <span className="text-slate-500">{t('conversations.channelsPanel.whatsapp.notConfigured')}</span>
                   )}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Estado</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.statusLabel')}</p>
                 <p className="mt-1 text-sm font-medium">
                   {!diagnostics?.whatsapp.dbConfig ? (
-                    <span className="text-slate-500">Sin registro</span>
+                    <span className="text-slate-500">{t('conversations.channelsPanel.whatsapp.noRecord')}</span>
                   ) : diagnostics?.whatsapp.dbConfig.status === 'active' ? (
-                    <span className="text-emerald-700">Activa</span>
+                    <span className="text-emerald-700">{t('conversations.channelsPanel.whatsapp.active')}</span>
                   ) : diagnostics?.whatsapp.dbConfig.status === 'pending' ? (
-                    <span className="text-amber-700">Pendiente</span>
+                    <span className="text-amber-700">{t('conversations.channelsPanel.whatsapp.pending')}</span>
                   ) : (
                     <span className="text-rose-700">{diagnostics?.whatsapp.dbConfig.status}</span>
                   )}
@@ -771,24 +807,24 @@ export default function ChannelsPage() {
               {diagnostics?.whatsapp.dbConfig?.activeConfig ? (
                 <>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Phone Number ID</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.phoneNumberId')}</p>
                     <p className="mt-1 text-xs font-mono text-slate-900 truncate">{diagnostics?.whatsapp.dbConfig.phoneNumberId}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Display Number</p>
-                    <p className="mt-1 text-sm font-medium text-slate-900">{diagnostics?.whatsapp.dbConfig.displayPhoneNumber || 'No configurado'}</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.displayNumber')}</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{diagnostics?.whatsapp.dbConfig.displayPhoneNumber || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Modo</p>
-                    <p className={`mt-1 text-sm font-medium ${diagnostics?.whatsapp.dbConfig.mode === 'production' ? 'text-emerald-700' : 'text-amber-700'}`}>{diagnostics?.whatsapp.dbConfig.mode === 'production' ? 'Producción' : 'Sandbox/Test'}</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.modeLabel')}</p>
+                    <p className={`mt-1 text-sm font-medium ${diagnostics?.whatsapp.dbConfig.mode === 'production' ? 'text-emerald-700' : 'text-amber-700'}`}>{diagnostics?.whatsapp.dbConfig.mode === 'production' ? t('conversations.channelsPanel.whatsapp.production') : t('conversations.channelsPanel.whatsapp.sandboxTest')}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Lista para Prueba</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.readyForTest')}</p>
                     <p className="mt-1 text-sm font-medium">
                       {diagnostics?.whatsapp.dbConfig.canTest ? (
-                        <span className="text-emerald-700">✓ Sí</span>
+                        <span className="text-emerald-700">✓ {t('conversations.channelsPanel.whatsapp.yes')}</span>
                       ) : (
-                        <span className="text-rose-700">✗ No</span>
+                        <span className="text-rose-700">✗ {t('conversations.channelsPanel.whatsapp.no')}</span>
                       )}
                     </p>
                   </div>
@@ -827,8 +863,8 @@ export default function ChannelsPage() {
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
                   {diagnostics?.whatsapp.configSource === 'db_config' 
-                    ? `Probando con: Configuración del Tenant (${diagnostics?.whatsapp.dbConfig?.mode})`
-                    : 'Probando con: Variables de entorno (fallback)'}
+                    ? t('conversations.channelsPanel.whatsapp.testingWith', { mode: diagnostics?.whatsapp.dbConfig?.mode || 'sandbox' })
+                    : t('conversations.channelsPanel.whatsapp.testingWithEnv')}
                 </p>
                 {whatsAppTestMessage ? <p className="mt-2 text-xs text-slate-600">{whatsAppTestMessage}</p> : null}
               </div>
@@ -845,42 +881,42 @@ export default function ChannelsPage() {
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Configuración por Tenant</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.configPerTenant')}</p>
                 <div className="mt-2 flex items-center gap-2 text-xs">
                   <span className={`inline-flex rounded-full px-2 py-1 ${diagnostics?.whatsapp.configSource === 'db_config' ? 'bg-emerald-100 text-emerald-800' : diagnostics?.whatsapp.configSource === 'env_fallback' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>
-                    {diagnostics?.whatsapp.configSource === 'db_config' ? t('conversations.whatsapp.configDb') : diagnostics?.whatsapp.configSource === 'env_fallback' ? t('conversations.whatsapp.configEnv') : t('conversations.whatsapp.configNone')}
+                    {diagnostics?.whatsapp.configSource === 'db_config' ? t('conversations.channelsPanel.whatsapp.configDb') : diagnostics?.whatsapp.configSource === 'env_fallback' ? t('conversations.channelsPanel.whatsapp.configEnv') : t('conversations.channelsPanel.whatsapp.configNone')}
                   </span>
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <input
                     value={waPhoneNumberId}
                     onChange={(e) => setWaPhoneNumberId(e.target.value)}
-                    placeholder="Phone Number ID (requerido)"
+                    placeholder={t('conversations.channelsPanel.whatsapp.phoneNumberIdPlaceholder')}
                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   />
                   <input
                     value={waDisplayPhone}
                     onChange={(e) => setWaDisplayPhone(e.target.value)}
-                    placeholder="Display Phone Number"
+                    placeholder={t('conversations.channelsPanel.whatsapp.displayPhonePlaceholder')}
                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   />
                   <input
                     value={waBusinessAccountId}
                     onChange={(e) => setWaBusinessAccountId(e.target.value)}
-                    placeholder="WhatsApp Business Account ID"
+                    placeholder={t('conversations.channelsPanel.whatsapp.businessAccountPlaceholder')}
                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   />
                   <input
                     value={waAccessToken}
                     onChange={(e) => setWaAccessToken(e.target.value)}
-                    placeholder="Access Token"
+                    placeholder={t('conversations.channelsPanel.whatsapp.accessToken')}
                     type="password"
                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   />
                   <input
                     value={waVerifyToken}
                     onChange={(e) => setWaVerifyToken(e.target.value)}
-                    placeholder="Verify Token"
+                    placeholder={t('conversations.channelsPanel.whatsapp.verifyToken')}
                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   />
                   <select
@@ -888,18 +924,18 @@ export default function ChannelsPage() {
                     onChange={(e) => setWaMode(e.target.value as 'sandbox' | 'production')}
                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="sandbox">Sandbox</option>
-                    <option value="production">Production</option>
+                    <option value="sandbox">{t('conversations.channelsPanel.whatsapp.modeSandbox')}</option>
+                    <option value="production">{t('conversations.channelsPanel.whatsapp.modeProduction')}</option>
                   </select>
                   <select
                     value={waStatus}
                     onChange={(e) => setWaStatus(e.target.value as 'pending' | 'active' | 'suspended' | 'disconnected')}
                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="pending">Pending</option>
-                    <option value="active">Active</option>
-                    <option value="suspended">Suspended</option>
-                    <option value="disconnected">Disconnected</option>
+                    <option value="pending">{t('conversations.channelsPanel.whatsapp.statusPending')}</option>
+                    <option value="active">{t('conversations.channelsPanel.whatsapp.statusActive')}</option>
+                    <option value="suspended">{t('conversations.channelsPanel.whatsapp.statusSuspended')}</option>
+                    <option value="disconnected">{t('conversations.channelsPanel.whatsapp.statusDisconnected')}</option>
                   </select>
                 </div>
                 <div className="mt-3">
@@ -908,7 +944,7 @@ export default function ChannelsPage() {
                     disabled={savingWaConfig || !waPhoneNumberId.trim()}
                     className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
                   >
-                    {savingWaConfig ? '...' : 'Guardar Configuración'}
+                    {savingWaConfig ? '...' : t('conversations.channelsPanel.whatsapp.saveConfig')}
                   </button>
                 </div>
                 {waConfigMessage ? <p className="mt-2 text-xs text-slate-600">{waConfigMessage}</p> : null}

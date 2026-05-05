@@ -540,7 +540,7 @@ const it = {
       },
       type: {
         text: 'Testo libero',
-        template: 'Template',
+        template: 'Modello',
       },
     },
     channelsPanel: {
@@ -554,7 +554,7 @@ const it = {
       incomplete: 'Incompleto',
       badges: { incomplete: 'Incompleto' },
       fields: {
-        provider: 'Provider',
+        provider: 'Fornitore',
         validation: 'Stato',
         mode: 'Modalita',
         freeText: 'Testo libero',
@@ -562,7 +562,7 @@ const it = {
         lastTest: 'Ultimo test controllato',
         envStatus: 'Variabili rilevate',
         test: 'Test controllato',
-        inboundConfig: 'Config inbound IMAP',
+        inboundConfig: 'Configurazione IMAP in ingresso',
         inboundSync: 'Sincronizzazione inbox',
         lastInboundSync: 'Ultima sincronizzazione inbound',
         lastInboundSyncAuto: 'Ultima sincronizzazione automatica',
@@ -729,7 +729,7 @@ const it = {
       demoMainMessage: 'Email demo simulata correttamente',
     },
     templateManager: {
-      title: 'Template WhatsApp',
+      title: 'Modelli WhatsApp',
       subtitle: 'Gestisci il catalogo interno, pubblica su Meta e sincronizza gli stati reali senza lavorare a mano.',
       actions: {
         publishSelected: 'Pubblica selezionati',

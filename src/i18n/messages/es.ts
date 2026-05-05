@@ -801,7 +801,7 @@ const es = {
         lastTest: 'Ultima prueba controlada',
         envStatus: 'Variables detectadas',
         test: 'Prueba controlada',
-        inboundConfig: 'Configuracion inbound IMAP',
+        inboundConfig: 'Configuración IMAP entrante',
         inboundSync: 'Sincronizacion inbox',
         lastInboundSync: 'Ultima sincronizacion inbound',
         lastInboundSyncAuto: 'Ultima sincronizacion automatica',
@@ -814,8 +814,8 @@ const es = {
       email: {
         title: 'Email SMTP',
         badge: 'Verificado',
-        copy: 'Canal de salida validado en la practica con entrega real a bandeja.',
-        validation: 'Verificado en practica',
+        copy: 'Canal de salida validado en la práctica con entrega real a bandeja.',
+        validation: 'Verificado en práctica',
         production: 'No hay bloqueador funcional confirmado. Mantener credenciales, remitente valido y monitoreo operativo.',
         testButton: 'Probar email',
         testPlaceholder: 'destinatario@email.com',
@@ -993,7 +993,7 @@ source: {
       stats: {
         total: 'Total: {count}',
         baseKeys: 'Claves base: {count}',
-        usables: 'Usables: {count}',
+        usables: 'Utilizables: {count}',
         pending: 'Pendientes: {count}',
         activeSender: 'Emisor activo: {sender}',
         noActiveConfig: 'Sin configuración activa de WhatsApp para publicar',

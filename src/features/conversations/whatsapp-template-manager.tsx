@@ -538,7 +538,7 @@ export function WhatsAppTemplateManager() {
                   </td>
                   <td className="px-4 py-4 align-top">
                     <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(state.tone)}`}>{t(`conversations.templateManager.states.${state.kind}`)}</span>
-                    <div className="mt-2 text-xs text-slate-500">{t('conversations.templateManager.table.internal', { status: template.status })}</div>
+                    <div className="mt-2 text-xs text-slate-500">{t('conversations.templateManager.table.internal', { status: template.status === 'draft' ? t('conversations.channelsPanel.ui.statusDraft') : template.status })}</div>
                     <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.active', { value: template.is_active ? t('conversations.templateManager.table.yes') : t('conversations.templateManager.table.no') })}</div>
                   </td>
                   <td className="px-4 py-4 align-top text-sm text-slate-700">

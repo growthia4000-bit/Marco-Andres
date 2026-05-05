@@ -725,7 +725,7 @@ export default function ChannelsPage() {
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.numberSavedLabel')}</p>
                       <p className="mt-1 text-sm font-medium text-slate-900">{diagnostics.whatsapp.dbConfig.displayPhoneNumber || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
-                      <p className="mt-1 text-xs text-slate-500">Phone Number ID: {diagnostics.whatsapp.dbConfig.phoneNumberId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.ui.phoneNumberIdLabel')}: {diagnostics.whatsapp.dbConfig.phoneNumberId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.numberMetaLabel')}</p>
@@ -735,7 +735,7 @@ export default function ChannelsPage() {
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.wabaActiveLabel')}</p>
                       <p className="mt-1 text-sm font-medium text-slate-900">{whatsappMetaWaba?.name || diagnostics.whatsapp.dbConfig.businessAccountId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
-                      <p className="mt-1 text-xs text-slate-500">ID: {whatsappMetaWaba?.id || diagnostics.whatsapp.dbConfig.businessAccountId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.ui.wabaIdLabel')}: {whatsappMetaWaba?.id || diagnostics.whatsapp.dbConfig.businessAccountId || t('conversations.channelsPanel.whatsapp.notConfiguredShort')}</p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                       <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.whatsapp.qualityLabel')}</p>

@@ -158,6 +158,27 @@ function summarizeLatestTest(t: (key: string, vars?: Record<string, string | num
   }
 }
 
+function translateProductionChecklistItem(item: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
+  const translations: Record<string, Record<string, string>> = {
+    'Cambiar el modo del canal a Produccion cuando el numero real este aprobado.': {
+      es: 'Cambiar el modo del canal a Producción cuando el número real esté aprobado.',
+      en: 'Change the channel mode to Production once the real number is approved.',
+      it: 'Cambiare la modalità del canale a Produzione quando il numero reale sarà approvato.',
+    },
+    'Validar en Meta el numero real para confirmar display number, verified name y quality rating.': {
+      es: 'Validar en Meta el número real para confirmar display number, verified name y quality rating.',
+      en: 'Validate the real number in Meta to confirm display number, verified name, and quality rating.',
+      it: 'Validare in Meta il numero reale per confermare display number, verified name e quality rating.',
+    },
+  }
+  const currentLocale = t('common.localeCode') || 'es'
+  const locale = currentLocale.split('-')[0]
+  if (translations[item] && translations[item][locale]) {
+    return translations[item][locale]
+  }
+  return item
+}
+
 export default function ChannelsPage() {
   const { t, formatDate } = useI18n()
   const [loading, setLoading] = useState(true)
@@ -770,7 +791,7 @@ export default function ChannelsPage() {
                       <p className="font-medium uppercase tracking-wide">{t('conversations.channelsPanel.whatsapp.pendingForProduction')}</p>
                       <div className="mt-2 space-y-1">
                         {diagnostics.whatsapp.dbConfig.productionChecklist.map((item) => (
-                          <p key={item}>- {item}</p>
+                          <p key={item}>- {translateProductionChecklistItem(item, t)}</p>
                         ))}
                       </div>
                     </div>

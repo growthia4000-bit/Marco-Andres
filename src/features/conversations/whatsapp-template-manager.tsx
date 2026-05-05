@@ -147,11 +147,13 @@ export function WhatsAppTemplateManager() {
 
   useEffect(() => {
     if (!hasManualLanguageFilter && localeCode) {
-      setLanguageFilter(localeCode)
+      const normalizedLocale = localeCode.split('-')[0].toLowerCase()
+      setLanguageFilter(normalizedLocale)
     }
   }, [localeCode, hasManualLanguageFilter])
 
   const filteredTemplates = useMemo(() => {
+    const normalizedLanguageFilter = languageFilter === 'all' ? 'all' : languageFilter.toLowerCase()
     return catalog.templates.filter((template) => {
       const state = templateStateKind(template)
       const baseTemplateKey = getBaseTemplateKey(template.template_key)
@@ -160,7 +162,7 @@ export function WhatsAppTemplateManager() {
         || baseTemplateKey.toLowerCase().includes(search.toLowerCase())
         || template.meta_template_name.toLowerCase().includes(search.toLowerCase())
         || template.body_text.toLowerCase().includes(search.toLowerCase())
-      const matchesLanguage = languageFilter === 'all' || template.language_code === languageFilter
+      const matchesLanguage = normalizedLanguageFilter === 'all' || template.language_code.toLowerCase() === normalizedLanguageFilter
       const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter
       const matchesStatus = statusFilter === 'all' || state.kind === statusFilter
       return matchesSearch && matchesLanguage && matchesCategory && matchesStatus
@@ -568,15 +570,6 @@ export function WhatsAppTemplateManager() {
           </tbody>
         </table>
       </div>
-
-      {hasHorizontalOverflow && floatingScrollbar.visible ? (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-          <div className="mb-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">{t('conversations.templateManager.table.horizontalScroll')}</div>
-          <div ref={floatingScrollRef} className="overflow-x-auto overflow-y-hidden" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
-            <div style={{ width: tableScrollMetrics.scrollWidth, height: 8 }} />
-          </div>
-        </div>
-      ) : null}
 
       {showEditor ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-8">

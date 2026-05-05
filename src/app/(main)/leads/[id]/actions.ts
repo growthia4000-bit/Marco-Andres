@@ -253,10 +253,13 @@ function hasUnsafeDraftContent(subject: string, body: string) {
   return UNSAFE_DRAFT_PATTERNS.some((pattern) => pattern.test(combined))
 }
 
-function parseDraft(text: string) {
-  // Try to parse the whole text as JSON first
+function parseDraft(text: string): { subject: string; body: string } | null {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+
+  // 1. Try to parse the whole text as JSON first
   try {
-    const json = JSON.parse(text) as { subject?: string; body?: string }
+    const json = JSON.parse(trimmed) as { subject?: string; body?: string }
     if (safeTrim(json.subject) && safeTrim(json.body)) {
       return {
         subject: safeTrim(json.subject),
@@ -264,24 +267,68 @@ function parseDraft(text: string) {
       }
     }
   } catch {
-    // If fails, try to extract JSON object from the text
+    // If fails, continue
   }
 
-  // Fallback: find the first '{' and the last '}' and try to parse that substring
-  const firstBrace = text.indexOf('{')
-  const lastBrace = text.lastIndexOf('}')
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) return null
+  // 2. Try to extract JSON from markdown code blocks ```json ... ```
+  const markdownMatch = trimmed.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/)
+  if (markdownMatch) {
+    try {
+      const json = JSON.parse(markdownMatch[1]) as { subject?: string; body?: string }
+      if (safeTrim(json.subject) && safeTrim(json.body)) {
+        return {
+          subject: safeTrim(json.subject),
+          body: safeTrim(json.body),
+        }
+      }
+    } catch {
+      // Continue
+    }
+  }
 
-  try {
-    const json = JSON.parse(text.slice(firstBrace, lastBrace + 1)) as { subject?: string; body?: string }
-    if (safeTrim(json.subject) && safeTrim(json.body)) {
+  // 3. Try to find JSON object between first { and last }
+  const firstBrace = trimmed.indexOf('{')
+  const lastBrace = trimmed.lastIndexOf('}')
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      const json = JSON.parse(trimmed.slice(firstBrace, lastBrace + 1)) as { subject?: string; body?: string }
+      if (safeTrim(json.subject) && safeTrim(json.body)) {
+        return {
+          subject: safeTrim(json.subject),
+          body: safeTrim(json.body),
+        }
+      }
+    } catch {
+      // Continue
+    }
+  }
+
+  // 4. Try to extract subject/body from patterns like "Subject: ..." or "body:" (case insensitive)
+  const subjectMatch = trimmed.match(/(?:subject|asunto|oggetto):\s*(.+?)(?:\n|$)/i)
+  const bodyStartMatch = trimmed.match(/(?:body|cuerpo|testo|contenido):\s*([\s\S]*)/i)
+
+  if (subjectMatch && bodyStartMatch) {
+    const subject = safeTrim(subjectMatch[1])
+    const body = safeTrim(bodyStartMatch[1])
+    if (subject && body) {
+      return { subject, body }
+    }
+  }
+
+  // 5. Defensive fallback: if there's any useful text, try to use it
+  // Split by lines and look for substantial content
+  const lines = trimmed.split('\n').filter(line => line.trim().length > 0)
+  if (lines.length >= 2) {
+    // Use first line as subject (if short enough), rest as body
+    const firstLine = lines[0].trim()
+    const restLines = lines.slice(1).join('\n').trim()
+
+    if (firstLine && restLines && firstLine.length < 100 && restLines.length > 20) {
       return {
-        subject: safeTrim(json.subject),
-        body: safeTrim(json.body),
+        subject: firstLine,
+        body: restLines,
       }
     }
-  } catch {
-    return null
   }
 
   return null

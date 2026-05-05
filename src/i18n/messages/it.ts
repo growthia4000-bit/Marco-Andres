@@ -607,7 +607,9 @@ const it = {
         syncButton: 'Simula email in arrivo',
         syncSuccess: 'Email demo simulata correttamente. Non proveniva da un server esterno reale.',
         testSuccess: 'Email demo generata correttamente. Non è stata inviata fuori dal CRM.',
+        testSuccessDemo: 'Test email demo registrato correttamente. Nessuna email reale è stata inviata fuori dal CRM.',
         testError: 'Nessun provider email configurato e la modalità demo è disattivata.',
+        testErrorDemo: 'Impossibile completare il test in modalità demo. Verifica la configurazione.',
       },
       whatsapp: {
         title: 'WhatsApp',

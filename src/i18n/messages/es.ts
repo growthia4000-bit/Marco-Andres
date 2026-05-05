@@ -846,7 +846,9 @@ source: {
         syncButton: 'Simular email entrante',
         syncSuccess: 'Email demo simulado correctamente. No provino de un servidor externo real.',
         testSuccess: 'Email demo generado correctamente. No se envió fuera del CRM.',
+        testSuccessDemo: 'Prueba de email demo registrada correctamente. No se envió un correo real fuera del CRM.',
         testError: 'No hay proveedor de email configurado y el modo demo está desactivado.',
+        testErrorDemo: 'No se pudo completar la prueba en modo demo. Verifica la configuración.',
       },
       whatsapp: {
         title: 'WhatsApp',

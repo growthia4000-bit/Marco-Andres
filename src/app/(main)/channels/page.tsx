@@ -266,18 +266,28 @@ export default function ChannelsPage() {
     ? diagnostics.runtimeError
     : t('conversations.channelsPanel.email.schedulerDisabled')
 
-  async function handleEmailTest() {
+async function handleEmailTest() {
     if (!emailTo.trim()) return
     setSendingEmail(true)
     setEmailTestMessage('')
     try {
       const fd = new FormData()
       fd.set('to', emailTo.trim())
-      await testEmailChannelAction(fd)
-      setEmailTestMessage(t('conversations.channelsPanel.email.testSuccess'))
+      const result = await testEmailChannelAction(fd) as { demo?: boolean; ok?: boolean; message?: string } | undefined
+      if (result?.demo) {
+        setEmailTestMessage(t('conversations.channelsPanel.email.testSuccessDemo'))
+      } else {
+        setEmailTestMessage(t('conversations.channelsPanel.email.testSuccess'))
+      }
       await loadDiagnostics()
     } catch (e: unknown) {
-      setEmailTestMessage(e instanceof Error ? e.message : t('common.error'))
+      const errorMessage = e instanceof Error ? e.message : t('common.error')
+      const demoModeError = errorMessage.toLowerCase().includes('smtp') || errorMessage.toLowerCase().includes('demo') || errorMessage.toLowerCase().includes('config')
+      if (demoModeError && diagnostics?.email.demo?.enabled) {
+        setEmailTestMessage(t('conversations.channelsPanel.email.testErrorDemo'))
+      } else {
+        setEmailTestMessage(t('conversations.channelsPanel.email.testError'))
+      }
       await loadDiagnostics()
     } finally {
       setSendingEmail(false)

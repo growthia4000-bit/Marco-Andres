@@ -275,7 +275,7 @@ async function handleEmailTest() {
       fd.set('to', emailTo.trim())
       const result = await testEmailChannelAction(fd) as { demo?: boolean; ok?: boolean; message?: string } | undefined
       if (result?.demo) {
-        setEmailTestMessage(t('conversations.channelsPanel.email.testSuccessDemo'))
+        setEmailTestMessage(t('conversations.channelsPanel.demo.testSuccessDemo'))
       } else {
         setEmailTestMessage(t('conversations.channelsPanel.email.testSuccess'))
       }
@@ -284,9 +284,9 @@ async function handleEmailTest() {
       const errorMessage = e instanceof Error ? e.message : t('common.error')
       const demoModeError = errorMessage.toLowerCase().includes('smtp') || errorMessage.toLowerCase().includes('demo') || errorMessage.toLowerCase().includes('config')
       if (demoModeError && diagnostics?.email.demo?.enabled) {
-        setEmailTestMessage(t('conversations.channelsPanel.email.testErrorDemo'))
+        setEmailTestMessage(t('conversations.channelsPanel.demo.testErrorDemo'))
       } else {
-        setEmailTestMessage(t('conversations.channelsPanel.email.testError'))
+        setEmailTestMessage(t('conversations.channelsPanel.demo.testError'))
       }
       await loadDiagnostics()
     } finally {

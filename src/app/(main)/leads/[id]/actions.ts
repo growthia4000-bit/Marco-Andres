@@ -334,6 +334,52 @@ function parseDraft(text: string): { subject: string; body: string } | null {
   return null
 }
 
+function parseDraftAggressive(text: string): { subject: string; body: string } | null {
+  const trimmed = text.trim()
+  if (!trimmed || trimmed.length < 20) return null
+
+  // Try to find any JSON-like structure with subject/body
+  const jsonPatterns = [
+    /"subject"\s*:\s*"([^"]+)"/i,
+    /"asunto"\s*:\s*"([^"]+)"/i,
+    /"oggetto"\s*:\s*"([^"]+)"/i,
+  ]
+
+  const bodyPatterns = [
+    /"body"\s*:\s*"([\s\S]*?)"\s*[,}]/i,
+    /"cuerpo"\s*:\s*"([\s\S]*?)"\s*[,}]/i,
+    /"testo"\s*:\s*"([\s\S]*?)"\s*[,}]/i,
+  ]
+
+  for (const subjPattern of jsonPatterns) {
+    const subjMatch = trimmed.match(subjPattern)
+    if (subjMatch) {
+      for (const bodyPattern of bodyPatterns) {
+        const bodyMatch = trimmed.match(bodyPattern)
+        if (bodyMatch) {
+          const subject = safeTrim(subjMatch[1])
+          const body = safeTrim(bodyMatch[1])
+          if (subject && body && body.length > 20) {
+            return { subject, body }
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback: split by first paragraph break
+  const lines = trimmed.split('\n').filter(l => l.trim().length > 0)
+  if (lines.length >= 2) {
+    const firstLine = lines[0].trim()
+    const rest = lines.slice(1).join('\n').trim()
+    if (firstLine.length < 100 && rest.length > 30) {
+      return { subject: firstLine, body: rest }
+    }
+  }
+
+  return null
+}
+
 function buildSpanishFallbackBody(args: {
   copy: (typeof COPY)['es']
   name: string
@@ -447,6 +493,9 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
     let lastParseFailure = false
     let lastGuardrailFailure = false
 
+    let lastRawText = ''
+    let lastParseStrategy = 'none'
+
     for (let attempt = 0; attempt < MAX_AI_DRAFT_ATTEMPTS; attempt += 1) {
       try {
         const { text } = await generateText({
@@ -465,7 +514,10 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
           maxOutputTokens: 420,
         })
 
+        lastRawText = text
         const parsed = parseDraft(text)
+        lastParseStrategy = parsed ? 'json' : 'failed'
+
         if (!parsed) {
           lastParseFailure = true
           continue
@@ -473,6 +525,7 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
 
         if (hasUnsafeDraftContent(parsed.subject, parsed.body)) {
           lastGuardrailFailure = true
+          lastParseStrategy = 'guardrail'
           continue
         }
 
@@ -489,8 +542,37 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
       }
     }
 
+    // DEFENSE: If raw text has useful content (>40 chars), construct IA result from it
+    const usefulText = lastRawText.trim()
+    if (usefulText.length > 40) {
+      // Try to extract subject/body with aggressive parsing
+      const aggressiveParsed = parseDraftAggressive(usefulText)
+      if (aggressiveParsed && !hasUnsafeDraftContent(aggressiveParsed.subject, aggressiveParsed.body)) {
+        return {
+          subject: aggressiveParsed.subject,
+          body: aggressiveParsed.body,
+          mode: 'ai',
+          source: `openrouter_balanced:${variant.key}:aggressive_parse`,
+        }
+      }
+      // If aggressive parsing failed but we have useful text, use it directly
+      const lines = usefulText.split('\n').filter(l => l.trim().length > 0)
+      if (lines.length >= 1) {
+        const subject = lines[0].slice(0, 80).trim() || 'Seguimiento de tu búsqueda'
+        const body = lines.slice(1).join('\n').trim() || usefulText
+        if (body.length > 20 && !hasUnsafeDraftContent(subject, body)) {
+          return {
+            subject,
+            body,
+            mode: 'ai',
+            source: `openrouter_balanced:${variant.key}:raw_text_fallback`,
+          }
+        }
+      }
+    }
+
     if (lastGuardrailFailure) return buildFallbackDraft(input, 'fallback_guardrail_error')
-    if (lastParseFailure) return buildFallbackDraft(input, 'fallback_parse_error')
+    if (lastParseFailure) return buildFallbackDraft(input, `fallback_parse_error:${lastParseStrategy}`)
     return buildFallbackDraft(input, 'fallback_ai_error:no_valid_output')
   } catch (error) {
     console.error('[lead ai email] generation failed', error)

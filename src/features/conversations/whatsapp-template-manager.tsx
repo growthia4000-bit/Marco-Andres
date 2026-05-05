@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Archive, Copy, Plus, RefreshCw, SendHorizonal, XCircle } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider'
 import { buildDefaultVariablesSchema, countTemplateVariables, getBaseTemplateKey, slugifyTemplateKey } from './whatsapp-templates'
 import { duplicateTenantWhatsAppTemplateAction, getTenantWhatsAppTemplatesAction, publishTenantWhatsAppTemplatesAction, saveTenantWhatsAppTemplateAction, syncTenantWhatsAppTemplatesAction, toggleTenantWhatsAppTemplateArchiveAction } from './actions'
 
@@ -95,15 +96,18 @@ function badgeClass(kind: 'usable' | 'pending' | 'rejected' | 'draft' | 'archive
   }
 }
 
-function templateStateLabel(template: TemplateRecord) {
-  if (!template.is_active || template.status === 'archived') return { label: 'Archivada', tone: 'archived' as const }
-  if (template.usable) return { label: 'Usable', tone: 'usable' as const }
-  if (template.meta_status === 'REJECTED' || template.status === 'rejected') return { label: 'Rechazada', tone: 'rejected' as const }
-  if (template.meta_status || template.status === 'pending_meta' || template.status === 'in_review') return { label: 'Pendiente Meta', tone: 'pending' as const }
-  return { label: 'Solo CRM', tone: 'draft' as const }
+type TemplateStateKind = 'archived' | 'usable' | 'rejected' | 'pendingMeta' | 'crmOnly'
+
+function templateStateKind(template: TemplateRecord): { kind: TemplateStateKind; tone: 'usable' | 'pending' | 'rejected' | 'draft' | 'archived' } {
+  if (!template.is_active || template.status === 'archived') return { kind: 'archived', tone: 'archived' }
+  if (template.usable) return { kind: 'usable', tone: 'usable' }
+  if (template.meta_status === 'REJECTED' || template.status === 'rejected') return { kind: 'rejected', tone: 'rejected' }
+  if (template.meta_status || template.status === 'pending_meta' || template.status === 'in_review') return { kind: 'pendingMeta', tone: 'pending' }
+  return { kind: 'crmOnly', tone: 'draft' }
 }
 
 export function WhatsAppTemplateManager() {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -111,7 +115,7 @@ export function WhatsAppTemplateManager() {
   const [search, setSearch] = useState('')
   const [languageFilter, setLanguageFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | TemplateStateKind>('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [catalog, setCatalog] = useState<TemplateCatalogResponse>({ templates: [], activeConfig: null })
   const [showEditor, setShowEditor] = useState(false)
@@ -130,7 +134,7 @@ export function WhatsAppTemplateManager() {
       setCatalog(response)
       setError('')
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'No se pudo cargar el catálogo de plantillas')
+      setError(loadError instanceof Error ? loadError.message : t('conversations.templateManager.messages.loadError'))
     } finally {
       setLoading(false)
     }
@@ -142,7 +146,7 @@ export function WhatsAppTemplateManager() {
 
   const filteredTemplates = useMemo(() => {
     return catalog.templates.filter((template) => {
-      const state = templateStateLabel(template)
+      const state = templateStateKind(template)
       const baseTemplateKey = getBaseTemplateKey(template.template_key)
       const matchesSearch = !search.trim()
         || template.template_key.toLowerCase().includes(search.toLowerCase())
@@ -151,7 +155,7 @@ export function WhatsAppTemplateManager() {
         || template.body_text.toLowerCase().includes(search.toLowerCase())
       const matchesLanguage = languageFilter === 'all' || template.language_code === languageFilter
       const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter
-      const matchesStatus = statusFilter === 'all' || state.label === statusFilter
+      const matchesStatus = statusFilter === 'all' || state.kind === statusFilter
       return matchesSearch && matchesLanguage && matchesCategory && matchesStatus
     }).sort((a, b) => {
       const baseA = getBaseTemplateKey(a.template_key)
@@ -317,11 +321,11 @@ export function WhatsAppTemplateManager() {
       fd.set('is_active', String(editor.is_active))
       fd.set('variables_schema', JSON.stringify(editor.variables_schema))
       await saveTenantWhatsAppTemplateAction(fd)
-      setMessage(editor.id ? 'Plantilla actualizada correctamente.' : 'Plantilla creada correctamente.')
+      setMessage(editor.id ? t('conversations.templateManager.messages.saveSuccessUpdate') : t('conversations.templateManager.messages.saveSuccessCreate'))
       setShowEditor(false)
       await loadCatalog()
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'No se pudo guardar la plantilla')
+      setError(saveError instanceof Error ? saveError.message : t('conversations.templateManager.messages.saveError'))
     } finally {
       setSubmitting(false)
     }
@@ -335,10 +339,10 @@ export function WhatsAppTemplateManager() {
       const fd = new FormData()
       fd.set('id', id)
       await duplicateTenantWhatsAppTemplateAction(fd)
-      setMessage('Plantilla duplicada correctamente.')
+      setMessage(t('conversations.templateManager.messages.duplicateSuccess'))
       await loadCatalog()
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'No se pudo duplicar la plantilla')
+      setError(actionError instanceof Error ? actionError.message : t('conversations.templateManager.messages.duplicateError'))
     } finally {
       setSubmitting(false)
     }
@@ -353,10 +357,10 @@ export function WhatsAppTemplateManager() {
       fd.set('id', id)
       fd.set('archive', String(archive))
       await toggleTenantWhatsAppTemplateArchiveAction(fd)
-      setMessage(archive ? 'Plantilla archivada.' : 'Plantilla reactivada.')
+      setMessage(archive ? t('conversations.templateManager.messages.archiveSuccess') : t('conversations.templateManager.messages.reactivateSuccess'))
       await loadCatalog()
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'No se pudo actualizar la plantilla')
+      setError(actionError instanceof Error ? actionError.message : t('conversations.templateManager.messages.archiveError'))
     } finally {
       setSubmitting(false)
     }
@@ -364,7 +368,9 @@ export function WhatsAppTemplateManager() {
 
   async function runBatchAction(kind: 'publish' | 'sync', ids: string[]) {
     if (ids.length === 0) {
-      setError(`Selecciona al menos una plantilla para ${kind === 'publish' ? 'publicar' : 'sincronizar'}.`)
+      setError(kind === 'publish'
+        ? t('conversations.templateManager.messages.selectAtLeastOnePublish')
+        : t('conversations.templateManager.messages.selectAtLeastOneSync'))
       return
     }
 
@@ -379,11 +385,13 @@ export function WhatsAppTemplateManager() {
         : await syncTenantWhatsAppTemplatesAction(fd) as { results: Array<{ ok: boolean }> }
       const okCount = response.results.filter((result) => result.ok).length
       const failCount = response.results.length - okCount
-      setMessage(`${kind === 'publish' ? 'Publicación' : 'Sincronización'} completada. OK: ${okCount}. Fallos: ${failCount}.`)
+      setMessage(kind === 'publish'
+        ? t('conversations.templateManager.messages.publishCompleted', { ok: okCount, fail: failCount })
+        : t('conversations.templateManager.messages.syncCompleted', { ok: okCount, fail: failCount }))
       setSelectedIds([])
       await loadCatalog()
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'No se pudo ejecutar la acción masiva')
+      setError(actionError instanceof Error ? actionError.message : t('conversations.templateManager.messages.batchError'))
     } finally {
       setSubmitting(false)
     }
@@ -393,8 +401,8 @@ export function WhatsAppTemplateManager() {
     <div ref={sectionRef} className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 pb-20 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">Plantillas WhatsApp</h3>
-          <p className="mt-1 text-sm text-slate-500">Gestiona el catálogo interno, publica en Meta y sincroniza estados reales sin trabajar a mano.</p>
+          <h3 className="text-lg font-semibold text-slate-900">{t('conversations.templateManager.title')}</h3>
+          <p className="mt-1 text-sm text-slate-500">{t('conversations.templateManager.subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -403,7 +411,7 @@ export function WhatsAppTemplateManager() {
             className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
             <SendHorizonal size={14} />
-            Publicar seleccionadas
+            {t('conversations.templateManager.actions.publishSelected')}
           </button>
           <button
             onClick={() => runBatchAction('sync', selectedIds.length > 0 ? selectedIds : catalog.templates.map((template) => template.id))}
@@ -411,14 +419,14 @@ export function WhatsAppTemplateManager() {
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             <RefreshCw size={14} />
-            Sincronizar estados
+            {t('conversations.templateManager.actions.syncStates')}
           </button>
           <button
             onClick={openCreateModal}
             className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             <Plus size={14} />
-            Crear plantilla
+            {t('conversations.templateManager.actions.create')}
           </button>
         </div>
       </div>
@@ -427,40 +435,40 @@ export function WhatsAppTemplateManager() {
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar por nombre o texto"
+          placeholder={t('conversations.templateManager.filters.searchPlaceholder')}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
         />
         <select value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
-          <option value="all">Todos los idiomas</option>
+          <option value="all">{t('conversations.templateManager.filters.allLanguages')}</option>
           {languages.map((language) => <option key={language} value={language}>{language}</option>)}
         </select>
         <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
-          <option value="all">Todas las categorías</option>
-          <option value="marketing">Marketing</option>
-          <option value="utility">Utility</option>
-          <option value="authentication">Authentication</option>
+          <option value="all">{t('conversations.templateManager.filters.allCategories')}</option>
+          <option value="marketing">{t('conversations.templateManager.filters.categoryMarketing')}</option>
+          <option value="utility">{t('conversations.templateManager.filters.categoryUtility')}</option>
+          <option value="authentication">{t('conversations.templateManager.filters.categoryAuthentication')}</option>
         </select>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
-          <option value="all">Todos los estados</option>
-          <option value="Usable">Usable</option>
-          <option value="Pendiente Meta">Pendiente Meta</option>
-          <option value="Rechazada">Rechazada</option>
-          <option value="Solo CRM">Solo CRM</option>
-          <option value="Archivada">Archivada</option>
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | TemplateStateKind)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+          <option value="all">{t('conversations.templateManager.filters.allStatuses')}</option>
+          <option value="usable">{t('conversations.templateManager.states.usable')}</option>
+          <option value="pendingMeta">{t('conversations.templateManager.states.pendingMeta')}</option>
+          <option value="rejected">{t('conversations.templateManager.states.rejected')}</option>
+          <option value="crmOnly">{t('conversations.templateManager.states.crmOnly')}</option>
+          <option value="archived">{t('conversations.templateManager.states.archived')}</option>
         </select>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1">Total: {catalog.templates.length}</span>
-        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1">Base keys: {templateFamilies.size}</span>
-        <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700">Usables: {catalog.templates.filter((template) => template.usable).length}</span>
-        <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">Pendientes: {catalog.templates.filter((template) => !template.usable && template.is_active).length}</span>
+        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1">{t('conversations.templateManager.stats.total', { count: catalog.templates.length })}</span>
+        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1">{t('conversations.templateManager.stats.baseKeys', { count: templateFamilies.size })}</span>
+        <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700">{t('conversations.templateManager.stats.usables', { count: catalog.templates.filter((template) => template.usable).length })}</span>
+        <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">{t('conversations.templateManager.stats.pending', { count: catalog.templates.filter((template) => !template.usable && template.is_active).length })}</span>
         {catalog.activeConfig ? (
           <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
-            Emisor activo: {catalog.activeConfig.displayPhoneNumber || catalog.activeConfig.phoneNumberId}
+            {t('conversations.templateManager.stats.activeSender', { sender: catalog.activeConfig.displayPhoneNumber || catalog.activeConfig.phoneNumberId })}
           </span>
         ) : (
-          <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-rose-700">Sin configuración activa de WhatsApp para publicar</span>
+          <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-rose-700">{t('conversations.templateManager.stats.noActiveConfig')}</span>
         )}
       </div>
 
@@ -469,38 +477,38 @@ export function WhatsAppTemplateManager() {
 
       <div
         ref={tableScrollRef}
-        className="table-scrollbar-hidden mt-4 overflow-x-auto rounded-xl border border-slate-200"
+        className="mt-4 overflow-x-auto rounded-xl border border-slate-200 pb-3"
       >
-        <table className="w-full min-w-[1400px] bg-white">
+        <table className="w-full min-w-[1480px] bg-white">
           <colgroup>
             <col className="w-14" />
             <col className="w-[17%]" />
-            <col className="w-[25%]" />
-            <col className="w-[14%]" />
-            <col className="w-[12%]" />
+            <col className="w-[24%]" />
+            <col className="w-[13%]" />
+            <col className="w-[11%]" />
             <col className="w-[10%]" />
             <col className="w-[10%]" />
-            <col className="w-[12%] min-w-[280px]" />
+            <col className="w-[15%] min-w-[520px]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3 text-center"><input type="checkbox" checked={filteredTemplates.length > 0 && selectedIds.length === filteredTemplates.length} onChange={toggleSelectAll} /></th>
-              <th className="px-4 py-3 align-top">Base key</th>
-              <th className="px-4 py-3 align-top">Variante</th>
-              <th className="px-4 py-3 align-top">Variables</th>
-              <th className="px-4 py-3 align-top">Estado</th>
-              <th className="px-4 py-3 align-top">Meta</th>
-              <th className="px-4 py-3 align-top whitespace-nowrap">Último sync</th>
-              <th className="px-6 py-3 text-right align-top whitespace-nowrap">Acciones</th>
+              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colBaseKey')}</th>
+              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colVariant')}</th>
+              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colVariables')}</th>
+              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colStatus')}</th>
+              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colMeta')}</th>
+              <th className="px-4 py-3 align-top whitespace-nowrap">{t('conversations.templateManager.table.colLastSync')}</th>
+              <th className="px-6 py-3 text-right align-top whitespace-nowrap">{t('conversations.templateManager.table.colActions')}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">Cargando catálogo...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">{t('conversations.templateManager.table.loading')}</td></tr>
             ) : filteredTemplates.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">No hay plantillas para los filtros seleccionados.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">{t('conversations.templateManager.table.empty')}</td></tr>
             ) : filteredTemplates.map((template) => {
-              const state = templateStateLabel(template)
+              const state = templateStateKind(template)
               const baseKey = getBaseTemplateKey(template.template_key)
               const familyLanguages = Array.from(templateFamilies.get(baseKey) || []).sort().join(' / ')
               return (
@@ -508,18 +516,18 @@ export function WhatsAppTemplateManager() {
                   <td className="px-4 py-4 text-center"><input type="checkbox" checked={selectedIds.includes(template.id)} onChange={() => toggleSelected(template.id)} /></td>
                   <td className="px-4 py-4 align-top">
                     <div className="font-medium text-slate-900">{baseKey}</div>
-                    <div className="mt-1 text-xs text-slate-500">Idiomas disponibles: {familyLanguages || template.language_code.toUpperCase()}</div>
+                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.availableLanguages', { languages: familyLanguages || template.language_code.toUpperCase() })}</div>
                   </td>
                   <td className="px-4 py-4 align-top">
                     <div className="font-medium text-slate-900">{template.template_key}</div>
-                    <div className="mt-1 text-xs text-slate-500">Meta: {template.meta_template_name}</div>
+                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.metaLabel', { name: template.meta_template_name })}</div>
                     <div className="mt-2 text-xs text-slate-500">{template.language_code.toUpperCase()} · {template.category}</div>
                     <p className="mt-2 line-clamp-2 max-w-md text-sm text-slate-700">{template.body_text}</p>
                     {template.last_error ? <p className="mt-2 text-xs text-rose-600">{template.last_error}</p> : null}
-                    {template.rejection_reason ? <p className="mt-2 text-xs text-rose-600">Rechazo Meta: {template.rejection_reason}</p> : null}
+                    {template.rejection_reason ? <p className="mt-2 text-xs text-rose-600">{t('conversations.templateManager.table.metaRejection', { reason: template.rejection_reason })}</p> : null}
                   </td>
                   <td className="px-4 py-4 align-top text-sm text-slate-700">
-                    <div>{template.variables_count} parámetros</div>
+                    <div>{t('conversations.templateManager.table.parameters', { count: template.variables_count })}</div>
                     <div className="mt-2 flex max-w-xs flex-wrap gap-1">
                       {template.variables_schema.map((variable, index) => (
                         <span key={`${template.id}-${variable.key}-${index}`} className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700">
@@ -529,22 +537,22 @@ export function WhatsAppTemplateManager() {
                     </div>
                   </td>
                   <td className="px-4 py-4 align-top">
-                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(state.tone)}`}>{state.label}</span>
-                    <div className="mt-2 text-xs text-slate-500">Interno: {template.status}</div>
-                    <div className="mt-1 text-xs text-slate-500">Activa: {template.is_active ? 'Sí' : 'No'}</div>
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(state.tone)}`}>{t(`conversations.templateManager.states.${state.kind}`)}</span>
+                    <div className="mt-2 text-xs text-slate-500">{t('conversations.templateManager.table.internal', { status: template.status })}</div>
+                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.active', { value: template.is_active ? t('conversations.templateManager.table.yes') : t('conversations.templateManager.table.no') })}</div>
                   </td>
                   <td className="px-4 py-4 align-top text-sm text-slate-700">
-                    <div>{template.meta_status || 'Sin publicar'}</div>
-                    <div className="mt-1 text-xs text-slate-500">ID: {template.meta_template_id || '—'}</div>
+                    <div>{template.meta_status || t('conversations.templateManager.table.notPublished')}</div>
+                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.metaId', { id: template.meta_template_id || '—' })}</div>
                   </td>
-                  <td className="px-4 py-4 align-top text-sm text-slate-700 whitespace-nowrap">{template.last_synced_at ? new Date(template.last_synced_at).toLocaleString() : 'Nunca'}</td>
+                  <td className="px-4 py-4 align-top text-sm text-slate-700 whitespace-nowrap">{template.last_synced_at ? new Date(template.last_synced_at).toLocaleString() : t('conversations.templateManager.table.never')}</td>
                   <td className="px-6 py-4 align-top">
-                    <div className="flex min-w-[280px] justify-end gap-2 pr-1">
-                      <button onClick={() => openEditModal(template)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Editar</button>
-                      <button onClick={() => handleDuplicate(template.id)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Copy size={12} />Duplicar</button>
-                      <button onClick={() => runBatchAction('publish', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"><SendHorizonal size={12} />Publicar</button>
-                      <button onClick={() => runBatchAction('sync', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={12} />Sync</button>
-                      <button onClick={() => handleArchive(template.id, template.is_active)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Archive size={12} />{template.is_active ? 'Archivar' : 'Activar'}</button>
+                    <div className="flex flex-nowrap justify-end gap-2 pr-1 whitespace-nowrap">
+                      <button onClick={() => openEditModal(template)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">{t('conversations.templateManager.actions.edit')}</button>
+                      <button onClick={() => handleDuplicate(template.id)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Copy size={12} />{t('conversations.templateManager.actions.duplicate')}</button>
+                      <button onClick={() => runBatchAction('publish', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"><SendHorizonal size={12} />{t('conversations.templateManager.actions.publish')}</button>
+                      <button onClick={() => runBatchAction('sync', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={12} />{t('conversations.templateManager.actions.sync')}</button>
+                      <button onClick={() => handleArchive(template.id, template.is_active)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Archive size={12} />{template.is_active ? t('conversations.templateManager.actions.archive') : t('conversations.templateManager.actions.activate')}</button>
                     </div>
                   </td>
                 </tr>
@@ -557,66 +565,55 @@ export function WhatsAppTemplateManager() {
       {hasHorizontalOverflow && floatingScrollbar.visible ? (
         <div className="pointer-events-none fixed bottom-4 z-40" style={{ left: floatingScrollbar.left, width: floatingScrollbar.width }}>
           <div className="pointer-events-auto rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur">
-            <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">Desplazamiento horizontal</div>
-            <div ref={floatingScrollRef} className="overflow-x-auto overflow-y-hidden" aria-label="Control horizontal flotante de la tabla de plantillas WhatsApp">
+            <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">{t('conversations.templateManager.table.horizontalScroll')}</div>
+            <div ref={floatingScrollRef} className="overflow-x-auto overflow-y-hidden" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
               <div style={{ width: tableScrollMetrics.scrollWidth, height: 1 }} />
             </div>
           </div>
         </div>
       ) : null}
 
-      <style jsx>{`
-        .table-scrollbar-hidden {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-
-        .table-scrollbar-hidden::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-
       {showEditor ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-8">
           <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h4 className="text-lg font-semibold text-slate-900">{editor.id ? 'Editar plantilla WhatsApp' : 'Crear plantilla WhatsApp'}</h4>
-                <p className="mt-1 text-sm text-slate-500">El CRM guarda el catálogo interno y usa Meta como fuente de aprobación real.</p>
+                <h4 className="text-lg font-semibold text-slate-900">{editor.id ? t('conversations.templateManager.editor.titleEdit') : t('conversations.templateManager.editor.titleCreate')}</h4>
+                <p className="mt-1 text-sm text-slate-500">{t('conversations.templateManager.editor.subtitle')}</p>
               </div>
               <button onClick={() => setShowEditor(false)} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><XCircle size={18} /></button>
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Template key interno</span>
+                <span className="mb-1 block font-medium">{t('conversations.templateManager.editor.templateKey')}</span>
                 <input value={editor.template_key} onChange={(event) => setEditor((current) => ({ ...current, template_key: slugifyTemplateKey(event.target.value) }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500" />
               </label>
               <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Nombre Meta</span>
+                <span className="mb-1 block font-medium">{t('conversations.templateManager.editor.metaName')}</span>
                 <input value={editor.meta_template_name} onChange={(event) => setEditor((current) => ({ ...current, meta_template_name: slugifyTemplateKey(event.target.value) }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500" />
               </label>
               <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Idioma</span>
+                <span className="mb-1 block font-medium">{t('conversations.templateManager.editor.language')}</span>
                 <input value={editor.language_code} onChange={(event) => setEditor((current) => ({ ...current, language_code: event.target.value || 'es', locale: event.target.value || 'es' }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500" />
               </label>
               <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Categoría</span>
+                <span className="mb-1 block font-medium">{t('conversations.templateManager.editor.category')}</span>
                 <select value={editor.category} onChange={(event) => setEditor((current) => ({ ...current, category: event.target.value }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500">
-                  <option value="utility">Utility</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="authentication">Authentication</option>
+                  <option value="utility">{t('conversations.templateManager.filters.categoryUtility')}</option>
+                  <option value="marketing">{t('conversations.templateManager.filters.categoryMarketing')}</option>
+                  <option value="authentication">{t('conversations.templateManager.filters.categoryAuthentication')}</option>
                 </select>
               </label>
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4">
               <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Header opcional</span>
+                <span className="mb-1 block font-medium">{t('conversations.templateManager.editor.headerOptional')}</span>
                 <input value={editor.header_text} onChange={(event) => setEditor((current) => ({ ...current, header_text: event.target.value }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500" />
               </label>
               <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Body</span>
+                <span className="mb-1 block font-medium">{t('conversations.templateManager.editor.body')}</span>
                 <textarea
                   value={editor.body_text}
                   onChange={(event) => {
@@ -630,10 +627,10 @@ export function WhatsAppTemplateManager() {
                   rows={5}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500"
                 />
-                <span className="mt-1 block text-xs text-slate-500">Usa variables Meta como {'{{1}}'}, {'{{2}}'}, {'{{3}}'}.</span>
+                <span className="mt-1 block text-xs text-slate-500">{t('conversations.templateManager.editor.bodyHint')}</span>
               </label>
               <label className="text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Footer opcional</span>
+                <span className="mb-1 block font-medium">{t('conversations.templateManager.editor.footerOptional')}</span>
                 <input value={editor.footer_text} onChange={(event) => setEditor((current) => ({ ...current, footer_text: event.target.value }))} className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500" />
               </label>
             </div>
@@ -641,14 +638,14 @@ export function WhatsAppTemplateManager() {
             <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h5 className="text-sm font-semibold text-slate-900">Variables esperadas</h5>
-                  <p className="text-xs text-slate-500">Define etiqueta y ejemplo para cada variable detectada en el body.</p>
+                  <h5 className="text-sm font-semibold text-slate-900">{t('conversations.templateManager.editor.variablesTitle')}</h5>
+                  <p className="text-xs text-slate-500">{t('conversations.templateManager.editor.variablesHint')}</p>
                 </div>
-                <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700">{editor.variables_schema.length} variables</span>
+                <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700">{t('conversations.templateManager.editor.variablesCount', { count: editor.variables_schema.length })}</span>
               </div>
               <div className="mt-3 space-y-3">
                 {editor.variables_schema.length === 0 ? (
-                  <p className="text-sm text-slate-500">Esta plantilla no requiere variables.</p>
+                  <p className="text-sm text-slate-500">{t('conversations.templateManager.editor.noVariables')}</p>
                 ) : editor.variables_schema.map((variable, index) => (
                   <div key={`${variable.key}-${index}`} className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 md:grid-cols-3">
                     <input
@@ -658,7 +655,7 @@ export function WhatsAppTemplateManager() {
                         variables_schema: current.variables_schema.map((item, itemIndex) => itemIndex === index ? { ...item, key: slugifyTemplateKey(event.target.value) || `param_${index + 1}` } : item),
                       }))}
                       className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
-                      placeholder={`param_${index + 1}`}
+                      placeholder={t('conversations.templateManager.editor.paramPlaceholder', { index: index + 1 })}
                     />
                     <input
                       value={variable.label}
@@ -667,7 +664,7 @@ export function WhatsAppTemplateManager() {
                         variables_schema: current.variables_schema.map((item, itemIndex) => itemIndex === index ? { ...item, label: event.target.value } : item),
                       }))}
                       className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
-                      placeholder={`Etiqueta ${index + 1}`}
+                      placeholder={t('conversations.templateManager.editor.labelPlaceholder', { index: index + 1 })}
                     />
                     <input
                       value={variable.example}
@@ -676,7 +673,7 @@ export function WhatsAppTemplateManager() {
                         variables_schema: current.variables_schema.map((item, itemIndex) => itemIndex === index ? { ...item, example: event.target.value } : item),
                       }))}
                       className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500"
-                      placeholder={`Ejemplo ${index + 1}`}
+                      placeholder={t('conversations.templateManager.editor.examplePlaceholder', { index: index + 1 })}
                     />
                   </div>
                 ))}
@@ -686,12 +683,12 @@ export function WhatsAppTemplateManager() {
             <div className="mt-5 flex items-center justify-between gap-3">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input type="checkbox" checked={editor.is_active} onChange={(event) => setEditor((current) => ({ ...current, is_active: event.target.checked }))} />
-                Plantilla activa dentro del CRM
+                {t('conversations.templateManager.editor.activeInCrm')}
               </label>
               <div className="flex gap-2">
-                <button onClick={() => setShowEditor(false)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancelar</button>
+                <button onClick={() => setShowEditor(false)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">{t('conversations.templateManager.editor.cancel')}</button>
                 <button onClick={handleSaveTemplate} disabled={submitting} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50">
-                  {submitting ? 'Guardando...' : 'Guardar plantilla'}
+                  {submitting ? t('conversations.templateManager.editor.saving') : t('conversations.templateManager.editor.save')}
                 </button>
               </div>
             </div>

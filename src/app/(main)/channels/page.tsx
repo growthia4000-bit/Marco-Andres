@@ -956,7 +956,7 @@ export default function ChannelsPage() {
         {loading ? <div className="mt-4 text-sm text-slate-500">{t('common.loading')}</div> : null}
       </div>
 
-      <div className="mx-auto mt-6 w-full max-w-[96rem] [&_table]:min-w-[1320px]">
+      <div className="mx-auto mt-6 w-full max-w-[96rem]">
         <WhatsAppTemplateManager />
       </div>
     </div>

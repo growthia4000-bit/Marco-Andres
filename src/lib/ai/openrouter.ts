@@ -1,8 +1,8 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 
 export const AI_MODELS = {
-  fast: 'nvidia/nemotron-3-nano-30b-a3b:free',
-  balanced: 'nvidia/nemotron-3-nano-30b-a3b:free',
+  fast: 'google/gemini-2.0-flash-001',
+  balanced: 'google/gemini-2.0-flash-001',
 } as const
 
 export type AiModelKey = keyof typeof AI_MODELS

@@ -518,7 +518,7 @@ export async function generateLeadEmailDraftAction(input: LeadEmailDraftInput): 
         const text = aiResult.text
         lastRawText = text
 
-        console.log(`[lead ai email] attempt ${attempt + 1}: duration=${aiDuration}ms, textLength=${text?.length || 0}, textPreview="${text?.slice(0, 120).replace(/\n/g, ' ')}"`)
+        console.log(`[lead ai email] attempt ${attempt + 1}: model=${AI_MODELS.balanced}, duration=${aiDuration}ms, textLength=${text?.length || 0}, finishReason=${aiResult.finishReason}, textPreview="${text?.slice(0, 120).replace(/\n/g, ' ')}"`)
 
         if (!text || text.trim().length < 40) {
           console.log(`[lead ai email] text too short, continuing`)

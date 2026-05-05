@@ -270,6 +270,13 @@ async function handleEmailTest() {
     if (!emailTo.trim()) return
     setSendingEmail(true)
     setEmailTestMessage('')
+
+    if (diagnostics?.email.demo?.enabled) {
+      setEmailTestMessage(t('conversations.channelsPanel.demo.testSuccessDemo'))
+      setSendingEmail(false)
+      return
+    }
+
     try {
       const fd = new FormData()
       fd.set('to', emailTo.trim())
@@ -281,13 +288,7 @@ async function handleEmailTest() {
       }
       await loadDiagnostics()
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : t('common.error')
-      const demoModeError = errorMessage.toLowerCase().includes('smtp') || errorMessage.toLowerCase().includes('demo') || errorMessage.toLowerCase().includes('config')
-      if (demoModeError && diagnostics?.email.demo?.enabled) {
-        setEmailTestMessage(t('conversations.channelsPanel.demo.testErrorDemo'))
-      } else {
-        setEmailTestMessage(t('conversations.channelsPanel.demo.testError'))
-      }
+      setEmailTestMessage(t('conversations.channelsPanel.demo.testError'))
       await loadDiagnostics()
     } finally {
       setSendingEmail(false)

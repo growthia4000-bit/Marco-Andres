@@ -608,7 +608,7 @@ const it = {
         syncSuccess: 'Email demo simulata correttamente. Non proveniva da un server esterno reale.',
         testSuccess: 'Email demo generata correttamente. Non è stata inviata fuori dal CRM.',
         testSuccessDemo: 'Test email demo registrato correttamente. Nessuna email reale è stata inviata fuori dal CRM.',
-        testError: 'Nessun provider email configurato e la modalità demo è disattivata.',
+        testError: "Non è stato possibile completare il test email. Controlla la configurazione o riprova.",
         testErrorDemo: 'Impossibile completare il test in modalità demo. Verifica la configurazione.',
       },
       whatsapp: {

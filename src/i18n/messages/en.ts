@@ -608,7 +608,7 @@ const en = {
         syncSuccess: 'Demo email simulated correctly. It did not come from a real external server.',
         testSuccess: 'Demo email generated correctly. It was not sent outside the CRM.',
         testSuccessDemo: 'Demo email test registered successfully. No real email was sent outside the CRM.',
-        testError: 'No email provider configured and demo mode is disabled.',
+        testError: 'The email test could not be completed. Check the configuration or try again.',
         testErrorDemo: 'Could not complete the test in demo mode. Check the configuration.',
       },
       whatsapp: {

@@ -345,7 +345,7 @@ export default function LeadDetailPage() {
                     </button>
                     <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition text-slate-700">
                       <ExternalLink size={18} className="text-slate-500" />
-                      <span>Abrir en WhatsApp</span>
+                      <span>{t('leadDetailExtra.openWhatsApp')}</span>
                     </a>
                     {whatsAppConversationError ? <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{whatsAppConversationError}</div> : null}
                   </>

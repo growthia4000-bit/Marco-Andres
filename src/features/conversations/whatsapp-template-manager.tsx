@@ -488,97 +488,99 @@ export function WhatsAppTemplateManager() {
       {error ? <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
       {message ? <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
 
-      <div
-        ref={tableScrollRef}
-        className="mt-4 overflow-x-scroll rounded-xl border border-slate-200 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <table className="w-full min-w-[1480px] bg-white">
-          <colgroup>
-            <col className="w-14" />
-            <col className="w-[17%]" />
-            <col className="w-[24%]" />
-            <col className="w-[13%]" />
-            <col className="w-[11%]" />
-            <col className="w-[10%]" />
-            <col className="w-[10%]" />
-            <col className="w-[15%] min-w-[520px]" />
-          </colgroup>
-          <thead className="sticky top-0 z-10 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3 text-center"><input type="checkbox" checked={filteredTemplates.length > 0 && selectedIds.length === filteredTemplates.length} onChange={toggleSelectAll} /></th>
-              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colBaseKey')}</th>
-              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colVariant')}</th>
-              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colVariables')}</th>
-              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colStatus')}</th>
-              <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colMeta')}</th>
-              <th className="px-4 py-3 align-top whitespace-nowrap">{t('conversations.templateManager.table.colLastSync')}</th>
-              <th className="px-6 py-3 text-right align-top whitespace-nowrap">{t('conversations.templateManager.table.colActions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">{t('conversations.templateManager.table.loading')}</td></tr>
-            ) : filteredTemplates.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">{t('conversations.templateManager.table.empty')}</td></tr>
-            ) : filteredTemplates.map((template) => {
-              const state = templateStateKind(template)
-              const baseKey = getBaseTemplateKey(template.template_key)
-              const familyLanguages = Array.from(templateFamilies.get(baseKey) || []).sort().join(' / ')
-              return (
-                <tr key={template.id} className="border-t border-slate-100 align-top">
-                  <td className="px-4 py-4 text-center"><input type="checkbox" checked={selectedIds.includes(template.id)} onChange={() => toggleSelected(template.id)} /></td>
-                  <td className="px-4 py-4 align-top">
-                    <div className="font-medium text-slate-900">{baseKey}</div>
-                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.availableLanguages', { languages: familyLanguages || template.language_code.toUpperCase() })}</div>
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <div className="font-medium text-slate-900">{template.template_key}</div>
-                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.metaLabel', { name: template.meta_template_name })}</div>
-                    <div className="mt-2 text-xs text-slate-500">{template.language_code.toUpperCase()} · {template.category}</div>
-                    <p className="mt-2 line-clamp-2 max-w-md text-sm text-slate-700">{template.body_text}</p>
-                    {template.last_error ? <p className="mt-2 text-xs text-rose-600">{template.last_error}</p> : null}
-                    {template.rejection_reason ? <p className="mt-2 text-xs text-rose-600">{t('conversations.templateManager.table.metaRejection', { reason: template.rejection_reason })}</p> : null}
-                  </td>
-                  <td className="px-4 py-4 align-top text-sm text-slate-700">
-                    <div>{t('conversations.templateManager.table.parameters', { count: template.variables_count })}</div>
-                    <div className="mt-2 flex max-w-xs flex-wrap gap-1">
-                      {template.variables_schema.map((variable, index) => (
-                        <span key={`${template.id}-${variable.key}-${index}`} className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700">
-                          {index + 1}. {variable.label}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(state.tone)}`}>{t(`conversations.templateManager.states.${state.kind}`)}</span>
-                    <div className="mt-2 text-xs text-slate-500">{t('conversations.templateManager.table.internal', { status: template.status === 'draft' ? t('conversations.channelsPanel.ui.statusDraft') : template.status })}</div>
-                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.active', { value: template.is_active ? t('conversations.templateManager.table.yes') : t('conversations.templateManager.table.no') })}</div>
-                  </td>
-                  <td className="px-4 py-4 align-top text-sm text-slate-700">
-                    <div>{template.meta_status || t('conversations.templateManager.table.notPublished')}</div>
-                    <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.metaId', { id: template.meta_template_id || '—' })}</div>
-                  </td>
-                  <td className="px-4 py-4 align-top text-sm text-slate-700 whitespace-nowrap">{template.last_synced_at ? new Date(template.last_synced_at).toLocaleString() : t('conversations.templateManager.table.never')}</td>
-                  <td className="px-6 py-4 align-top">
-                    <div className="flex flex-nowrap justify-end gap-2 pr-1 whitespace-nowrap">
-                      <button onClick={() => openEditModal(template)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">{t('conversations.templateManager.actions.edit')}</button>
-                      <button onClick={() => handleDuplicate(template.id)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Copy size={12} />{t('conversations.templateManager.actions.duplicate')}</button>
-                      <button onClick={() => runBatchAction('publish', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"><SendHorizonal size={12} />{t('conversations.templateManager.actions.publish')}</button>
-                      <button onClick={() => runBatchAction('sync', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={12} />{t('conversations.templateManager.actions.sync')}</button>
-                      <button onClick={() => handleArchive(template.id, template.is_active)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Archive size={12} />{template.is_active ? t('conversations.templateManager.actions.archive') : t('conversations.templateManager.actions.activate')}</button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      <div className="mt-4 relative">
+        <div
+          ref={tableScrollRef}
+          className="overflow-x-scroll rounded-t-xl border border-b-0 border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <table className="w-full min-w-[1480px] bg-white">
+            <colgroup>
+              <col className="w-14" />
+              <col className="w-[17%]" />
+              <col className="w-[24%]" />
+              <col className="w-[13%]" />
+              <col className="w-[11%]" />
+              <col className="w-[10%]" />
+              <col className="w-[10%]" />
+              <col className="w-[15%] min-w-[520px]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-4 py-3 text-center"><input type="checkbox" checked={filteredTemplates.length > 0 && selectedIds.length === filteredTemplates.length} onChange={toggleSelectAll} /></th>
+                <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colBaseKey')}</th>
+                <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colVariant')}</th>
+                <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colVariables')}</th>
+                <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colStatus')}</th>
+                <th className="px-4 py-3 align-top">{t('conversations.templateManager.table.colMeta')}</th>
+                <th className="px-4 py-3 align-top whitespace-nowrap">{t('conversations.templateManager.table.colLastSync')}</th>
+                <th className="px-6 py-3 text-right align-top whitespace-nowrap">{t('conversations.templateManager.table.colActions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">{t('conversations.templateManager.table.loading')}</td></tr>
+              ) : filteredTemplates.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">{t('conversations.templateManager.table.empty')}</td></tr>
+              ) : filteredTemplates.map((template) => {
+                const state = templateStateKind(template)
+                const baseKey = getBaseTemplateKey(template.template_key)
+                const familyLanguages = Array.from(templateFamilies.get(baseKey) || []).sort().join(' / ')
+                return (
+                  <tr key={template.id} className="border-t border-slate-100 align-top">
+                    <td className="px-4 py-4 text-center"><input type="checkbox" checked={selectedIds.includes(template.id)} onChange={() => toggleSelected(template.id)} /></td>
+                    <td className="px-4 py-4 align-top">
+                      <div className="font-medium text-slate-900">{baseKey}</div>
+                      <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.availableLanguages', { languages: familyLanguages || template.language_code.toUpperCase() })}</div>
+                    </td>
+                    <td className="px-4 py-4 align-top">
+                      <div className="font-medium text-slate-900">{template.template_key}</div>
+                      <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.metaLabel', { name: template.meta_template_name })}</div>
+                      <div className="mt-2 text-xs text-slate-500">{template.language_code.toUpperCase()} · {template.category}</div>
+                      <p className="mt-2 line-clamp-2 max-w-md text-sm text-slate-700">{template.body_text}</p>
+                      {template.last_error ? <p className="mt-2 text-xs text-rose-600">{template.last_error}</p> : null}
+                      {template.rejection_reason ? <p className="mt-2 text-xs text-rose-600">{t('conversations.templateManager.table.metaRejection', { reason: template.rejection_reason })}</p> : null}
+                    </td>
+                    <td className="px-4 py-4 align-top text-sm text-slate-700">
+                      <div>{t('conversations.templateManager.table.parameters', { count: template.variables_count })}</div>
+                      <div className="mt-2 flex max-w-xs flex-wrap gap-1">
+                        {template.variables_schema.map((variable, index) => (
+                          <span key={`${template.id}-${variable.key}-${index}`} className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700">
+                            {index + 1}. {variable.label}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 align-top">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${badgeClass(state.tone)}`}>{t(`conversations.templateManager.states.${state.kind}`)}</span>
+                      <div className="mt-2 text-xs text-slate-500">{t('conversations.templateManager.table.internal', { status: template.status === 'draft' ? t('conversations.channelsPanel.ui.statusDraft') : template.status })}</div>
+                      <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.active', { value: template.is_active ? t('conversations.templateManager.table.yes') : t('conversations.templateManager.table.no') })}</div>
+                    </td>
+                    <td className="px-4 py-4 align-top text-sm text-slate-700">
+                      <div>{template.meta_status || t('conversations.templateManager.table.notPublished')}</div>
+                      <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.metaId', { id: template.meta_template_id || '—' })}</div>
+                    </td>
+                    <td className="px-4 py-4 align-top text-sm text-slate-700 whitespace-nowrap">{template.last_synced_at ? new Date(template.last_synced_at).toLocaleString() : t('conversations.templateManager.table.never')}</td>
+                    <td className="px-6 py-4 align-top">
+                      <div className="flex flex-nowrap justify-end gap-2 pr-1 whitespace-nowrap">
+                        <button onClick={() => openEditModal(template)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">{t('conversations.templateManager.actions.edit')}</button>
+                        <button onClick={() => handleDuplicate(template.id)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Copy size={12} />{t('conversations.templateManager.actions.duplicate')}</button>
+                        <button onClick={() => runBatchAction('publish', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"><SendHorizonal size={12} />{t('conversations.templateManager.actions.publish')}</button>
+                        <button onClick={() => runBatchAction('sync', [template.id])} disabled={submitting || !catalog.activeConfig?.canPublish} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={12} />{t('conversations.templateManager.actions.sync')}</button>
+                        <button onClick={() => handleArchive(template.id, template.is_active)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Archive size={12} />{template.is_active ? t('conversations.templateManager.actions.archive') : t('conversations.templateManager.actions.activate')}</button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 shrink-0">{t('conversations.templateManager.table.horizontalScroll')}</span>
-        <div ref={floatingScrollRef} className="flex-1 cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
-          <div style={{ width: Math.max(tableScrollMetrics.scrollWidth, 1480), height: 6 }} />
+        <div className="sticky bottom-0 z-20 flex items-center gap-2 rounded-b-xl border border-t-0 border-slate-200 bg-slate-50 px-3 py-2">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 shrink-0">{t('conversations.templateManager.table.horizontalScroll')}</span>
+          <div ref={floatingScrollRef} className="flex-1 cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing" aria-label={t('conversations.templateManager.table.horizontalScrollAria')}>
+            <div style={{ width: Math.max(tableScrollMetrics.scrollWidth, 1480), height: 6 }} />
+          </div>
         </div>
       </div>
 

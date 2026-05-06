@@ -297,6 +297,9 @@ export async function createTenantAction(formData: FormData) {
     email: ownerEmail,
     password: tempPassword,
     email_confirm: true,
+    app_metadata: {
+      provisioning_source: 'superadmin',
+    },
     user_metadata: {
       full_name: ownerName,
       tenant_name: tenantName,

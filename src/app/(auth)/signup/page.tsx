@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, UserPlus, CheckCircle, AlertCircle, Building2 } from 'lucide-react'
+import { Eye, EyeOff, UserPlus, CheckCircle, AlertCircle, Building2, ShieldCheck } from 'lucide-react'
 import AuthHeroShell from '@/components/auth/AuthHeroShell'
 import { useI18n } from '@/i18n/I18nProvider'
 
@@ -28,9 +28,7 @@ interface InvitationVerificationResponse {
 
 function SignupForm() {
   const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [tenantName, setTenantName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -91,7 +89,6 @@ function SignupForm() {
             tenant_name: data.tenant_name || t('auth.signup.unknownTenantName'),
             tenant_id: data.invitation.tenant_id,
           })
-          setEmail(data.invitation.email)
         } else {
           setInvalidInvite(true)
           setError(getInviteErrorMessage(data.errorCode, data.error))
@@ -171,58 +168,6 @@ function SignupForm() {
         router.push('/dashboard')
         router.refresh()
       }
-    } else {
-      if (!tenantName.trim()) {
-          setError(t('auth.signup.errors.tenantRequired'))
-        setLoading(false)
-        return
-      }
-
-      const supabase = createClient()
-      const tenantSlug = tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            tenant_name: tenantName,
-            tenant_slug: tenantSlug,
-          },
-        },
-      })
-
-      if (authError) {
-        setError(authError.message)
-        setLoading(false)
-        return
-      }
-
-      if (data.user && !data.session) {
-        setSuccess(true)
-        setConfirmEmail(email)
-        setLoading(false)
-        return
-      }
-
-      if (data.session) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('id, tenant_id')
-          .eq('id', data.user?.id)
-          .single()
-
-        if (!profile?.tenant_id) {
-          setError(t('auth.signup.errors.tenantCreate'))
-          await supabase.auth.signOut()
-          setLoading(false)
-          return
-        }
-
-        router.push('/dashboard')
-        router.refresh()
-      }
     }
 
     setLoading(false)
@@ -270,25 +215,25 @@ function SignupForm() {
   }
 
   const isInviteMode = !!inviteInfo && !invalidInvite
-  const heroEyebrow = isInviteMode ? t('auth.signup.teamInvitationEyebrow') : invalidInvite ? t('auth.signup.invitationIssueEyebrow') : t('auth.signup.initialSetupEyebrow')
+  const heroEyebrow = isInviteMode ? t('auth.signup.teamInvitationEyebrow') : invalidInvite ? t('auth.signup.invitationIssueEyebrow') : t('auth.signup.approvalEyebrow')
   const heroTitle = isInviteMode
     ? t('auth.signup.inviteTitle', { tenant: inviteInfo.tenant_name })
     : invalidInvite
       ? t('auth.signup.invalidHeroTitle')
-      : t('auth.signup.defaultHeroTitle')
+      : t('auth.signup.approvalTitle')
   const heroDescription = isInviteMode
     ? t('auth.signup.inviteHeroDescription')
     : invalidInvite
       ? t('auth.signup.invalidHeroDescription')
-      : t('auth.signup.defaultHeroDescription')
+      : t('auth.signup.approvalDescription')
 
   return (
     <AuthHeroShell
       eyebrow={heroEyebrow}
       title={heroTitle}
       description={heroDescription}
-      panelTitle={isInviteMode ? t('auth.signup.inviteTitle', { tenant: inviteInfo.tenant_name }) : invalidInvite ? t('auth.signup.invalidInvitation') : t('auth.signup.createTitle')}
-      panelDescription={isInviteMode ? t('auth.signup.invitedAs', { role: t(`roles.${inviteInfo.role}`) }) : invalidInvite ? error : t('auth.brandSubtitle')}
+      panelTitle={isInviteMode ? t('auth.signup.inviteTitle', { tenant: inviteInfo.tenant_name }) : invalidInvite ? t('auth.signup.invalidInvitation') : t('auth.signup.approvalPanelTitle')}
+      panelDescription={isInviteMode ? t('auth.signup.invitedAs', { role: t(`roles.${inviteInfo.role}`) }) : invalidInvite ? error : t('auth.signup.approvalPanelDescription')}
     >
       {isInviteMode ? (
         <>
@@ -378,125 +323,40 @@ function SignupForm() {
             </button>
           </form>
         </>
-      ) : invalidInvite ? (
-        <>
-          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm text-red-700">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-red-600">
-              <AlertCircle size={20} />
-            </div>
-            <div>
-              <p className="font-semibold text-red-900">{t('auth.signup.invalidInvitation')}</p>
-              <p className="text-red-700/80">{error}</p>
-            </div>
-          </div>
-          <Link
-            href="/signup"
-            className="flex w-full items-center justify-center rounded-2xl bg-slate-950 py-3.5 font-semibold text-white shadow-[0_16px_30px_rgba(15,23,42,0.18)] transition hover:bg-slate-900"
-          >
-            {t('auth.signup.createOwnAccount')}
-          </Link>
-        </>
       ) : (
         <>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                {t('auth.signup.companyName')}
-              </label>
-              <input
-                type="text"
-                value={tenantName}
-                onChange={(e) => setTenantName(e.target.value)}
-                placeholder={t('auth.signup.companyPlaceholder')}
-                required
-                className={inputClassName}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                {t('auth.signup.fullName')}
-              </label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder={t('auth.signup.fullNamePlaceholder')}
-                required
-                className={inputClassName}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                {t('auth.signup.email')}
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('auth.signup.emailPlaceholder')}
-                required
-                className={inputClassName}
-              />
-            </div>
-
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label className="block text-sm font-medium text-slate-700">
-                  {t('auth.signup.password')}
-                </label>
-                <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{t('auth.signup.ownerAccessLabel')}</span>
+          {invalidInvite && (
+            <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-red-600">
+                <AlertCircle size={20} />
               </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('auth.signup.passwordPlaceholder')}
-                  required
-                  minLength={6}
-                  className={`${inputClassName} pr-12`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+              <div>
+                <p className="font-semibold text-red-900">{t('auth.signup.invalidInvitation')}</p>
+                <p className="text-red-700/80">{error}</p>
               </div>
             </div>
+          )}
 
-            {error && (
-              <div className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-4 text-sm text-emerald-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-emerald-600">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <p className="font-semibold text-emerald-950">{t('auth.signup.approvalNoticeTitle')}</p>
+              <p className="mt-1 leading-6 text-emerald-800/90">{t('auth.signup.approvalNoticeDescription')}</p>
+            </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 py-3.5 font-semibold text-white shadow-[0_16px_30px_rgba(15,23,42,0.18)] transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? (
-                <span className="animate-spin">...</span>
-              ) : (
-                <>
-                  <UserPlus size={20} />
-                  {t('auth.signup.submit')}
-                </>
-              )}
-            </button>
-          </form>
+          <div className="space-y-4 rounded-3xl border border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-600">
+            <p>{t('auth.signup.approvalHelp')}</p>
+          </div>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            {t('auth.signup.alreadyAccount')}{' '}
-            <Link href="/login" className="font-semibold text-slate-900 transition hover:text-blue-700">
-              {t('auth.signup.loginLink')}
-            </Link>
-          </p>
+          <Link
+            href="/login"
+            className="mt-6 flex w-full items-center justify-center rounded-2xl bg-slate-950 py-3.5 font-semibold text-white shadow-[0_16px_30px_rgba(15,23,42,0.18)] transition hover:bg-slate-900"
+          >
+            {t('auth.signup.backToLogin')}
+          </Link>
         </>
       )}
     </AuthHeroShell>

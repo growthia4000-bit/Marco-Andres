@@ -292,14 +292,15 @@ export async function createTenantAction(formData: FormData) {
   )
 
   const tempPassword = crypto.randomUUID().slice(0, 12) + 'A1!'
+  const provisioningAppMetadata = {
+    provisioning_source: 'superadmin',
+  }
 
   const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
     email: ownerEmail,
     password: tempPassword,
     email_confirm: true,
-    app_metadata: {
-      provisioning_source: 'superadmin',
-    },
+    app_metadata: provisioningAppMetadata,
     user_metadata: {
       full_name: ownerName,
       tenant_name: tenantName,
@@ -308,66 +309,98 @@ export async function createTenantAction(formData: FormData) {
   })
 
   if (authError) {
+    if (authError.message.includes('PUBLIC_SIGNUP_DISABLED')) {
+      throw new Error('La creación automática fue bloqueada. Revisa la migración de provisioning en Supabase.')
+    }
     if (authError.message.includes('already been registered') || authError.message.includes('already exists')) {
       throw new Error('Este email ya está registrado')
     }
     throw new Error(authError.message)
   }
 
-  const newUserId = authUser.user.id
+  const newUserId = authUser.user?.id
 
-  const { data: newUserData } = await supabase
+  if (!newUserId) {
+    throw new Error('Supabase Auth no devolvió el usuario creado')
+  }
+
+  const { data: newUserData, error: newUserError } = await adminClient
     .from('users')
     .select('tenant_id')
     .eq('id', newUserId)
     .single()
 
-  if (newUserData?.tenant_id) {
-    await supabase
-      .from('tenants')
-      .update({ email: ownerEmail })
-      .eq('id', newUserData.tenant_id)
+  if (newUserError) {
+    throw new Error(newUserError.message)
   }
 
-  if (planSlug && newUserData?.tenant_id) {
-    const { data: plan } = await supabase
+  if (!newUserData?.tenant_id) {
+    throw new Error('No se pudo vincular el nuevo usuario con su inmobiliaria')
+  }
+
+  const tenantId = newUserData.tenant_id
+
+  const { error: tenantUpdateError } = await adminClient
+    .from('tenants')
+    .update({ email: ownerEmail })
+    .eq('id', tenantId)
+
+  if (tenantUpdateError) {
+    throw new Error(tenantUpdateError.message)
+  }
+
+  if (planSlug) {
+    const { data: plan, error: planError } = await adminClient
       .from('plans')
       .select('id')
       .eq('slug', planSlug)
       .single()
 
-    if (plan) {
-      await supabase
-        .from('subscriptions')
-        .update({ is_current: false })
-        .eq('tenant_id', newUserData.tenant_id)
-        .eq('is_current', true)
+    if (planError) {
+      throw new Error(planError.message)
+    }
 
-      await supabase.from('subscriptions').insert({
-        tenant_id: newUserData.tenant_id,
+    const { error: resetSubscriptionError } = await adminClient
+      .from('subscriptions')
+      .update({ is_current: false })
+      .eq('tenant_id', tenantId)
+      .eq('is_current', true)
+
+    if (resetSubscriptionError) {
+      throw new Error(resetSubscriptionError.message)
+    }
+
+    const { error: insertSubscriptionError } = await adminClient.from('subscriptions').insert({
+        tenant_id: tenantId,
         plan_id: plan.id,
         status: 'active',
         is_current: true,
         billing_cycle: 'monthly',
       })
+
+    if (insertSubscriptionError) {
+      throw new Error(insertSubscriptionError.message)
     }
   }
 
-  if (newUserData?.tenant_id) {
-    await supabase.from('audit_logs').insert({
-      tenant_id: newUserData.tenant_id,
-      actor_user_id: actorUserId,
-      action: 'tenant.created',
-      entity_type: 'tenant',
-      entity_id: newUserData.tenant_id,
-      metadata: {
-        tenant_name: tenantName,
-        tenant_slug: slug,
-        owner_email: ownerEmail,
-        owner_name: ownerName,
-        plan_slug: planSlug || 'starter',
-      },
-    })
+  const { error: auditError } = await adminClient.from('audit_logs').insert({
+    tenant_id: tenantId,
+    actor_user_id: actorUserId,
+    action: 'tenant.created',
+    entity_type: 'tenant',
+    entity_id: tenantId,
+    metadata: {
+      tenant_name: tenantName,
+      tenant_slug: slug,
+      owner_email: ownerEmail,
+      owner_name: ownerName,
+      plan_slug: planSlug || 'starter',
+      provisioning_source: provisioningAppMetadata.provisioning_source,
+    },
+  })
+
+  if (auditError) {
+    throw new Error(auditError.message)
   }
 
   revalidatePath('/admin')

@@ -292,26 +292,85 @@ export async function createTenantAction(formData: FormData) {
   )
 
   const tempPassword = crypto.randomUUID().slice(0, 12) + 'A1!'
-  const provisioningAppMetadata = {
-    provisioning_source: 'superadmin',
+  const { data: existingUser, error: existingUserError } = await adminClient
+    .from('users')
+    .select('id')
+    .eq('email', ownerEmail)
+    .maybeSingle()
+
+  if (existingUserError) {
+    throw new Error(existingUserError.message)
+  }
+
+  if (existingUser) {
+    throw new Error('Este email ya está registrado')
+  }
+
+  const targetPlanSlug = planSlug || 'starter'
+  const { data: plan, error: planError } = await adminClient
+    .from('plans')
+    .select('id, slug')
+    .eq('slug', targetPlanSlug)
+    .single()
+
+  if (planError || !plan) {
+    throw new Error(planError?.message || 'Plan no encontrado')
+  }
+
+  const { data: newTenant, error: tenantInsertError } = await adminClient
+    .from('tenants')
+    .insert({
+      name: tenantName,
+      slug,
+      email: ownerEmail,
+    })
+    .select('id')
+    .single()
+
+  if (tenantInsertError || !newTenant) {
+    throw new Error(tenantInsertError?.message || 'No se pudo crear la inmobiliaria')
+  }
+
+  const tenantId = newTenant.id
+
+  const { error: subscriptionError } = await adminClient.from('subscriptions').insert({
+    tenant_id: tenantId,
+    plan_id: plan.id,
+    status: 'active',
+    is_current: true,
+    billing_cycle: 'monthly',
+  })
+
+  if (subscriptionError) {
+    throw new Error(subscriptionError.message)
+  }
+
+  const { data: invitation, error: invitationError } = await adminClient
+    .from('invitations')
+    .insert({
+      tenant_id: tenantId,
+      email: ownerEmail,
+      role: 'admin',
+      invited_by: actorUserId,
+    })
+    .select('id, token')
+    .single()
+
+  if (invitationError || !invitation) {
+    throw new Error(invitationError?.message || 'No se pudo crear la invitación del propietario')
   }
 
   const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
     email: ownerEmail,
     password: tempPassword,
     email_confirm: true,
-    app_metadata: provisioningAppMetadata,
     user_metadata: {
       full_name: ownerName,
-      tenant_name: tenantName,
-      tenant_slug: slug,
+      invite_token: invitation.token,
     },
   })
 
   if (authError) {
-    if (authError.message.includes('PUBLIC_SIGNUP_DISABLED')) {
-      throw new Error('La creación automática fue bloqueada. Revisa la migración de provisioning en Supabase.')
-    }
     if (authError.message.includes('already been registered') || authError.message.includes('already exists')) {
       throw new Error('Este email ya está registrado')
     }
@@ -338,49 +397,31 @@ export async function createTenantAction(formData: FormData) {
     throw new Error('No se pudo vincular el nuevo usuario con su inmobiliaria')
   }
 
-  const tenantId = newUserData.tenant_id
+  if (newUserData.tenant_id !== tenantId) {
+    throw new Error('El usuario fue vinculado a una inmobiliaria incorrecta')
+  }
+
+  const { data: acceptedInvitation, error: acceptedInvitationError } = await adminClient
+    .from('invitations')
+    .select('status, accepted_at')
+    .eq('id', invitation.id)
+    .single()
+
+  if (acceptedInvitationError) {
+    throw new Error(acceptedInvitationError.message)
+  }
+
+  if (acceptedInvitation?.status !== 'accepted' || !acceptedInvitation.accepted_at) {
+    throw new Error('La invitación del propietario no fue aceptada automáticamente')
+  }
 
   const { error: tenantUpdateError } = await adminClient
     .from('tenants')
-    .update({ email: ownerEmail })
+    .update({ owner_user_id: newUserId, email: ownerEmail })
     .eq('id', tenantId)
 
   if (tenantUpdateError) {
     throw new Error(tenantUpdateError.message)
-  }
-
-  if (planSlug) {
-    const { data: plan, error: planError } = await adminClient
-      .from('plans')
-      .select('id')
-      .eq('slug', planSlug)
-      .single()
-
-    if (planError) {
-      throw new Error(planError.message)
-    }
-
-    const { error: resetSubscriptionError } = await adminClient
-      .from('subscriptions')
-      .update({ is_current: false })
-      .eq('tenant_id', tenantId)
-      .eq('is_current', true)
-
-    if (resetSubscriptionError) {
-      throw new Error(resetSubscriptionError.message)
-    }
-
-    const { error: insertSubscriptionError } = await adminClient.from('subscriptions').insert({
-        tenant_id: tenantId,
-        plan_id: plan.id,
-        status: 'active',
-        is_current: true,
-        billing_cycle: 'monthly',
-      })
-
-    if (insertSubscriptionError) {
-      throw new Error(insertSubscriptionError.message)
-    }
   }
 
   const { error: auditError } = await adminClient.from('audit_logs').insert({
@@ -394,8 +435,8 @@ export async function createTenantAction(formData: FormData) {
       tenant_slug: slug,
       owner_email: ownerEmail,
       owner_name: ownerName,
-      plan_slug: planSlug || 'starter',
-      provisioning_source: provisioningAppMetadata.provisioning_source,
+      plan_slug: plan.slug,
+      provisioning_source: 'superadmin_invitation',
     },
   })
 

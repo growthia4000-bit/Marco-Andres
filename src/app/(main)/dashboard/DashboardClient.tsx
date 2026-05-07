@@ -629,7 +629,7 @@ export default function DashboardPage() {
     {
       href: '/tasks',
       title: t('dashboard.labels.viewTasks'),
-      description: t('dashboard.labels.chatbotTasks'),
+      description: t('dashboard.labels.crmTasksDesc'),
       icon: CheckCircle,
       tone: 'bg-sky-100 text-sky-600',
     },

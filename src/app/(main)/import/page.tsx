@@ -10,6 +10,7 @@ import {
   Building2,
   CheckCircle,
   ChevronRight,
+  ChevronsRight,
   Download,
   FileSpreadsheet,
   FileUp,
@@ -175,11 +176,26 @@ export default function ImportPage() {
                   </div>
                   <button
                     onClick={downloadTemplate}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-medium text-sky-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-100"
                   >
                     <Download size={16} />
                     {t('importPage.downloadTemplate')}
                   </button>
+                </div>
+
+                <div className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4 sm:grid-cols-4">
+                  {[1, 2, 3, 4].map((step) => (
+                    <div key={step} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white">
+                          {step}
+                        </div>
+                        {step < 4 ? <ChevronsRight size={14} className="text-slate-300 sm:hidden" /> : null}
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-slate-900">{t(`importPage.process.step${step}Title`)}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-500">{t(`importPage.process.step${step}Text`)}</p>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -314,6 +330,10 @@ export default function ImportPage() {
                     </>
                   )}
                 </button>
+
+                {!selectedFile && !importing ? (
+                  <p className="text-sm text-slate-500">{t('importPage.disabledHint')}</p>
+                ) : null}
               </div>
             </section>
 
@@ -333,11 +353,67 @@ export default function ImportPage() {
                   <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     {t('importPage.previewTitle')}
                   </div>
-                  <div className="bg-white p-4 font-mono text-sm text-slate-700">
-                    <p className="rounded-xl bg-slate-50 px-3 py-2 text-slate-500">{importType === 'properties' ? t('importPage.examples.propertiesPreviewHeader') : t('importPage.examples.leadsPreviewHeader')}</p>
-                    <p className="mt-2 rounded-xl px-3 py-2">{importType === 'properties' ? t('importPage.examples.propertiesPreviewRow1') : t('importPage.examples.leadsPreviewRow1')}</p>
-                    <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2">{importType === 'properties' ? t('importPage.examples.propertiesPreviewRow2') : t('importPage.examples.leadsPreviewRow2')}</p>
-                  </div>
+                  {importType === 'properties' ? (
+                    <div className="overflow-x-auto bg-white">
+                      <table className="min-w-full text-sm text-slate-700">
+                        <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                          <tr>
+                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.title')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.price')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.type')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.operation')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.city')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t border-slate-100">
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.title')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.price')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.type')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.operation')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.city')}</td>
+                          </tr>
+                          <tr className="border-t border-slate-100 bg-slate-50/70">
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.title')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.price')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.type')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.operation')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.city')}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto bg-white">
+                      <table className="min-w-full text-sm text-slate-700">
+                        <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                          <tr>
+                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.firstName')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.lastName')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.email')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.phone')}</th>
+                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.source')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t border-slate-100">
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.firstName')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.lastName')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.email')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.phone')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.source')}</td>
+                          </tr>
+                          <tr className="border-t border-slate-100 bg-slate-50/70">
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.firstName')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.lastName')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.email')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.phone')}</td>
+                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.source')}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">

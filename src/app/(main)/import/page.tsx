@@ -354,61 +354,61 @@ export default function ImportPage() {
                     {t('importPage.previewTitle')}
                   </div>
                   {importType === 'properties' ? (
-                    <div className="overflow-x-auto bg-white">
-                      <table className="min-w-full text-sm text-slate-700">
-                        <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    <div className="bg-white">
+                      <table className="w-full table-fixed text-xs text-slate-700 sm:text-sm">
+                        <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-xs">
                           <tr>
-                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.title')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.price')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.type')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.operation')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.propertiesTable.city')}</th>
+                            <th className="w-[30%] px-3 py-2.5 sm:px-4">{t('importPage.examples.propertiesTable.title')}</th>
+                            <th className="w-[14%] px-3 py-2.5 sm:px-4">{t('importPage.examples.propertiesTable.price')}</th>
+                            <th className="w-[18%] px-3 py-2.5 sm:px-4">{t('importPage.examples.propertiesTable.type')}</th>
+                            <th className="w-[18%] px-3 py-2.5 sm:px-4">{t('importPage.examples.propertiesTable.operation')}</th>
+                            <th className="w-[20%] px-3 py-2.5 sm:px-4">{t('importPage.examples.propertiesTable.city')}</th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-t border-slate-100">
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.title')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.price')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.type')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.operation')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row1.city')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row1.title')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row1.price')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row1.type')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row1.operation')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row1.city')}</td>
                           </tr>
                           <tr className="border-t border-slate-100 bg-slate-50/70">
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.title')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.price')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.type')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.operation')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.propertiesTable.row2.city')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row2.title')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row2.price')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row2.type')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row2.operation')}</td>
+                            <td className="px-3 py-2.5 leading-5 sm:px-4">{t('importPage.examples.propertiesTable.row2.city')}</td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto bg-white">
-                      <table className="min-w-full text-sm text-slate-700">
-                        <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    <div className="bg-white">
+                      <table className="w-full table-fixed text-xs text-slate-700 sm:text-sm">
+                        <thead className="bg-slate-50 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 sm:text-[11px]">
                           <tr>
-                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.firstName')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.lastName')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.email')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.phone')}</th>
-                            <th className="px-4 py-3">{t('importPage.examples.leadsTable.source')}</th>
+                            <th className="w-[16%] px-2.5 py-2.5 sm:px-3">{t('importPage.examples.leadsTable.firstName')}</th>
+                            <th className="w-[16%] px-2.5 py-2.5 sm:px-3">{t('importPage.examples.leadsTable.lastName')}</th>
+                            <th className="w-[32%] px-2.5 py-2.5 sm:px-3">{t('importPage.examples.leadsTable.email')}</th>
+                            <th className="w-[20%] px-2.5 py-2.5 sm:px-3">{t('importPage.examples.leadsTable.phone')}</th>
+                            <th className="w-[16%] px-2.5 py-2.5 sm:px-3">{t('importPage.examples.leadsTable.source')}</th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-t border-slate-100">
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.firstName')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.lastName')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.email')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.phone')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row1.source')}</td>
+                            <td className="px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row1.firstName')}</td>
+                            <td className="px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row1.lastName')}</td>
+                            <td className="break-all px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row1.email')}</td>
+                            <td className="whitespace-nowrap px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row1.phone')}</td>
+                            <td className="px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row1.source')}</td>
                           </tr>
                           <tr className="border-t border-slate-100 bg-slate-50/70">
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.firstName')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.lastName')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.email')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.phone')}</td>
-                            <td className="px-4 py-3">{t('importPage.examples.leadsTable.row2.source')}</td>
+                            <td className="px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row2.firstName')}</td>
+                            <td className="px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row2.lastName')}</td>
+                            <td className="break-all px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row2.email')}</td>
+                            <td className="whitespace-nowrap px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row2.phone')}</td>
+                            <td className="px-2.5 py-2.5 leading-5 sm:px-3">{t('importPage.examples.leadsTable.row2.source')}</td>
                           </tr>
                         </tbody>
                       </table>

@@ -371,22 +371,31 @@ async function handleEmailTest() {
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-6">
       <div className="mx-auto max-w-6xl">
-        <div className="flex items-center gap-3 text-sm text-slate-500">
-          <Link href="/dashboard" className="hover:text-slate-700">{t('dashboard.title')}</Link>
-          <ChevronRight size={14} />
-          <span className="font-medium text-slate-900">{t('conversations.channelsPanel.title')}</span>
-        </div>
-
-        <div className="mt-4 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">{t('conversations.channelsPanel.title')}</h1>
-            <p className="mt-1 text-sm text-slate-500">{t('conversations.channelsPanel.subtitle')}</p>
+        <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(14,116,144,0.1),_transparent_42%),linear-gradient(135deg,_#ffffff_0%,_#f8fafc_55%,_#eef2ff_100%)] px-6 py-6 sm:px-8 sm:py-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-sm text-slate-500">
+                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                    {t('dashboard.title')}
+                  </Link>
+                  <ChevronRight size={14} className="text-slate-300" />
+                  <span className="font-medium text-slate-900">{t('conversations.channelsPanel.title')}</span>
+                </div>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t('conversations.channelsPanel.title')}</h1>
+                  <p className="max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{t('conversations.channelsPanel.subtitle')}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500">
+                  <ArrowLeft size={16} />
+                  {t('conversations.channelsPanel.backToDashboard')}
+                </Link>
+              </div>
+            </div>
           </div>
-          <Link href="/conversations" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-            <ArrowLeft size={16} />
-            {t('conversations.channelsPanel.back')}
-          </Link>
-        </div>
+        </section>
 
         {error && (
           <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">

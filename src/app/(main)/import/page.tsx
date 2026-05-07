@@ -1,15 +1,31 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Upload, FileSpreadsheet, AlertCircle, CheckCircle, Loader2, Download } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowLeft,
+  Building2,
+  CheckCircle,
+  ChevronRight,
+  Download,
+  FileSpreadsheet,
+  FileUp,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  TableProperties,
+  Upload,
+  Users,
+} from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider'
 
 export default function ImportPage() {
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const [importType, setImportType] = useState<'properties' | 'leads'>('properties')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [result, setResult] = useState<{ imported: number; errors: string[] } | null>(null)
@@ -51,17 +67,20 @@ export default function ImportPage() {
     URL.revokeObjectURL(url)
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (!file.name.endsWith('.csv')) {
-        setError(t('importPage.csvOnly'))
-        return
-      }
-      setSelectedFile(file)
-      setResult(null)
-      setError('')
+  const handleSelectedFile = (file: File | null) => {
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setError(t('importPage.csvOnly'))
+      return
     }
+
+    setSelectedFile(file)
+    setResult(null)
+    setError('')
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleSelectedFile(e.target.files?.[0] || null)
   }
 
   const handleImport = async () => {
@@ -91,7 +110,7 @@ export default function ImportPage() {
       } else {
         setResult(data)
       }
-    } catch (err) {
+    } catch {
       setError(t('importPage.connection'))
     } finally {
       setImporting(false)
@@ -108,171 +127,261 @@ export default function ImportPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-6 py-4">
-        <nav className="flex items-center gap-2 text-sm">
-          <Link href="/dashboard" className="text-slate-500 hover:text-slate-700 font-medium">
-            {t('importPage.backToDashboard')}
-          </Link>
-          <span className="text-slate-300">/</span>
-          <span className="text-slate-900 font-medium">{t('importPage.title')}</span>
-        </nav>
-      </header>
-
-      <main className="p-6 max-w-3xl mx-auto">
-        <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('importPage.subtitle')}</h2>
-          
-          <div className="flex gap-4 mb-6">
-            <button
-              onClick={() => { setImportType('properties'); setSelectedFile(null); setResult(null) }}
-              className={`flex-1 p-4 rounded-xl border-2 transition ${
-                importType === 'properties'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <Home className="mx-auto mb-2" size={32} />
-              <p className="font-medium text-slate-900">{t('importPage.properties')}</p>
-              <p className="text-sm text-slate-500">{t('importPage.importProperties')}</p>
-            </button>
-            <button
-              onClick={() => { setImportType('leads'); setSelectedFile(null); setResult(null) }}
-              className={`flex-1 p-4 rounded-xl border-2 transition ${
-                importType === 'leads'
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <Users className="mx-auto mb-2" size={32} />
-              <p className="font-medium text-slate-900">{t('importPage.leads')}</p>
-              <p className="text-sm text-slate-500">{t('importPage.importLeads')}</p>
-            </button>
-          </div>
-
-          <div className="mb-6">
-            <button
-              onClick={downloadTemplate}
-              className="flex items-center gap-2 text-blue-500 hover:text-blue-600 text-sm"
-            >
-              <Download size={16} />
-              {t('importPage.downloadTemplate')}
-            </button>
-          </div>
-
-          <div
-            className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-blue-400 transition cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            <Upload className="mx-auto text-slate-400 mb-4" size={48} />
-            {selectedFile ? (
-              <div>
-                <p className="font-medium text-slate-900">{selectedFile.name}</p>
-                <p className="text-sm text-slate-500 mt-1">
-                  {(selectedFile.size / 1024).toFixed(1)} KB
-                </p>
+      <main className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
+        <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(14,116,144,0.12),_transparent_42%),linear-gradient(135deg,_#ffffff_0%,_#f8fafc_55%,_#eef2ff_100%)] px-6 py-6 sm:px-8 sm:py-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                    {t('dashboard.title')}
+                  </Link>
+                  <ChevronRight size={14} className="text-slate-300" />
+                  <span className="font-medium text-slate-900">{t('importPage.title')}</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                    <FileSpreadsheet size={22} />
+                  </div>
+                  <div className="space-y-2">
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t('importPage.title')}</h1>
+                    <p className="max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{t('importPage.heroSubtitle')}</p>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div>
-                 <p className="font-medium text-slate-900">{t('importPage.dragCsv')}</p>
-                 <p className="text-sm text-slate-500 mt-1">{t('importPage.clickSelect')}</p>
-               </div>
-             )}
+              <div className="flex flex-wrap items-center gap-3">
+                <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500">
+                  <ArrowLeft size={16} />
+                  {t('importPage.backToPanel')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_360px]">
+          <div className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                      <FileUp size={18} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-950">{t('importPage.subtitle')}</h2>
+                      <p className="mt-1 text-sm text-slate-500">{t('importPage.importCardSubtitle')}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={downloadTemplate}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <Download size={16} />
+                    {t('importPage.downloadTemplate')}
+                  </button>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <button
+                    onClick={() => { setImportType('properties'); setSelectedFile(null); setResult(null) }}
+                    className={`rounded-3xl border p-5 text-left transition ${
+                      importType === 'properties'
+                        ? 'border-sky-300 bg-[linear-gradient(135deg,#eff6ff_0%,#f8fafc_55%,#ffffff_100%)] shadow-sm ring-2 ring-sky-100'
+                        : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${importType === 'properties' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Building2 size={22} />
+                        </div>
+                        <p className="mt-4 font-semibold text-slate-900">{t('importPage.properties')}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">{t('importPage.importProperties')}</p>
+                      </div>
+                      {importType === 'properties' ? <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700">{t('importPage.selected')}</span> : null}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setImportType('leads'); setSelectedFile(null); setResult(null) }}
+                    className={`rounded-3xl border p-5 text-left transition ${
+                      importType === 'leads'
+                        ? 'border-emerald-300 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_55%,#ffffff_100%)] shadow-sm ring-2 ring-emerald-100'
+                        : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${importType === 'leads' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Users size={22} />
+                        </div>
+                        <p className="mt-4 font-semibold text-slate-900">{t('importPage.leads')}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">{t('importPage.importLeads')}</p>
+                      </div>
+                      {importType === 'leads' ? <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">{t('importPage.selected')}</span> : null}
+                    </div>
+                  </button>
+                </div>
+
+                <div
+                  className={`cursor-pointer rounded-[28px] border-2 border-dashed p-8 text-center transition ${isDragging ? 'border-sky-400 bg-sky-50' : selectedFile ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] hover:border-sky-300 hover:bg-sky-50/40'}`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(event) => {
+                    event.preventDefault()
+                    setIsDragging(true)
+                  }}
+                  onDragLeave={(event) => {
+                    event.preventDefault()
+                    setIsDragging(false)
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault()
+                    setIsDragging(false)
+                    handleSelectedFile(event.dataTransfer.files?.[0] || null)
+                  }}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-slate-700 shadow-sm">
+                    <Upload size={30} />
+                  </div>
+
+                  {selectedFile ? (
+                    <div className="mt-5 space-y-2">
+                      <p className="text-lg font-semibold text-slate-900">{selectedFile.name}</p>
+                      <p className="text-sm text-slate-500">{t('importPage.fileReady')}</p>
+                      <div className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
+                        {(selectedFile.size / 1024).toFixed(1)} KB
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-5 space-y-2">
+                      <p className="text-lg font-semibold text-slate-900">{t('importPage.dragCsv')}</p>
+                      <p className="text-sm text-slate-500">{t('importPage.clickSelect')}</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{t('importPage.supportedFormat')}</p>
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-600 flex items-center gap-2">
+                    <AlertCircle size={18} />
+                    {error}
+                  </div>
+                )}
+
+                {result && (
+                  <div className={`mt-4 rounded-xl p-4 flex items-center gap-2 ${
+                    result.imported > 0 ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-amber-50 border border-amber-200 text-amber-700'
+                  }`}>
+                    {result.imported > 0 ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+                    <span>{t('importPage.imported', { count: result.imported })}</span>
+                  </div>
+                )}
+
+                {result?.errors && result.errors.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                    <p className="mb-2 font-medium text-red-700">{t('importPage.errors', { count: result.errors.length })}</p>
+                    <ul className="space-y-1 text-sm text-red-600">
+                      {result.errors.map((err, i) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleImport}
+                  disabled={!selectedFile || importing}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {importing ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      {t('importPage.importing')}
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={18} />
+                      {t('importPage.importButton', { type: importType === 'properties' ? t('importPage.properties') : t('importPage.leads') })}
+                    </>
+                  )}
+                </button>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                  <TableProperties size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-950">{t('importPage.fileFormat')}</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">{t('importPage.fileFormatText')}</p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                <div className="overflow-hidden rounded-2xl border border-slate-200">
+                  <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {t('importPage.previewTitle')}
+                  </div>
+                  <div className="bg-white p-4 font-mono text-sm text-slate-700">
+                    <p className="rounded-xl bg-slate-50 px-3 py-2 text-slate-500">{importType === 'properties' ? t('importPage.examples.propertiesPreviewHeader') : t('importPage.examples.leadsPreviewHeader')}</p>
+                    <p className="mt-2 rounded-xl px-3 py-2">{importType === 'properties' ? t('importPage.examples.propertiesPreviewRow1') : t('importPage.examples.leadsPreviewRow1')}</p>
+                    <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2">{importType === 'properties' ? t('importPage.examples.propertiesPreviewRow2') : t('importPage.examples.leadsPreviewRow2')}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{t('importPage.microcopyTitle')}</p>
+                  <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
+                    <p>{t('importPage.microcopyUtf8')}</p>
+                    <p>{t('importPage.microcopyHeaders')}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
 
-          {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 flex items-center gap-2">
-              <AlertCircle size={18} />
-              {error}
-            </div>
-          )}
+          <aside className="space-y-6">
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-950">{t('importPage.beforeImportTitle')}</h3>
+                  <p className="mt-1 text-sm text-slate-500">{t('importPage.beforeImportSubtitle')}</p>
+                </div>
+              </div>
 
-          {result && (
-            <div className={`mt-4 p-4 rounded-xl flex items-center gap-2 ${
-              result.imported > 0 ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-amber-50 border border-amber-200 text-amber-700'
-            }`}>
-              {result.imported > 0 ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-              <span>{t('importPage.imported', { count: result.imported })}</span>
-            </div>
-          )}
-
-          {result?.errors && result.errors.length > 0 && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <p className="font-medium text-red-700 mb-2">{t('importPage.errors', { count: result.errors.length })}</p>
-              <ul className="text-sm text-red-600 space-y-1">
-                {result.errors.map((err, i) => (
-                  <li key={i}>{err}</li>
+              <div className="mt-5 space-y-3">
+                {[1, 2, 3, 4].map((item) => (
+                  <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm">
+                        {item === 1 ? <FileSpreadsheet size={16} /> : item === 2 ? <ShieldCheck size={16} /> : item === 3 ? <Download size={16} /> : <CheckCircle size={16} />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{t(`importPage.beforeImport.items.item${item}Title`)}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">{t(`importPage.beforeImport.items.item${item}Text`)}</p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </ul>
-            </div>
-          )}
-
-          <button
-            onClick={handleImport}
-            disabled={!selectedFile || importing}
-            className="mt-6 w-full px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {importing ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                 {t('importPage.importing')}
-              </>
-            ) : (
-              <>
-                <Upload size={18} />
-                 {t('importPage.importButton', { type: importType === 'properties' ? t('importPage.properties') : t('importPage.leads') })}
-               </>
-             )}
-          </button>
-        </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('importPage.fileFormat')}</h3>
-            <p className="text-sm text-slate-600 mb-4">
-             {t('importPage.fileFormatText')}
-            </p>
-          
-          {importType === 'properties' ? (
-            <div className="bg-slate-50 rounded-lg p-4 text-sm font-mono">
-               <p className="text-slate-500">{t('importPage.examples.propertiesPreviewHeader')}</p>
-               <p>{t('importPage.examples.propertiesPreviewRow1')}</p>
-               <p>{t('importPage.examples.propertiesPreviewRow2')}</p>
-             </div>
-           ) : (
-             <div className="bg-slate-50 rounded-lg p-4 text-sm font-mono">
-               <p className="text-slate-500">{t('importPage.examples.leadsPreviewHeader')}</p>
-               <p>{t('importPage.examples.leadsPreviewRow1')}</p>
-               <p>{t('importPage.examples.leadsPreviewRow2')}</p>
-             </div>
-           )}
-        </div>
+              </div>
+            </section>
+          </aside>
+        </section>
       </main>
     </div>
-  )
-}
-
-function Home({ className, size }: { className?: string; size: number }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-      <polyline points="9 22 9 12 15 12 15 22"></polyline>
-    </svg>
-  )
-}
-
-function Users({ className, size }: { className?: string; size: number }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-    </svg>
   )
 }

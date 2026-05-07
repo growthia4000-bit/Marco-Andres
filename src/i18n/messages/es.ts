@@ -388,9 +388,10 @@ const es = {
     imported: '{count} registros importados exitosamente', errors: 'Errores ({count}):',
     importButton: 'Importar {type}', importing: 'Importando...', fileFormat: 'Formato del archivo CSV',
     fileFormatText: 'Usa un CSV simple con encabezados claros para que propiedades y leads entren con el contexto correcto desde la primera carga.', previewTitle: 'Vista previa recomendada', microcopyTitle: 'Buenas prácticas', microcopyUtf8: 'Guarda el archivo en UTF-8 para evitar caracteres rotos en nombres, direcciones y notas.', microcopyHeaders: 'Mantén la primera fila como encabezado para que el CRM reconozca cada columna correctamente.',
-    beforeImportTitle: 'Antes de importar', beforeImportSubtitle: 'Cuatro checks rápidos para una demo limpia y una carga sin sorpresas.',
+    beforeImportTitle: 'Antes de importar', beforeImportSubtitle: 'Recomendaciones para una carga limpia y sin errores.',
+    process: { step1Title: 'Elegir tipo', step1Text: 'Define si vas a cargar propiedades o leads.', step2Title: 'Preparar plantilla', step2Text: 'Descarga la plantilla y completa las columnas clave.', step3Title: 'Subir CSV', step3Text: 'Arrastra el archivo o selecciónalo desde tu equipo.', step4Title: 'Importar', step4Text: 'Confirma la carga y revisa el resultado.' },
     beforeImport: { items: { item1Title: 'Usa CSV con encabezados', item1Text: 'La primera fila debe nombrar cada columna para mapear correctamente propiedades o leads.', item2Title: 'Revisa duplicados', item2Text: 'Evita contactos o inmuebles repetidos antes de cargar el archivo completo.', item3Title: 'Trabaja con la plantilla', item3Text: 'Descarga la plantilla CSV para respetar el formato esperado y reducir errores.', item4Title: 'Valida con pocos registros', item4Text: 'Importa primero una muestra pequeña y confirma el resultado antes de subir todo el lote.' } },
-    csvOnly: 'Solo se permiten archivos CSV', selectFile: 'Selecciona un archivo', importError: 'Error al importar', connection: 'Error de conexión',
+    csvOnly: 'Solo se permiten archivos CSV', selectFile: 'Selecciona un archivo', disabledHint: 'Selecciona un archivo CSV para continuar.', importError: 'Error al importar', connection: 'Error de conexión',
     backToDashboard: 'Panel', backToPanel: 'Volver al Panel',
     examples: {
       propertiesFile: 'plantilla-propiedades.csv',
@@ -402,9 +403,19 @@ const es = {
       propertiesPreviewHeader: 'titulo,precio,tipo,operacion,ciudad',
       propertiesPreviewRow1: 'Apartamento centrico,150000,apartamento,venta,Madrid',
       propertiesPreviewRow2: 'Casa con jardin,350000,casa,venta,Barcelona',
+      propertiesTable: {
+        title: 'título', price: 'precio', type: 'tipo', operation: 'operación', city: 'ciudad',
+        row1: { title: 'Apartamento céntrico', price: '150000', type: 'apartamento', operation: 'venta', city: 'Madrid' },
+        row2: { title: 'Casa con jardín', price: '350000', type: 'casa', operation: 'venta', city: 'Barcelona' },
+      },
       leadsPreviewHeader: 'nombre,apellido,email,telefono,fuente',
       leadsPreviewRow1: 'Juan,Garcia,juan@email.com,612345678,web',
       leadsPreviewRow2: 'Maria,Lopez,maria@email.com,698765432,referido',
+      leadsTable: {
+        firstName: 'nombre', lastName: 'apellido', email: 'email', phone: 'teléfono', source: 'fuente',
+        row1: { firstName: 'Juan', lastName: 'García', email: 'juan@email.com', phone: '612345678', source: 'web' },
+        row2: { firstName: 'Maria', lastName: 'Lopez', email: 'maria@email.com', phone: '698765432', source: 'referido' },
+      },
     }
   },
   team: {

@@ -111,6 +111,7 @@ export function WhatsAppTemplateManager() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [errorDetails, setErrorDetails] = useState('')
   const [message, setMessage] = useState('')
   const [search, setSearch] = useState('')
   const [languageFilter, setLanguageFilter] = useState<string>(localeCode || 'es')
@@ -134,8 +135,10 @@ export function WhatsAppTemplateManager() {
       const response = await getTenantWhatsAppTemplatesAction() as TemplateCatalogResponse
       setCatalog(response)
       setError('')
+      setErrorDetails('')
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : t('conversations.templateManager.messages.loadError'))
+      setErrorDetails('')
     } finally {
       setLoading(false)
     }
@@ -315,6 +318,7 @@ export function WhatsAppTemplateManager() {
   async function handleSaveTemplate() {
     setSubmitting(true)
     setError('')
+    setErrorDetails('')
     setMessage('')
     try {
       const fd = new FormData()
@@ -343,6 +347,7 @@ export function WhatsAppTemplateManager() {
   async function handleDuplicate(id: string) {
     setSubmitting(true)
     setError('')
+    setErrorDetails('')
     setMessage('')
     try {
       const fd = new FormData()
@@ -360,6 +365,7 @@ export function WhatsAppTemplateManager() {
   async function handleArchive(id: string, archive: boolean) {
     setSubmitting(true)
     setError('')
+    setErrorDetails('')
     setMessage('')
     try {
       const fd = new FormData()
@@ -380,11 +386,13 @@ export function WhatsAppTemplateManager() {
       setError(kind === 'publish'
         ? t('conversations.templateManager.messages.selectAtLeastOnePublish')
         : t('conversations.templateManager.messages.selectAtLeastOneSync'))
+      setErrorDetails('')
       return
     }
 
     setSubmitting(true)
     setError('')
+    setErrorDetails('')
     setMessage('')
     try {
       const fd = new FormData()
@@ -400,7 +408,14 @@ export function WhatsAppTemplateManager() {
       setSelectedIds([])
       await loadCatalog()
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : t('conversations.templateManager.messages.batchError'))
+      const technicalDetail = actionError instanceof Error ? actionError.message : ''
+      if (kind === 'sync') {
+        setError(t('conversations.templateManager.messages.syncStatesError'))
+        setErrorDetails(technicalDetail)
+      } else {
+        setError(actionError instanceof Error ? actionError.message : t('conversations.templateManager.messages.batchError'))
+        setErrorDetails('')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -485,7 +500,17 @@ export function WhatsAppTemplateManager() {
         )}
       </div>
 
-      {error ? <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+      {error ? (
+        <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <p>{error}</p>
+          {errorDetails ? (
+            <details className="mt-3 rounded-lg border border-rose-200/80 bg-white/70 px-3 py-2 text-xs text-rose-800">
+              <summary className="cursor-pointer font-medium list-none">{t('conversations.templateManager.messages.viewTechnicalDetails')}</summary>
+              <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-5">{errorDetails}</pre>
+            </details>
+          ) : null}
+        </div>
+      ) : null}
       {message ? <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
 
       <div className="mt-4 relative">

@@ -134,14 +134,14 @@ export default function ImportPage() {
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">
+                  <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-3 py-1 font-medium text-sky-700 transition hover:border-sky-300 hover:text-sky-800">
                     {t('dashboard.title')}
                   </Link>
                   <ChevronRight size={14} className="text-slate-300" />
                   <span className="font-medium text-slate-900">{t('importPage.title')}</span>
                 </div>
                 <div className="space-y-3">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-sm shadow-sky-200">
                     <FileSpreadsheet size={22} />
                   </div>
                   <div className="space-y-2">
@@ -151,7 +151,7 @@ export default function ImportPage() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500">
+                <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50 px-4 py-2.5 text-sm font-medium text-sky-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:from-sky-100 hover:to-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400">
                   <ArrowLeft size={16} />
                   {t('importPage.backToPanel')}
                 </Link>
@@ -166,7 +166,7 @@ export default function ImportPage() {
               <div className="flex flex-col gap-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-sm shadow-sky-200">
                       <FileUp size={18} />
                     </div>
                     <div>
@@ -187,7 +187,7 @@ export default function ImportPage() {
                   {[1, 2, 3, 4].map((step) => (
                     <div key={step} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white">
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-semibold ${step === 1 ? 'bg-sky-100 text-sky-700' : step === 2 ? 'bg-amber-100 text-amber-700' : step === 3 ? 'bg-cyan-100 text-cyan-700' : 'bg-emerald-100 text-emerald-700'}`}>
                           {step}
                         </div>
                         {step < 4 ? <ChevronsRight size={14} className="text-slate-300 sm:hidden" /> : null}
@@ -209,7 +209,7 @@ export default function ImportPage() {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${importType === 'properties' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${importType === 'properties' ? 'bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-sm shadow-sky-200' : 'bg-sky-50 text-sky-600'}`}>
                           <Building2 size={22} />
                         </div>
                         <p className="mt-4 font-semibold text-slate-900">{t('importPage.properties')}</p>
@@ -229,7 +229,7 @@ export default function ImportPage() {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${importType === 'leads' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${importType === 'leads' ? 'bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-sm shadow-violet-200' : 'bg-violet-50 text-violet-600'}`}>
                           <Users size={22} />
                         </div>
                         <p className="mt-4 font-semibold text-slate-900">{t('importPage.leads')}</p>
@@ -265,7 +265,7 @@ export default function ImportPage() {
                     className="hidden"
                   />
 
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-slate-700 shadow-sm">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-50 to-cyan-50 text-sky-700 shadow-sm">
                     <Upload size={30} />
                   </div>
 
@@ -316,7 +316,7 @@ export default function ImportPage() {
                 <button
                   onClick={handleImport}
                   disabled={!selectedFile || importing}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-600 to-cyan-600 px-6 py-3.5 text-sm font-medium text-white shadow-sm shadow-sky-200 transition hover:-translate-y-0.5 hover:from-sky-700 hover:to-cyan-700 disabled:opacity-50"
                 >
                   {importing ? (
                     <>
@@ -339,7 +339,7 @@ export default function ImportPage() {
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-400 text-white shadow-sm shadow-amber-200">
                   <TableProperties size={18} />
                 </div>
                 <div>
@@ -416,7 +416,7 @@ export default function ImportPage() {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{t('importPage.microcopyTitle')}</p>
                   <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
                     <p>{t('importPage.microcopyUtf8')}</p>
@@ -430,7 +430,7 @@ export default function ImportPage() {
           <aside className="space-y-6">
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm shadow-violet-200">
                   <Sparkles size={18} />
                 </div>
                 <div>
@@ -443,7 +443,7 @@ export default function ImportPage() {
                 {[1, 2, 3, 4].map((item) => (
                   <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm">
+                      <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl shadow-sm ${item === 1 ? 'bg-sky-50 text-sky-600' : item === 2 ? 'bg-emerald-50 text-emerald-600' : item === 3 ? 'bg-amber-50 text-amber-600' : 'bg-violet-50 text-violet-600'}`}>
                         {item === 1 ? <FileSpreadsheet size={16} /> : item === 2 ? <ShieldCheck size={16} /> : item === 3 ? <Download size={16} /> : <CheckCircle size={16} />}
                       </div>
                       <div>

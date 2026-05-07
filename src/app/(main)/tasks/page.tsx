@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useI18n } from '@/i18n/I18nProvider'
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowRight,
   Bot,
   CheckCircle2,
@@ -66,9 +67,9 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<TaskRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [sourceFilter, setSourceFilter] = useState('chatbot')
+  const [sourceFilter, setSourceFilter] = useState('all')
   const [actionTypeFilter, setActionTypeFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('open')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null)
 
@@ -81,9 +82,9 @@ export default function TasksPage() {
     const actionType = searchParams.get('action_type')
     const status = searchParams.get('status')
 
-    setSourceFilter(source || 'chatbot')
+    setSourceFilter(source || 'all')
     setActionTypeFilter(actionType || 'all')
-    setStatusFilter(status || 'open')
+    setStatusFilter(status || 'all')
   }, [searchParams])
 
   async function loadTasks() {
@@ -161,14 +162,11 @@ export default function TasksPage() {
     }
   }
 
-  const filteredTasks = useMemo(() => {
+  const scopedTasks = useMemo(() => {
     return tasks.filter((task) => {
       const presentation = getTaskPresentation(task, t, formatCurrency)
       const sourceMatches = sourceFilter === 'all' || task.source === sourceFilter
       const actionMatches = actionTypeFilter === 'all' || task.action_type === actionTypeFilter
-      const statusMatches = statusFilter === 'all'
-        || (statusFilter === 'open' && task.action_status !== 'completed')
-        || task.action_status === statusFilter
       const normalizedQuery = normalizeSearchText(searchQuery.trim())
       const metadataText = task.metadata ? JSON.stringify(task.metadata) : ''
       const searchHaystack = normalizeSearchText([
@@ -197,19 +195,29 @@ export default function TasksPage() {
         .join(' '))
 
       const searchMatches = !normalizedQuery || searchHaystack.includes(normalizedQuery)
-      return sourceMatches && actionMatches && statusMatches && searchMatches
+      return sourceMatches && actionMatches && searchMatches
     })
-  }, [tasks, sourceFilter, actionTypeFilter, statusFilter, searchQuery, t, formatCurrency])
+  }, [tasks, sourceFilter, actionTypeFilter, searchQuery, t, formatCurrency])
+
+  const filteredTasks = useMemo(() => {
+    return scopedTasks.filter((task) => {
+      const statusMatches = statusFilter === 'all'
+        || (statusFilter === 'open' && task.action_status !== 'completed')
+        || task.action_status === statusFilter
+
+      return statusMatches
+    })
+  }, [scopedTasks, statusFilter])
 
   const stats = useMemo(() => {
-    const pending = filteredTasks.filter((task) => task.action_status === 'pending').length
-    const inProgress = filteredTasks.filter((task) => task.action_status === 'in_progress').length
-    const completed = filteredTasks.filter((task) => task.action_status === 'completed').length
+    const pending = scopedTasks.filter((task) => task.action_status === 'pending').length
+    const inProgress = scopedTasks.filter((task) => task.action_status === 'in_progress').length
+    const completed = scopedTasks.filter((task) => task.action_status === 'completed').length
     return [
       {
         key: 'total',
         label: t('tasksPage.stats.total'),
-        value: filteredTasks.length,
+        value: scopedTasks.length,
         icon: Layers3,
         shell: 'border-slate-200 bg-white',
         iconShell: 'bg-slate-900 text-white',
@@ -243,7 +251,19 @@ export default function TasksPage() {
         valueTone: 'text-emerald-700',
       },
     ]
-  }, [filteredTasks, t])
+  }, [scopedTasks, t])
+
+  const hasFilterAdjustments = sourceFilter !== 'all' || actionTypeFilter !== 'all' || statusFilter !== 'all' || searchQuery.trim().length > 0
+  function resetFilters() {
+    setSourceFilter('all')
+    setActionTypeFilter('all')
+    setStatusFilter('all')
+    setSearchQuery('')
+  }
+
+  function setQuickStatusFilter(nextStatus: string) {
+    setStatusFilter(nextStatus)
+  }
 
   if (loading) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-500">{t('common.loading')}</div></div>
@@ -270,6 +290,13 @@ export default function TasksPage() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+                >
+                  <ArrowLeft size={16} />
+                  {t('tasksPage.navigation.backToDashboard')}
+                </Link>
                 <button
                   onClick={loadTasks}
                   className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
@@ -287,18 +314,28 @@ export default function TasksPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon
+            const isActive = statusFilter === stat.key || (stat.key === 'total' && statusFilter === 'all')
             return (
-              <article key={stat.key} className={`rounded-3xl border p-5 shadow-sm ${stat.shell}`}>
+              <button
+                key={stat.key}
+                type="button"
+                onClick={() => setQuickStatusFilter(stat.key === 'total' ? 'all' : stat.key)}
+                aria-pressed={isActive}
+                className={`rounded-3xl border p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${stat.shell} ${isActive ? 'ring-2 ring-sky-400 ring-offset-2' : ''}`}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-3">
-                    <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                      {isActive && <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700">{t('tasksPage.filters.active')}</span>}
+                    </div>
                     <p className={`text-3xl font-semibold tracking-tight ${stat.valueTone}`}>{stat.value}</p>
                   </div>
                   <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm ${stat.iconShell}`}>
                     <Icon size={20} />
                   </div>
                 </div>
-              </article>
+              </button>
             )
           })}
         </section>
@@ -377,9 +414,28 @@ export default function TasksPage() {
 
           {filteredTasks.length === 0 ? (
             <div className="p-12 text-center text-slate-500">
-              <MessageSquare className="mx-auto mb-3 text-slate-300" size={40} />
-              <p className="font-medium text-slate-700">{t('tasksPage.emptySearch')}</p>
-              <p className="mt-1 text-sm text-slate-500">{t('tasksPage.emptySearchSubtitle')}</p>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-400 shadow-inner">
+                <MessageSquare size={32} />
+              </div>
+              <p className="mt-5 text-lg font-semibold text-slate-800">
+                {tasks.length === 0 && !hasFilterAdjustments ? t('tasksPage.emptyQueueTitle') : t('tasksPage.emptySearch')}
+              </p>
+              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                {tasks.length === 0 && !hasFilterAdjustments ? t('tasksPage.emptyQueueSubtitle') : t('tasksPage.emptySearchSubtitle')}
+              </p>
+              {tasks.length === 0 && !hasFilterAdjustments && (
+                <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500">{t('tasksPage.emptyQueueHint')}</p>
+              )}
+              {tasks.length > 0 && hasFilterAdjustments && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                >
+                  <X size={16} />
+                  {t('tasksPage.filters.clearAll')}
+                </button>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-slate-100">

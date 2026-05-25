@@ -259,7 +259,7 @@ async function performEmailInboxSyncViaDemo(args: {
     {
       uid: Date.now(),
       from: 'Juan Pérez <juan.perez@gmail.com>',
-      to: 'agente@inmocrm.com',
+      to: 'agente@growthiaglobalcrm.com',
       subject: 'Consulta sobre propiedad en venta',
       text: 'Hola, me interesa saber más sobre el apartamento en el centro. Tengo presupuesto hasta 200.000 euros y necesito 2 habitaciones. Gracias.',
       html: '<p>Hola, me interesa saber más sobre el apartamento en el centro. Tengo presupuesto hasta 200.000 euros y necesito 2 habitaciones. Gracias.</p>',

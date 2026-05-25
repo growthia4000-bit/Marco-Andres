@@ -810,7 +810,7 @@ export default function DashboardPage() {
                     <Building2 size={28} />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">INMOCRM</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">GROWTHIA GLOBAL CRM</p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t('dashboard.title')}</h1>
                     <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">{t('dashboard.subtitle')}</p>
                   </div>

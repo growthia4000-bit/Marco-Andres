@@ -31,7 +31,7 @@ const it = {
     assistant: 'assistente',
   },
   auth: {
-    brandSubtitle: 'CRM Immobiliare Multi-Agente',
+    brandSubtitle: 'Growthia Global CRM',
     footer: {
       rightsReserved: 'Tutti i diritti riservati.',
       secureAccess: 'Accesso sicuro per team immobiliari moderni',

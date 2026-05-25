@@ -31,7 +31,7 @@ const en = {
     assistant: 'assistant',
   },
   auth: {
-    brandSubtitle: 'Multi-Agent Real Estate CRM',
+    brandSubtitle: 'Growthia Global CRM',
     footer: {
       rightsReserved: 'All rights reserved.',
       secureAccess: 'Secure access for modern real estate teams',

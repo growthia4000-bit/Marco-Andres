@@ -38,7 +38,7 @@ const es = {
     },
     login: {
       heroEyebrow: 'Acceso seguro',
-      heroTitle: 'Bienvenido a InmoCRM',
+      heroTitle: 'Bienvenido a Growthia Global CRM',
       heroDescription: 'Un espacio premium para equipos inmobiliarios que gestionan inventario, leads y conversaciones con confianza.',
       title: 'Iniciar Sesión',
       email: 'Correo electrónico',
@@ -558,7 +558,7 @@ const es = {
     newTitle: 'Nuevo Lead', editTitle: 'Editar Lead', subtitle: 'Registra un nuevo contacto comercial con contexto claro para priorizar seguimiento, presupuesto y preferencias desde el primer momento.', backToLeads: 'Volver a Leads', successCreate: '¡Lead guardado correctamente!', successEdit: '¡Lead actualizado correctamente!', contactInfo: 'Información de Contacto', firstName: 'Nombre *', lastName: 'Apellido', lastNames: 'Apellidos', phone: 'Teléfono *', email: 'Email', source: 'Origen del Lead', sourceShort: 'Origen', status: 'Estado', preferences: 'Presupuesto y Preferencias', preferencesShort: 'Preferencias', budgetMin: 'Presupuesto mínimo', budgetMax: 'Presupuesto máximo', budgetMinLong: 'Presupuesto mínimo', budgetMaxLong: 'Presupuesto máximo', preferredLocation: 'Zona Preferida', preferredLocationLong: 'Ubicación Preferida', preferredType: 'Tipo de Propiedad', notes: 'Notas', notesPlaceholder: 'Notas sobre el lead...', select: 'Seleccionar...', save: 'Guardar Lead', saveChanges: 'Guardar Cambios', saving: 'Guardando...', placeholders: { firstName: 'Juan', lastName: 'García', phone: '+34 600 000 000', email: 'juan@email.com', budgetMin: '100000', budgetMax: '200000', preferredLocation: 'Centro, Norte...' }, errors: { tenant: 'No se encontró el tenant', firstNameRequired: 'El nombre es requerido', phoneRequired: 'El teléfono es requerido', invalidEmail: 'Email inválido', save: 'Error al guardar el lead', create: 'Error al crear el lead. Intenta nuevamente.', update: 'Error al actualizar el lead', notFound: 'Lead no encontrado.', retry: 'Error de conexión. Intenta nuevamente.', profile: 'Error al cargar tu perfil. Intenta cerrar sesión y volver a entrar.', tenantMissing: 'No se encontró tu inmobiliaria. Por favor contacta a soporte.' }
   },
   leadDetailExtra: {
-    detail: 'Detalle del Lead', notFound: 'Lead no encontrado', back: 'Volver a Leads', budget: 'Presupuesto', preferredArea: 'Zona Preferida', source: 'Origen', notes: 'Notas', interactions: 'Historial de Interacciones', addNote: 'Añadir Nota', addNotePlaceholder: 'Añadir una nota...', noInteractions: 'No hay interacciones registradas', note: 'Nota', quickActions: 'Acciones Rápidas', call: 'Llamar {phone}', sendEmail: 'Enviar Email', schedule: 'Agendar Cita', whatsapp: 'WhatsApp', openWhatsApp: 'Abrir en WhatsApp', info: 'Información', created: 'Creado', preferredType: 'Tipo Preferido', deleteConfirm: '¿Eliminar este lead? Esta acción no se puede deshacer.', reactivate: 'Reactivar Lead', reactivateSuccess: 'Mensaje de reactivación enviado', reactivateError: 'Error al reactivar', errors: { profile: 'Error al cargar tu perfil.', load: 'Error al cargar el lead.', missing: 'Lead no encontrado o no tienes permisos.' }, emailSubject: 'Contacto desde InmoCRM', emailBody: 'Hola {name},', aiCompose: { trigger: 'Redactar con IA', title: 'Redacción asistida por IA', subtitle: 'Genera un email breve y profesional listo para enviar a este lead.', subject: 'Asunto', body: 'Cuerpo', generating: 'Generando borrador...', regenerate: 'Regenerar', copy: 'Copiar', copied: 'Copiado', copyError: 'No se pudo copiar el borrador.', openGmail: 'Abrir en Gmail', error: 'No se pudo generar el email con IA.', aiBadge: 'IA', fallbackBadge: 'Fallback', fallbackNoProvider: 'Se muestra un borrador base porque no hay proveedor IA configurado en este entorno.', fallbackCredits: 'Se muestra un borrador fallback porque la cuenta de OpenRouter no tiene créditos disponibles.', fallbackGeneric: 'Se muestra un borrador fallback porque la respuesta IA no pudo aprovecharse correctamente.' }, interactionTypes: { note: 'Nota' }
+    detail: 'Detalle del Lead', notFound: 'Lead no encontrado', back: 'Volver a Leads', budget: 'Presupuesto', preferredArea: 'Zona Preferida', source: 'Origen', notes: 'Notas', interactions: 'Historial de Interacciones', addNote: 'Añadir Nota', addNotePlaceholder: 'Añadir una nota...', noInteractions: 'No hay interacciones registradas', note: 'Nota', quickActions: 'Acciones Rápidas', call: 'Llamar {phone}', sendEmail: 'Enviar Email', schedule: 'Agendar Cita', whatsapp: 'WhatsApp', openWhatsApp: 'Abrir en WhatsApp', info: 'Información', created: 'Creado', preferredType: 'Tipo Preferido', deleteConfirm: '¿Eliminar este lead? Esta acción no se puede deshacer.', reactivate: 'Reactivar Lead', reactivateSuccess: 'Mensaje de reactivación enviado', reactivateError: 'Error al reactivar', errors: { profile: 'Error al cargar tu perfil.', load: 'Error al cargar el lead.', missing: 'Lead no encontrado o no tienes permisos.' }, emailSubject: 'Contacto desde Growthia Global CRM', emailBody: 'Hola {name},', aiCompose: { trigger: 'Redactar con IA', title: 'Redacción asistida por IA', subtitle: 'Genera un email breve y profesional listo para enviar a este lead.', subject: 'Asunto', body: 'Cuerpo', generating: 'Generando borrador...', regenerate: 'Regenerar', copy: 'Copiar', copied: 'Copiado', copyError: 'No se pudo copiar el borrador.', openGmail: 'Abrir en Gmail', error: 'No se pudo generar el email con IA.', aiBadge: 'IA', fallbackBadge: 'Fallback', fallbackNoProvider: 'Se muestra un borrador base porque no hay proveedor IA configurado en este entorno.', fallbackCredits: 'Se muestra un borrador fallback porque la cuenta de OpenRouter no tiene créditos disponibles.', fallbackGeneric: 'Se muestra un borrador fallback porque la respuesta IA no pudo aprovecharse correctamente.' }, interactionTypes: { note: 'Nota' }
   },
   tasksPage: {
     title: 'Acciones CRM',
@@ -785,7 +785,7 @@ const es = {
       whatsapp: {
         badge: 'Verificado en sandbox',
         title: 'WhatsApp validado solo en entorno de prueba',
-        description: 'El canal WhatsApp ya entrega desde InmoCRM en sandbox Meta. El texto libre exacto de UI aun no queda validado como modo productivo estable.',
+        description: 'El canal WhatsApp ya entrega desde Growthia Global CRM en sandbox Meta. El texto libre exacto de UI aun no queda validado como modo productivo estable.',
         nextTitle: 'Que falta para produccion',
         checklist: {
           token: 'Token estable y rotacion operativa, no token temporal de pruebas.',
@@ -884,7 +884,7 @@ source: {
       whatsapp: {
         title: 'WhatsApp',
         badge: 'Verificado en sandbox',
-        copy: 'Canal de salida validado en Meta sandbox desde InmoCRM, con respaldo controlado cuando aplica.',
+        copy: 'Canal de salida validado en Meta sandbox desde Growthia Global CRM, con respaldo controlado cuando aplica.',
         mode: 'Sandbox Meta',
         validation: 'Verificado en sandbox',
         freeText: 'Pendiente como flujo productivo estable',
@@ -949,7 +949,7 @@ source: {
         productionStatusSandbox: 'Sandbox / Prueba',
         productionReadyBadge: 'Listo para producción',
         productionNotReadyBadge: 'No listo para producción',
-        numberSavedLabel: 'Número guardado en InmoCRM',
+        numberSavedLabel: 'Número guardado en Growthia Global CRM',
         numberMetaLabel: 'Número real devuelto por Meta',
         verifiedNameLabel: 'Nombre verificado',
         wabaActiveLabel: 'WABA activo',
@@ -965,7 +965,7 @@ source: {
         pendingConfig: 'Pendiente',
         notAvailable: 'No disponible',
         notConfiguredShort: 'No configurado',
-        numberMismatchWarning: 'Advertencia: el número guardado en InmoCRM no coincide con el número real devuelto por Meta.',
+        numberMismatchWarning: 'Advertencia: el número guardado en Growthia Global CRM no coincide con el número real devuelto por Meta.',
         metaDiagnosticsError: 'No se pudo validar Meta en tiempo real',
         pendingForProduction: 'Pendientes para producción',
         compatibilityModeTitle: 'Modo compatibilidad',
@@ -1121,7 +1121,7 @@ source: {
   flowMap: {
     title: 'Mapa operativo del CRM',
     eyebrow: 'Automatización CRM',
-    description: 'Visualiza cómo InmoCRM convierte mensajes entrantes en conversaciones, leads, citas, tareas, respuestas y seguimiento comercial.',
+    description: 'Visualiza cómo Growthia Global CRM convierte mensajes entrantes en conversaciones, leads, citas, tareas, respuestas y seguimiento comercial.',
     note: 'El mapa resume el recorrido operativo real del producto: qué canales ya están validados, qué piezas están implementadas y qué partes siguen en sandbox antes de producción completa.',
     canvas: {
       title: 'Flujo maestro horizontal',

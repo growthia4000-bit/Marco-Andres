@@ -38,7 +38,7 @@ const en = {
     },
     login: {
       heroEyebrow: 'Secure Access',
-      heroTitle: 'Welcome to InmoCRM',
+      heroTitle: 'Welcome to Growthia Global CRM',
       heroDescription: 'A premium workspace for real estate teams to manage inventory, leads and conversations with confidence.',
       title: 'Sign In',
       email: 'Email',
@@ -363,7 +363,7 @@ const en = {
   leadLabels: { statuses: { new: 'New', contacted: 'Contacted', qualified: 'Qualified', visit: 'Visit', negotiation: 'Negotiation', won: 'Won', lost: 'Lost' }, sources: { web: 'Web', referral: 'Referral', instagram: 'Instagram', facebook: 'Facebook', phone: 'Phone', walk_in: 'Walk-in', chatbot: 'Chatbot', other: 'Other' } },
   leadsPageExtra: { title: 'Leads', subtitle: 'Commercial pipeline to prioritize opportunities, move them by stage, and keep every contact under clear follow-up.', new: 'New Lead', pipeline: 'Pipeline', list: 'List', all: 'All', controlsTitle: 'Operational controls', controlsSubtitle: 'Switch views, filter by stage, and save useful combinations for daily commercial follow-up.', saveTitle: 'Save Filters', savePlaceholder: 'Filter name (ex: Qualified leads)', filtersToSave: 'Filters to save:', noLeads: 'No leads', first: 'Start by adding your first lead', emptyFiltered: 'No leads match the current filters.', clearFilters: 'Clear filters', name: 'Name', contact: 'Contact', budget: 'Budget', status: 'Status', source: 'Source', actions: 'Actions', noBudget: 'Not defined', noPipeline: 'No leads', pipelineCount: '{count} leads', searchPlaceholder: 'Search leads...', deleteConfirm: 'Delete this lead?', savedFilters: 'Saved filters', save: 'Save', listEmpty: 'No leads', dashboard: 'Dashboard', errors: { profile: 'Error loading your profile. Try signing out and back in.', tenant: 'Your agency could not be found. Please contact support.', load: 'Error loading leads.', connection: 'Connection error.' } },
   leadFormExtra: { newTitle: 'New Lead', editTitle: 'Edit Lead', subtitle: 'Register a new commercial contact with clear context so the team can prioritize follow-up, budget, and preferences from the start.', backToLeads: 'Back to Leads', successCreate: 'Lead saved successfully!', successEdit: 'Lead updated successfully!', contactInfo: 'Contact Information', firstName: 'First name *', lastName: 'Last name', lastNames: 'Last names', phone: 'Phone *', email: 'Email', source: 'Lead source', sourceShort: 'Source', status: 'Status', preferences: 'Budget & Preferences', preferencesShort: 'Preferences', budgetMin: 'Minimum budget', budgetMax: 'Maximum budget', budgetMinLong: 'Minimum budget', budgetMaxLong: 'Maximum budget', preferredLocation: 'Preferred Area', preferredLocationLong: 'Preferred Location', preferredType: 'Property Type', notes: 'Notes', notesPlaceholder: 'Notes about the lead...', select: 'Select...', save: 'Save Lead', saveChanges: 'Save Changes', saving: 'Saving...', placeholders: { firstName: 'John', lastName: 'Garcia', phone: '+34 600 000 000', email: 'john@email.com', budgetMin: '100000', budgetMax: '200000', preferredLocation: 'Center, North...' }, errors: { tenant: 'Tenant not found', firstNameRequired: 'First name is required', phoneRequired: 'Phone is required', invalidEmail: 'Invalid email', save: 'Error saving the lead', create: 'Error creating the lead. Try again.', update: 'Error updating the lead', notFound: 'Lead not found.', retry: 'Connection error. Try again.', profile: 'Error loading your profile. Try signing out and back in.', tenantMissing: 'Your agency could not be found. Please contact support.' } },
-  leadDetailExtra: { detail: 'Lead Detail', notFound: 'Lead not found', back: 'Back to Leads', budget: 'Budget', preferredArea: 'Preferred Area', source: 'Source', notes: 'Notes', interactions: 'Interaction History', addNote: 'Add Note', addNotePlaceholder: 'Add a note...', noInteractions: 'No interactions recorded', note: 'Note', quickActions: 'Quick Actions', call: 'Call {phone}', sendEmail: 'Send Email', schedule: 'Schedule Appointment', whatsapp: 'WhatsApp', openWhatsApp: 'Open in WhatsApp', info: 'Information', created: 'Created', preferredType: 'Preferred Type', deleteConfirm: 'Delete this lead? This action cannot be undone.', reactivate: 'Reactivate Lead', reactivateSuccess: 'Reactivation message sent', reactivateError: 'Error reactivating lead', errors: { profile: 'Error loading your profile.', load: 'Error loading the lead.', missing: 'Lead not found or you do not have permission.' }, emailSubject: 'Contact from InmoCRM', emailBody: 'Hello {name},', aiCompose: { trigger: 'Draft with AI', title: 'AI email draft', subtitle: 'Generate a short professional email ready to send to this lead.', subject: 'Subject', body: 'Body', generating: 'Generating draft...', regenerate: 'Regenerate', copy: 'Copy', copied: 'Copied', copyError: 'Could not copy the draft.', openGmail: 'Open in Gmail', error: 'Could not generate the AI email.', aiBadge: 'AI', fallbackBadge: 'Fallback', fallbackNoProvider: 'A base draft is shown because no AI provider is configured in this environment.', fallbackCredits: 'A fallback draft is shown because the OpenRouter account has no available credits.', fallbackGeneric: 'A fallback draft is shown because the AI response could not be used reliably.' }, interactionTypes: { note: 'Note' } },
+  leadDetailExtra: { detail: 'Lead Detail', notFound: 'Lead not found', back: 'Back to Leads', budget: 'Budget', preferredArea: 'Preferred Area', source: 'Source', notes: 'Notes', interactions: 'Interaction History', addNote: 'Add Note', addNotePlaceholder: 'Add a note...', noInteractions: 'No interactions recorded', note: 'Note', quickActions: 'Quick Actions', call: 'Call {phone}', sendEmail: 'Send Email', schedule: 'Schedule Appointment', whatsapp: 'WhatsApp', openWhatsApp: 'Open in WhatsApp', info: 'Information', created: 'Created', preferredType: 'Preferred Type', deleteConfirm: 'Delete this lead? This action cannot be undone.', reactivate: 'Reactivate Lead', reactivateSuccess: 'Reactivation message sent', reactivateError: 'Error reactivating lead', errors: { profile: 'Error loading your profile.', load: 'Error loading the lead.', missing: 'Lead not found or you do not have permission.' }, emailSubject: 'Contact from Growthia Global CRM', emailBody: 'Hello {name},', aiCompose: { trigger: 'Draft with AI', title: 'AI email draft', subtitle: 'Generate a short professional email ready to send to this lead.', subject: 'Subject', body: 'Body', generating: 'Generating draft...', regenerate: 'Regenerate', copy: 'Copy', copied: 'Copied', copyError: 'Could not copy the draft.', openGmail: 'Open in Gmail', error: 'Could not generate the AI email.', aiBadge: 'AI', fallbackBadge: 'Fallback', fallbackNoProvider: 'A base draft is shown because no AI provider is configured in this environment.', fallbackCredits: 'A fallback draft is shown because the OpenRouter account has no available credits.', fallbackGeneric: 'A fallback draft is shown because the AI response could not be used reliably.' }, interactionTypes: { note: 'Note' } },
   tasksPage: {
     title: 'CRM Actions',
     subtitle: 'Operational commercial follow-up generated by the chatbot and the team to move each opportunity with clarity.',
@@ -530,7 +530,7 @@ const en = {
       whatsapp: {
         badge: 'Verified in sandbox',
         title: 'WhatsApp validated only in test mode',
-        description: 'The WhatsApp channel already delivers from InmoCRM in Meta sandbox. The exact free-text content typed in UI is not yet validated as stable production behavior.',
+        description: 'The WhatsApp channel already delivers from Growthia Global CRM in Meta sandbox. The exact free-text content typed in UI is not yet validated as stable production behavior.',
         nextTitle: 'What is still needed for production',
         checklist: {
           token: 'Stable token and operational rotation, not a temporary test token.',
@@ -629,7 +629,7 @@ const en = {
       whatsapp: {
         title: 'WhatsApp',
         badge: 'Verified in sandbox',
-        copy: 'Outbound channel validated from InmoCRM inside Meta sandbox, with controlled fallback when needed.',
+        copy: 'Outbound channel validated from Growthia Global CRM inside Meta sandbox, with controlled fallback when needed.',
         mode: 'Meta sandbox',
         validation: 'Verified in sandbox',
         freeText: 'Pending as stable production flow',
@@ -694,7 +694,7 @@ const en = {
         productionStatusSandbox: 'Sandbox / Test',
         productionReadyBadge: 'Ready for production',
         productionNotReadyBadge: 'Not ready for production',
-        numberSavedLabel: 'Number saved in InmoCRM',
+        numberSavedLabel: 'Number saved in Growthia Global CRM',
         numberMetaLabel: 'Real number returned by Meta',
         verifiedNameLabel: 'Verified name',
         wabaActiveLabel: 'Active WABA',
@@ -710,7 +710,7 @@ const en = {
         pendingConfig: 'Pending',
         notAvailable: 'Not available',
         notConfiguredShort: 'Not configured',
-        numberMismatchWarning: 'Warning: the number saved in InmoCRM does not match the real number returned by Meta.',
+        numberMismatchWarning: 'Warning: the number saved in Growthia Global CRM does not match the real number returned by Meta.',
         metaDiagnosticsError: 'Could not validate Meta in real time',
         pendingForProduction: 'Pending for production',
         compatibilityModeTitle: 'Compatibility mode',

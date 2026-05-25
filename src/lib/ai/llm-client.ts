@@ -22,7 +22,7 @@ function getOpenAIProvider() {
     baseURL: process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1',
     apiKey,
     headers: {
-      'AISDK-Badge': 'InmoCRM',
+      'AISDK-Badge': 'Growthia Global CRM',
     },
   })
 }

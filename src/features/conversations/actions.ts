@@ -1418,7 +1418,7 @@ const [emailTest, emailInboundSyncManual, emailInboundSyncAuto, emailInboundSync
   if (!whatsappDbConfig?.phone_number_id?.trim()) productionChecklist.push('Definir el Phone Number ID real en la configuracion del tenant.')
   if (!whatsappDbConfig?.whatsapp_business_account_id?.trim()) productionChecklist.push('Definir el WhatsApp Business Account ID (WABA) del tenant.')
   if (!metaPhoneNumber && accessTokenConfigured && whatsappDbConfig?.phone_number_id?.trim()) productionChecklist.push('Validar en Meta el numero real para confirmar display number, verified name y quality rating.')
-  if (displayNumberMismatch) productionChecklist.push('Corregir la discrepancia entre el numero guardado en InmoCRM y el numero real devuelto por Meta.')
+  if (displayNumberMismatch) productionChecklist.push('Corregir la discrepancia entre el numero guardado en Growthia Global CRM y el numero real devuelto por Meta.')
 
   const productionReady = productionChecklist.length === 0
   const isTestNumber = resolvedEnvironment !== 'production'
@@ -1733,8 +1733,8 @@ export async function testEmailChannelAction(formData: FormData) {
   const to = String(formData.get('to') || '').trim()
   if (!to) throw new Error('El destinatario es obligatorio')
 
-  const subject = `InmoCRM test · ${new Date().toISOString()}`
-  const text = 'Prueba controlada de canal Email desde InmoCRM.'
+  const subject = `Growthia Global CRM test · ${new Date().toISOString()}`
+  const text = 'Prueba controlada de canal Email desde Growthia Global CRM.'
 
   const emailGraphConfig = await getTenantEmailGraphConfig(supabase, tenantId)
   const graphEnvConfig = detectMicrosoftGraphConfig(process.env)
@@ -2006,7 +2006,7 @@ export async function testWhatsAppChannelAction(formData: FormData) {
   const result = await sendWhatsAppViaMeta({
     config: deliveryConfig.meta,
     to,
-    text: 'InmoCRM WhatsApp test',
+    text: 'Growthia Global CRM WhatsApp test',
     templateName,
     templateLanguageCode,
     templateParams,

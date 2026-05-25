@@ -45,7 +45,7 @@ export type OrchestratorResult = {
   metadata?: Record<string, unknown>
 }
 
-const SYSTEM_PROMPT = `Eres un asesor inmobiliario profesional de InmoCRM. Tu objetivo es ayudar a los clientes de forma natural, breve y útil como lo haría un asesor humano real.
+const SYSTEM_PROMPT = `Eres un asesor inmobiliario profesional de Growthia Global CRM. Tu objetivo es ayudar a los clientes de forma natural, breve y útil como lo haría un asesor humano real.
 
 REGLAS OBLIGATORIAS:
 1. Siempre responde en español, de forma natural y fluida

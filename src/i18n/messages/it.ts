@@ -38,7 +38,7 @@ const it = {
     },
     login: {
       heroEyebrow: 'Accesso sicuro',
-      heroTitle: 'Benvenuto in InmoCRM',
+      heroTitle: 'Benvenuto in Growthia Global CRM',
       heroDescription: 'Uno spazio premium per team immobiliari che gestiscono immobili, lead e conversazioni con piena fiducia.',
       title: 'Accedi',
       email: 'Email',
@@ -363,7 +363,7 @@ const it = {
   leadLabels: { statuses: { new: 'Nuovo', contacted: 'Contattato', qualified: 'Qualificato', visit: 'Visita', negotiation: 'Negoziazione', won: 'Vinto', lost: 'Perso' }, sources: { web: 'Web', referral: 'Segnalazione', instagram: 'Instagram', facebook: 'Facebook', phone: 'Telefono', walk_in: 'Ingresso diretto', chatbot: 'Chatbot', other: 'Altro' } },
   leadsPageExtra: { title: 'Lead', subtitle: 'Pipeline commerciale per dare priorità alle opportunità, spostarle tra le fasi e mantenere ogni contatto sotto controllo.', new: 'Nuovo lead', pipeline: 'Pipeline', list: 'Lista', all: 'Tutti', controlsTitle: 'Controlli operativi', controlsSubtitle: 'Cambia vista, filtra per stato e salva combinazioni utili per il follow-up commerciale quotidiano.', saveTitle: 'Salva filtri', savePlaceholder: 'Nome filtro (es: Lead qualificati)', filtersToSave: 'Filtri da salvare:', noLeads: 'Nessun lead', first: 'Inizia aggiungendo il tuo primo lead', emptyFiltered: 'Nessun lead corrisponde ai filtri attuali.', clearFilters: 'Cancella filtri', name: 'Nome', contact: 'Contatto', budget: 'Budget', status: 'Stato', source: 'Origine', actions: 'Azioni', noBudget: 'Non definito', noPipeline: 'Nessun lead', pipelineCount: '{count} lead', searchPlaceholder: 'Cerca lead...', deleteConfirm: 'Eliminare questo lead?', savedFilters: 'Filtri salvati', save: 'Salva', listEmpty: 'Nessun lead', dashboard: 'Cruscotto', errors: { profile: 'Errore durante il caricamento del profilo. Prova a uscire e rientrare.', tenant: 'La tua agenzia non è stata trovata. Contatta il supporto.', load: 'Errore durante il caricamento dei lead.', connection: 'Errore di connessione.' } },
   leadFormExtra: { newTitle: 'Nuovo lead', editTitle: 'Modifica lead', subtitle: 'Registra un nuovo contatto commerciale con un contesto chiaro per dare priorita a follow-up, budget e preferenze fin dal primo momento.', backToLeads: 'Torna ai lead', successCreate: 'Lead salvato correttamente!', successEdit: 'Lead aggiornato correttamente!', contactInfo: 'Informazioni di contatto', firstName: 'Nome *', lastName: 'Cognome', lastNames: 'Cognomi', phone: 'Telefono *', email: 'Email', source: 'Origine lead', sourceShort: 'Origine', status: 'Stato', preferences: 'Budget e preferenze', preferencesShort: 'Preferenze', budgetMin: 'Budget minimo', budgetMax: 'Budget massimo', budgetMinLong: 'Budget minimo', budgetMaxLong: 'Budget massimo', preferredLocation: 'Zona preferita', preferredLocationLong: 'Posizione preferita', preferredType: 'Tipo di immobile', notes: 'Note', notesPlaceholder: 'Note sul lead...', select: 'Seleziona...', save: 'Salva lead', saveChanges: 'Salva modifiche', saving: 'Salvataggio...', placeholders: { firstName: 'Giovanni', lastName: 'Rossi', phone: '+34 600 000 000', email: 'giovanni@email.com', budgetMin: '100000', budgetMax: '200000', preferredLocation: 'Centro, Nord...' }, errors: { tenant: 'Tenant non trovato', firstNameRequired: 'Il nome è obbligatorio', phoneRequired: 'Il telefono è obbligatorio', invalidEmail: 'Email non valida', save: 'Errore durante il salvataggio del lead', create: 'Errore durante la creazione del lead. Riprova.', update: 'Errore durante l’aggiornamento del lead', notFound: 'Lead non trovato.', retry: 'Errore di connessione. Riprova.', profile: 'Errore durante il caricamento del profilo. Prova a uscire e rientrare.', tenantMissing: 'La tua agenzia non è stata trovata. Contatta il supporto.' } },
-  leadDetailExtra: { detail: 'Dettaglio lead', notFound: 'Lead non trovato', back: 'Torna ai lead', budget: 'Budget', preferredArea: 'Zona preferita', source: 'Origine', notes: 'Note', interactions: 'Storico interazioni', addNote: 'Aggiungi nota', addNotePlaceholder: 'Aggiungi una nota...', noInteractions: 'Nessuna interazione registrata', note: 'Nota', quickActions: 'Azioni rapide', call: 'Chiama {phone}', sendEmail: 'Invia email', schedule: 'Pianifica appuntamento', whatsapp: 'WhatsApp', openWhatsApp: 'Apri in WhatsApp', info: 'Informazioni', created: 'Creato', preferredType: 'Tipo preferito', deleteConfirm: 'Eliminare questo lead? Questa azione non può essere annullata.', reactivate: 'Riattiva lead', reactivateSuccess: 'Messaggio di riattivazione inviato', reactivateError: 'Errore nella riattivazione', errors: { profile: 'Errore durante il caricamento del profilo.', load: 'Errore durante il caricamento del lead.', missing: 'Lead non trovato o permessi insufficienti.' }, emailSubject: 'Contatto da InmoCRM', emailBody: 'Ciao {name},', aiCompose: { trigger: 'Scrivi con IA', title: 'Bozza email con IA', subtitle: 'Genera un’email breve e professionale pronta da inviare a questo lead.', subject: 'Oggetto', body: 'Corpo', generating: 'Generazione bozza...', regenerate: 'Rigenera', copy: 'Copia', copied: 'Copiato', copyError: 'Impossibile copiare la bozza.', openGmail: 'Apri in Gmail', error: 'Impossibile generare l’email con IA.', aiBadge: 'IA', fallbackBadge: 'Fallback', fallbackNoProvider: 'Viene mostrata una bozza base perché in questo ambiente non è configurato alcun provider IA.', fallbackCredits: 'Viene mostrata una bozza fallback perché l’account OpenRouter non ha crediti disponibili.', fallbackGeneric: 'Viene mostrata una bozza fallback perché la risposta IA non è stata utilizzabile correttamente.' }, interactionTypes: { note: 'Nota' } },
+  leadDetailExtra: { detail: 'Dettaglio lead', notFound: 'Lead non trovato', back: 'Torna ai lead', budget: 'Budget', preferredArea: 'Zona preferita', source: 'Origine', notes: 'Note', interactions: 'Storico interazioni', addNote: 'Aggiungi nota', addNotePlaceholder: 'Aggiungi una nota...', noInteractions: 'Nessuna interazione registrata', note: 'Nota', quickActions: 'Azioni rapide', call: 'Chiama {phone}', sendEmail: 'Invia email', schedule: 'Pianifica appuntamento', whatsapp: 'WhatsApp', openWhatsApp: 'Apri in WhatsApp', info: 'Informazioni', created: 'Creato', preferredType: 'Tipo preferito', deleteConfirm: 'Eliminare questo lead? Questa azione non può essere annullata.', reactivate: 'Riattiva lead', reactivateSuccess: 'Messaggio di riattivazione inviato', reactivateError: 'Errore nella riattivazione', errors: { profile: 'Errore durante il caricamento del profilo.', load: 'Errore durante il caricamento del lead.', missing: 'Lead non trovato o permessi insufficienti.' }, emailSubject: 'Contatto da Growthia Global CRM', emailBody: 'Ciao {name},', aiCompose: { trigger: 'Scrivi con IA', title: 'Bozza email con IA', subtitle: 'Genera un’email breve e professionale pronta da inviare a questo lead.', subject: 'Oggetto', body: 'Corpo', generating: 'Generazione bozza...', regenerate: 'Rigenera', copy: 'Copia', copied: 'Copiato', copyError: 'Impossibile copiare la bozza.', openGmail: 'Apri in Gmail', error: 'Impossibile generare l’email con IA.', aiBadge: 'IA', fallbackBadge: 'Fallback', fallbackNoProvider: 'Viene mostrata una bozza base perché in questo ambiente non è configurato alcun provider IA.', fallbackCredits: 'Viene mostrata una bozza fallback perché l’account OpenRouter non ha crediti disponibili.', fallbackGeneric: 'Viene mostrata una bozza fallback perché la risposta IA non è stata utilizzabile correttamente.' }, interactionTypes: { note: 'Nota' } },
   tasksPage: {
     title: 'Azioni CRM',
     subtitle: 'Follow-up commerciale operativo generato dal chatbot e dal team per muovere ogni opportunita con maggiore chiarezza.',
@@ -530,7 +530,7 @@ const it = {
       whatsapp: {
         badge: 'Verificato in sandbox',
         title: 'WhatsApp validato solo in ambiente di prova',
-        description: 'Il canale WhatsApp gia consegna da InmoCRM nel sandbox Meta. Il testo libero esatto scritto in UI non e ancora validato come comportamento produttivo stabile.',
+        description: 'Il canale WhatsApp gia consegna da Growthia Global CRM nel sandbox Meta. Il testo libero esatto scritto in UI non e ancora validato come comportamento produttivo stabile.',
         nextTitle: 'Cosa manca per la produzione',
         checklist: {
           token: 'Token stabile e rotazione operativa, non un token temporaneo di test.',
@@ -629,7 +629,7 @@ const it = {
       whatsapp: {
         title: 'WhatsApp',
         badge: 'Verificato in sandbox',
-        copy: 'Canale in uscita validato da InmoCRM nel sandbox Meta, con fallback controllato quando necessario.',
+        copy: 'Canale in uscita validato da Growthia Global CRM nel sandbox Meta, con fallback controllato quando necessario.',
         mode: 'Sandbox Meta',
         validation: 'Verificato in sandbox',
         freeText: 'Ancora pendente come flusso produttivo stabile',
@@ -694,7 +694,7 @@ const it = {
         productionStatusSandbox: 'Sandbox / Test',
         productionReadyBadge: 'Pronto per produzione',
         productionNotReadyBadge: 'Non pronto per produzione',
-        numberSavedLabel: 'Numero salvato in InmoCRM',
+        numberSavedLabel: 'Numero salvato in Growthia Global CRM',
         numberMetaLabel: 'Numero reale restituito da Meta',
         verifiedNameLabel: 'Nome verificato',
         wabaActiveLabel: 'WABA attivo',
@@ -710,7 +710,7 @@ const it = {
         pendingConfig: 'In attesa',
         notAvailable: 'Non disponibile',
         notConfiguredShort: 'Non configurato',
-        numberMismatchWarning: 'Attenzione: il numero salvato in InmoCRM non coincide con il numero reale restituito da Meta.',
+        numberMismatchWarning: 'Attenzione: il numero salvato in Growthia Global CRM non coincide con il numero reale restituito da Meta.',
         metaDiagnosticsError: 'Impossibile validare Meta in tempo reale',
         pendingForProduction: 'Necessari per la produzione',
         compatibilityModeTitle: 'Modalità compatibilità',

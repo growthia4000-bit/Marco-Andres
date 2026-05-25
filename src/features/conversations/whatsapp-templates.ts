@@ -41,7 +41,7 @@ const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
   {
     base_template_key: 'lead_bienvenida',
     category: 'marketing',
-    variables_schema: makeVariables(['client_name', 'Client name', 'Marta'], ['agency_name', 'Agency name', 'InmoCRM Homes']),
+    variables_schema: makeVariables(['client_name', 'Client name', 'Marta'], ['agency_name', 'Agency name', 'Growthia Global CRM Homes']),
     header_text: {
       es: 'Nuevo lead inmobiliario',
       en: 'New property lead',
@@ -489,7 +489,7 @@ const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
   {
     base_template_key: 'firma_recordatorio',
     category: 'utility',
-    variables_schema: makeVariables(['client_name', 'Client name', 'Sara'], ['process_name', 'Process name', 'the deposit contract'], ['sign_date', 'Signing date', '30/04/2026'], ['sign_time', 'Signing time', '12:30'], ['sign_location', 'Signing location', 'InmoCRM Homes office']),
+    variables_schema: makeVariables(['client_name', 'Client name', 'Sara'], ['process_name', 'Process name', 'the deposit contract'], ['sign_date', 'Signing date', '30/04/2026'], ['sign_time', 'Signing time', '12:30'], ['sign_location', 'Signing location', 'Growthia Global CRM Homes office']),
     header_text: {
       es: 'Recordatorio de firma',
       en: 'Signing reminder',

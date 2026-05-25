@@ -56,8 +56,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/automations') ||
     pathname.startsWith('/team') ||
     pathname.startsWith('/admin') ||
-    isSuspendedPage ||
-    pathname === '/'
+    isSuspendedPage
 
   const redirectTo = (targetPath: string) => {
     const url = request.nextUrl.clone()

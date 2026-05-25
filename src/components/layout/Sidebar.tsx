@@ -7,30 +7,33 @@ import {
   LayoutDashboard, Building2, TrendingUp, Calendar, MessageSquareText,
   BarChart3, Radio, Users, Settings, Menu, X,
 } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider'
 
 // ─── Nav tree ────────────────────────────────────────────────────────────────
-const NAV_GROUPS: { href: string; icon: React.ElementType; label: string }[][] = [
+type NavItem = { href: string; icon: React.ElementType; labelKey: string }
+const NAV_GROUPS: NavItem[][] = [
   [
-    { href: '/dashboard',     icon: LayoutDashboard,   label: 'Dashboard' },
+    { href: '/dashboard',     icon: LayoutDashboard,   labelKey: 'nav.dashboard' },
   ],
   [
-    { href: '/properties',    icon: Building2,         label: 'Propiedades' },
-    { href: '/leads',         icon: TrendingUp,        label: 'Leads' },
-    { href: '/appointments',  icon: Calendar,          label: 'Citas' },
-    { href: '/conversations', icon: MessageSquareText, label: 'Conversaciones' },
+    { href: '/properties',    icon: Building2,         labelKey: 'nav.properties' },
+    { href: '/leads',         icon: TrendingUp,        labelKey: 'nav.leads' },
+    { href: '/appointments',  icon: Calendar,          labelKey: 'nav.appointments' },
+    { href: '/conversations', icon: MessageSquareText, labelKey: 'nav.conversations' },
   ],
   [
-    { href: '/reports',  icon: BarChart3, label: 'Reportes' },
-    { href: '/channels', icon: Radio,     label: 'Canales' },
+    { href: '/reports',  icon: BarChart3, labelKey: 'nav.reports' },
+    { href: '/channels', icon: Radio,     labelKey: 'nav.channels' },
   ],
   [
-    { href: '/team',     icon: Users,    label: 'Equipo' },
-    { href: '/settings', icon: Settings, label: 'Configuración' },
+    { href: '/team',     icon: Users,    labelKey: 'nav.team' },
+    { href: '/settings', icon: Settings, labelKey: 'nav.settings' },
   ],
 ]
 
 // ─── Shared nav content ───────────────────────────────────────────────────────
 function NavContent({ pathname, onNav }: { pathname: string; onNav?: () => void }) {
+  const { t } = useI18n()
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Logo */}
@@ -51,7 +54,7 @@ function NavContent({ pathname, onNav }: { pathname: string; onNav?: () => void 
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
             <div className="space-y-0.5">
-              {group.map(({ href, icon: Icon, label }) => {
+              {group.map(({ href, icon: Icon, labelKey }) => {
                 const active =
                   pathname === href || pathname.startsWith(href + '/')
                 return (
@@ -69,7 +72,7 @@ function NavContent({ pathname, onNav }: { pathname: string; onNav?: () => void 
                       size={16}
                       className={`shrink-0 ${active ? 'text-blue-500' : 'text-slate-400'}`}
                     />
-                    <span className="truncate">{label}</span>
+                    <span className="truncate">{t(labelKey)}</span>
                   </Link>
                 )
               })}
@@ -90,6 +93,7 @@ function NavContent({ pathname, onNav }: { pathname: string; onNav?: () => void 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
+  const { t } = useI18n()
 
   // Close drawer on route change
   useEffect(() => { setMobileOpen(false) }, [pathname])
@@ -110,7 +114,7 @@ export default function Sidebar() {
       {/* ── Mobile: hamburger trigger ── */}
       <button
         onClick={() => setMobileOpen(true)}
-        aria-label="Abrir menú"
+        aria-label={t('nav.openMenu')}
         className="fixed left-4 top-[18px] z-40 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 lg:hidden"
       >
         <Menu size={17} className="text-slate-600" />

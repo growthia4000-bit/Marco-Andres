@@ -12,14 +12,12 @@ import {
 
 type Section = 'profile' | 'password' | 'language' | 'notifications'
 
-const SECTIONS: { id: Section; icon: React.ElementType; label: string; color: string; bg: string }[] = [
-  { id: 'profile',       icon: User,      label: 'Perfil',           color: 'text-blue-600',   bg: 'bg-blue-50' },
-  { id: 'password',      icon: Lock,      label: 'Contraseña',       color: 'text-amber-600',  bg: 'bg-amber-50' },
-  { id: 'language',      icon: Languages, label: 'Idioma',           color: 'text-violet-600', bg: 'bg-violet-50' },
-  { id: 'notifications', icon: Bell,      label: 'Notificaciones',   color: 'text-emerald-600',bg: 'bg-emerald-50' },
+const SECTIONS: { id: Section; icon: React.ElementType; color: string; bg: string }[] = [
+  { id: 'profile',       icon: User,      color: 'text-blue-600',   bg: 'bg-blue-50' },
+  { id: 'password',      icon: Lock,      color: 'text-amber-600',  bg: 'bg-amber-50' },
+  { id: 'language',      icon: Languages, color: 'text-violet-600', bg: 'bg-violet-50' },
+  { id: 'notifications', icon: Bell,      color: 'text-emerald-600',bg: 'bg-emerald-50' },
 ]
-
-const LANG_LABELS: Record<string, string> = { es: 'Español', en: 'English', it: 'Italiano' }
 
 export default function SettingsClient() {
   const supabase = createClient()
@@ -117,8 +115,8 @@ export default function SettingsClient() {
 
   async function handleSavePassword() {
     setPasswordError('')
-    if (newPassword.length < 6) { setPasswordError('La contraseña debe tener al menos 6 caracteres'); return }
-    if (newPassword !== confirmPassword)  { setPasswordError('Las contraseñas no coinciden'); return }
+    if (newPassword.length < 6) { setPasswordError(t('settings.password.errorLength')); return }
+    if (newPassword !== confirmPassword)  { setPasswordError(t('settings.password.errorMatch')); return }
 
     setSavingPassword(true)
     const { error } = await supabase.auth.updateUser({ password: newPassword })
@@ -175,9 +173,9 @@ export default function SettingsClient() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">GROWTHIA GLOBAL CRM</p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Configuración</h1>
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t('settings.title')}</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
-                  Gestiona tu perfil, seguridad y preferencias de la plataforma
+                  {t('settings.subtitle')}
                 </p>
               </div>
             </div>
@@ -186,7 +184,7 @@ export default function SettingsClient() {
               className="inline-flex items-center gap-2 self-start rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 xl:self-auto"
             >
               <ArrowLeft size={15} />
-              Volver al Dashboard
+              {t('settings.backToDashboard')}
             </Link>
           </div>
         </header>
@@ -196,7 +194,7 @@ export default function SettingsClient() {
 
           {/* Sidebar nav */}
           <nav className="flex gap-1.5 overflow-x-auto rounded-[26px] border border-slate-200/80 bg-white p-2 shadow-sm lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible">
-            {SECTIONS.map(({ id, icon: Icon, label, color, bg }) => (
+            {SECTIONS.map(({ id, icon: Icon, color, bg }) => (
               <button
                 key={id}
                 onClick={() => setActiveSection(id)}
@@ -209,7 +207,7 @@ export default function SettingsClient() {
                 <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${activeSection === id ? bg : 'bg-slate-100'}`}>
                   <Icon size={15} className={activeSection === id ? color : 'text-slate-400'} />
                 </span>
-                {label}
+                {t(`settings.sections.${id}`)}
               </button>
             ))}
           </nav>
@@ -225,8 +223,8 @@ export default function SettingsClient() {
                     <User size={18} className="text-blue-600" />
                   </span>
                   <div>
-                    <h2 className="text-base font-semibold text-slate-900">Perfil de usuario</h2>
-                    <p className="text-xs text-slate-500">Información personal y datos de cuenta</p>
+                    <h2 className="text-base font-semibold text-slate-900">{t('settings.profile.sectionTitle')}</h2>
+                    <p className="text-xs text-slate-500">{t('settings.profile.sectionSubtitle')}</p>
                   </div>
                 </div>
 
@@ -236,7 +234,7 @@ export default function SettingsClient() {
                     {initials}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{savedFullName || 'Sin nombre'}</p>
+                    <p className="text-sm font-semibold text-slate-900">{savedFullName || t('settings.profile.noName')}</p>
                     <p className="text-xs text-slate-500">{email}</p>
                     {role && (
                       <span className="mt-1.5 inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">
@@ -248,23 +246,23 @@ export default function SettingsClient() {
 
                 <div className="flex max-w-lg flex-col gap-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Nombre completo</label>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('settings.profile.fullNameLabel')}</label>
                     <input
                       type="text"
                       value={fullName}
                       onChange={e => setFullName(e.target.value)}
-                      placeholder="Tu nombre completo"
+                      placeholder={t('settings.profile.fullNamePlaceholder')}
                       className={inputCls}
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Correo electrónico</label>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('settings.profile.emailLabel')}</label>
                     <input type="email" value={email} disabled className={inputCls} />
-                    <p className="mt-1.5 text-xs text-slate-400">El correo electrónico no puede modificarse desde aquí</p>
+                    <p className="mt-1.5 text-xs text-slate-400">{t('settings.profile.emailHint')}</p>
                   </div>
                   {tenantName && (
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">Organización</label>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('settings.profile.orgLabel')}</label>
                       <input type="text" value={tenantName} disabled className={inputCls} />
                     </div>
                   )}
@@ -284,7 +282,7 @@ export default function SettingsClient() {
                     {savingProfile
                       ? <Loader2 size={15} className="animate-spin" />
                       : profileSuccess ? <Check size={15} /> : <Save size={15} />}
-                    {profileSuccess ? 'Guardado' : 'Guardar cambios'}
+                    {profileSuccess ? t('settings.profile.saved') : t('settings.profile.save')}
                   </button>
                 </div>
               </div>
@@ -298,20 +296,20 @@ export default function SettingsClient() {
                     <Lock size={18} className="text-amber-600" />
                   </span>
                   <div>
-                    <h2 className="text-base font-semibold text-slate-900">Cambiar contraseña</h2>
-                    <p className="text-xs text-slate-500">Actualiza tu contraseña de acceso a la plataforma</p>
+                    <h2 className="text-base font-semibold text-slate-900">{t('settings.password.sectionTitle')}</h2>
+                    <p className="text-xs text-slate-500">{t('settings.password.sectionSubtitle')}</p>
                   </div>
                 </div>
 
                 <div className="flex max-w-lg flex-col gap-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Nueva contraseña</label>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('settings.password.newLabel')}</label>
                     <div className="relative">
                       <input
                         type={showNew ? 'text' : 'password'}
                         value={newPassword}
                         onChange={e => setNewPassword(e.target.value)}
-                        placeholder="Mínimo 6 caracteres"
+                        placeholder={t('settings.password.newPlaceholder')}
                         className={`${inputCls} pr-12`}
                       />
                       <button
@@ -324,13 +322,13 @@ export default function SettingsClient() {
                     </div>
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Confirmar contraseña</label>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('settings.password.confirmLabel')}</label>
                     <div className="relative">
                       <input
                         type={showConfirm ? 'text' : 'password'}
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
-                        placeholder="Repite la contraseña"
+                        placeholder={t('settings.password.confirmPlaceholder')}
                         className={`${inputCls} pr-12`}
                       />
                       <button
@@ -346,10 +344,10 @@ export default function SettingsClient() {
                   {/* Hints */}
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-500 space-y-1">
                     <p className={newPassword.length >= 6 ? 'text-emerald-600 font-medium' : ''}>
-                      {newPassword.length >= 6 ? '+ ' : '· '}Mínimo 6 caracteres
+                      {newPassword.length >= 6 ? '+ ' : '· '}{t('settings.password.hintLength')}
                     </p>
                     <p className={newPassword === confirmPassword && confirmPassword.length > 0 ? 'text-emerald-600 font-medium' : ''}>
-                      {newPassword === confirmPassword && confirmPassword.length > 0 ? '+ ' : '· '}Las contraseñas coinciden
+                      {newPassword === confirmPassword && confirmPassword.length > 0 ? '+ ' : '· '}{t('settings.password.hintMatch')}
                     </p>
                   </div>
 
@@ -368,7 +366,7 @@ export default function SettingsClient() {
                     {savingPassword
                       ? <Loader2 size={15} className="animate-spin" />
                       : passwordSuccess ? <Check size={15} /> : <Lock size={15} />}
-                    {passwordSuccess ? 'Contraseña actualizada' : 'Actualizar contraseña'}
+                    {passwordSuccess ? t('settings.password.saved') : t('settings.password.save')}
                   </button>
                 </div>
               </div>
@@ -382,8 +380,8 @@ export default function SettingsClient() {
                     <Languages size={18} className="text-violet-600" />
                   </span>
                   <div>
-                    <h2 className="text-base font-semibold text-slate-900">Idioma de la interfaz</h2>
-                    <p className="text-xs text-slate-500">Elige el idioma en que se muestra la plataforma</p>
+                    <h2 className="text-base font-semibold text-slate-900">{t('settings.language.sectionTitle')}</h2>
+                    <p className="text-xs text-slate-500">{t('settings.language.sectionSubtitle')}</p>
                   </div>
                 </div>
 
@@ -404,11 +402,11 @@ export default function SettingsClient() {
                           <span className={`flex h-10 w-10 items-center justify-center rounded-2xl ${active ? 'bg-blue-100' : 'bg-slate-100'}`}>
                             <Languages size={18} className={active ? 'text-blue-600' : 'text-slate-400'} />
                           </span>
-                          <span>{LANG_LABELS[loc] ?? loc.toUpperCase()}</span>
+                          <span>{t(`languages.${loc}`)}</span>
                           {active && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
                               <Check size={11} />
-                              Activo
+                              {t('settings.language.active')}
                             </span>
                           )}
                         </button>
@@ -416,7 +414,7 @@ export default function SettingsClient() {
                     })}
                   </div>
                   <p className="text-xs text-slate-400">
-                    El cambio de idioma se aplica inmediatamente en toda la plataforma
+                    {t('settings.language.hint')}
                   </p>
                 </div>
               </div>
@@ -430,38 +428,38 @@ export default function SettingsClient() {
                     <Bell size={18} className="text-emerald-600" />
                   </span>
                   <div>
-                    <h2 className="text-base font-semibold text-slate-900">Preferencias de notificaciones</h2>
-                    <p className="text-xs text-slate-500">Controla qué notificaciones quieres recibir</p>
+                    <h2 className="text-base font-semibold text-slate-900">{t('settings.notifications.sectionTitle')}</h2>
+                    <p className="text-xs text-slate-500">{t('settings.notifications.sectionSubtitle')}</p>
                   </div>
                 </div>
 
                 <div className="flex max-w-lg flex-col gap-3">
                   {([
                     {
-                      label: 'Notificaciones por email',
-                      desc:  'Recibe resúmenes y alertas importantes en tu correo',
+                      label: t('settings.notifications.emailLabel'),
+                      desc:  t('settings.notifications.emailDesc'),
                       value: notifEmail,
                       set:   setNotifEmail,
                     },
                     {
-                      label: 'Nuevos leads',
-                      desc:  'Alerta cuando se registra un nuevo lead en el sistema',
+                      label: t('settings.notifications.leadsLabel'),
+                      desc:  t('settings.notifications.leadsDesc'),
                       value: notifLeads,
                       set:   setNotifLeads,
                     },
                     {
-                      label: 'Recordatorios de citas',
-                      desc:  'Avisos antes de citas programadas',
+                      label: t('settings.notifications.appointmentsLabel'),
+                      desc:  t('settings.notifications.appointmentsDesc'),
                       value: notifAppointments,
                       set:   setNotifAppointments,
                     },
                     {
-                      label: 'Tareas pendientes',
-                      desc:  'Recordatorios de tareas asignadas o próximas a vencer',
+                      label: t('settings.notifications.tasksLabel'),
+                      desc:  t('settings.notifications.tasksDesc'),
                       value: notifTasks,
                       set:   setNotifTasks,
                     },
-                  ] as const).map(({ label, desc, value, set }) => (
+                  ] as { label: string; desc: string; value: boolean; set: (v: boolean) => void }[]).map(({ label, desc, value, set }) => (
                     <div
                       key={label}
                       className="flex items-center justify-between rounded-[20px] border border-slate-100 bg-slate-50/60 px-5 py-4"
@@ -495,7 +493,7 @@ export default function SettingsClient() {
                     {savingNotifs
                       ? <Loader2 size={15} className="animate-spin" />
                       : notifsSuccess ? <Check size={15} /> : <Save size={15} />}
-                    {notifsSuccess ? 'Guardado' : 'Guardar preferencias'}
+                    {notifsSuccess ? t('settings.notifications.saved') : t('settings.notifications.save')}
                   </button>
                 </div>
               </div>

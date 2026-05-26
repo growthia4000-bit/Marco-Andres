@@ -7,6 +7,7 @@ import {
   Mail, ChevronRight, Zap, Shield, Users,
 } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 const WA_NUMBER = '447506862450'
 const WA_MESSAGE = encodeURIComponent('Hola, me interesa solicitar una demo gratuita de Growthia Global CRM.')
@@ -98,6 +99,7 @@ export default function LandingPage() {
             <a href="#contact" className="transition hover:text-slate-900">{t('landing.nav.contact')}</a>
           </nav>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <Link
               href="/login"
               className="hidden rounded-2xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 sm:block"

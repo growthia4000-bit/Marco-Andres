@@ -40,6 +40,7 @@ export default function LandingPage() {
     {
       name: 'Starter',
       price: '29',
+      planKey: 'starter',
       desc: t('landing.pricing.starter.desc'),
       features: ['f1','f2','f3','f4','f5','f6'].map(k => t(`landing.pricing.starter.${k}`)),
       cta: t('landing.pricing.starter.cta'),
@@ -48,6 +49,7 @@ export default function LandingPage() {
     {
       name: 'Profesional',
       price: '59',
+      planKey: 'profesional',
       desc: t('landing.pricing.pro.desc'),
       features: ['f1','f2','f3','f4','f5','f6','f7'].map(k => t(`landing.pricing.pro.${k}`)),
       cta: t('landing.pricing.pro.cta'),
@@ -56,6 +58,7 @@ export default function LandingPage() {
     {
       name: 'Premium',
       price: '99',
+      planKey: 'premium',
       desc: t('landing.pricing.premium.desc'),
       features: ['f1','f2','f3','f4','f5','f6','f7'].map(k => t(`landing.pricing.premium.${k}`)),
       cta: t('landing.pricing.premium.cta'),
@@ -106,15 +109,13 @@ export default function LandingPage() {
             >
               {t('landing.nav.login')}
             </Link>
-            <a
-              href={WA_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/register"
               className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-500/20 transition hover:from-blue-700 hover:to-sky-600"
             >
               {t('landing.nav.demo')}
               <ChevronRight size={14} />
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -146,15 +147,13 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <a
-                href={WA_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/register"
                 className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-blue-500 to-sky-400 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:from-blue-600 hover:to-sky-500 hover:shadow-blue-500/40 sm:w-auto"
               >
-                <MessageSquareText size={18} />
+                <Zap size={18} />
                 {t('landing.hero.ctaPrimary')}
-              </a>
+              </Link>
               <a
                 href="#features"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-8 py-4 text-base font-medium text-white backdrop-blur-sm transition hover:bg-white/15 sm:w-auto"
@@ -245,7 +244,7 @@ export default function LandingPage() {
           </div>
 
           <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3">
-            {PLANS.map(({ name, price, desc, features, cta, highlight }) => (
+            {PLANS.map(({ name, price, planKey, desc, features, cta, highlight }) => (
               <div
                 key={name}
                 className={`relative flex flex-col rounded-[32px] p-8 transition ${
@@ -278,10 +277,8 @@ export default function LandingPage() {
                   ))}
                 </ul>
 
-                <a
-                  href={WA_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={`/register?plan=${planKey}`}
                   className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition ${
                     highlight
                       ? 'bg-white text-blue-600 hover:bg-blue-50'
@@ -290,7 +287,7 @@ export default function LandingPage() {
                 >
                   {cta}
                   <ArrowRight size={15} />
-                </a>
+                </Link>
               </div>
             ))}
           </div>
@@ -352,15 +349,13 @@ export default function LandingPage() {
           <p className="mb-10 text-lg text-slate-300">
             {t('landing.cta.desc')}
           </p>
-          <a
-            href={WA_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/register"
             className="inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-blue-500 to-sky-400 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:from-blue-600 hover:to-sky-500"
           >
-            <MessageSquareText size={18} />
+            <Zap size={18} />
             {t('landing.cta.button')}
-          </a>
+          </Link>
         </div>
       </section>
 

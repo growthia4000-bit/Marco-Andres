@@ -401,13 +401,24 @@ export default function LandingPage() {
                 <ul className="flex flex-col gap-3 text-sm text-slate-500">
                   <li>
                     <a
-                      href={WA_URL}
+                      href="https://wa.me/447506862450"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 transition hover:text-slate-900"
                     >
                       <Phone size={13} />
-                      +44 7506 862450
+                      Rodney Zambrano: +44 7506 862450 (UK)
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://wa.me/34631422119"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 transition hover:text-slate-900"
+                    >
+                      <Phone size={13} />
+                      Marcos Zambrano: +34 631 422 119 (España)
                     </a>
                   </li>
                   <li>

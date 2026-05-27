@@ -1295,6 +1295,7 @@ cta: {
       perMonth: '/mo',
       customPlan: 'Need a custom plan for your agency?',
       contactUs: 'Contact us on WhatsApp',
+      eurNote: 'Prices in EUR · We accept international payments',
       starter: {
         desc: 'For independent agents who want to get organized from day one.',
         f1: '1 user', f2: 'Up to 50 properties', f3: 'Lead pipeline',

@@ -298,6 +298,7 @@ export default function LandingPage() {
               {t('landing.pricing.contactUs')}
             </a>
           </p>
+          <p className="mt-3 text-center text-xs text-slate-400">{t('landing.pricing.eurNote')}</p>
         </div>
       </section>
 

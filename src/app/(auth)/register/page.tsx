@@ -1,70 +1,51 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Check, ChevronRight, AlertCircle, Star, Building2, Users, Zap } from 'lucide-react'
 import { Suspense } from 'react'
-
-// Plan definitions (matching src/lib/stripe.ts)
-const PLANS = [
-  {
-    key: 'starter',
-    name: 'Starter',
-    price: 29,
-    description: 'Ideal para autónomos y pequeñas inmobiliarias',
-    icon: Building2,
-    color: 'slate',
-    popular: false,
-    features: [
-      'Hasta 5 usuarios',
-      '100 propiedades',
-      '500 leads',
-      'WhatsApp básico',
-      'Email y calendario',
-      '1 GB de almacenamiento',
-    ],
-  },
-  {
-    key: 'profesional',
-    name: 'Profesional',
-    price: 59,
-    description: 'Para equipos en crecimiento con más clientes',
-    icon: Users,
-    color: 'blue',
-    popular: true,
-    features: [
-      'Hasta 15 usuarios',
-      'Propiedades ilimitadas',
-      'Leads ilimitados',
-      'WhatsApp & Email avanzado',
-      'Informes y analíticas',
-      'IA para gestión de leads',
-    ],
-  },
-  {
-    key: 'premium',
-    name: 'Premium',
-    price: 99,
-    description: 'Para grandes inmobiliarias y franquicias',
-    icon: Zap,
-    color: 'amber',
-    popular: false,
-    features: [
-      'Hasta 30 usuarios',
-      'Todo ilimitado',
-      'IA avanzada y chatbot',
-      'API & integraciones',
-      'Soporte prioritario 24/7',
-      'Gestor de cuenta dedicado',
-    ],
-  },
-]
+import { useI18n } from '@/i18n/I18nProvider'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 function RegisterForm() {
-  const router = useRouter()
+  const { t } = useI18n()
   const searchParams = useSearchParams()
+
+  const PLANS = [
+    {
+      key: 'starter',
+      name: 'Starter',
+      price: 29,
+      description: t('register.plans.starter.desc'),
+      icon: Building2,
+      color: 'slate',
+      popular: false,
+      features: (['f1', 'f2', 'f3', 'f4', 'f5', 'f6'] as const).map(k => t(`register.plans.starter.${k}`)),
+    },
+    {
+      key: 'profesional',
+      name: 'Profesional',
+      price: 59,
+      description: t('register.plans.profesional.desc'),
+      icon: Users,
+      color: 'blue',
+      popular: true,
+      features: (['f1', 'f2', 'f3', 'f4', 'f5', 'f6'] as const).map(k => t(`register.plans.profesional.${k}`)),
+    },
+    {
+      key: 'premium',
+      name: 'Premium',
+      price: 99,
+      description: t('register.plans.premium.desc'),
+      icon: Zap,
+      color: 'amber',
+      popular: false,
+      features: (['f1', 'f2', 'f3', 'f4', 'f5', 'f6'] as const).map(k => t(`register.plans.premium.${k}`)),
+    },
+  ]
+
   const [step, setStep] = useState<'plan' | 'details'>(
     searchParams.get('plan') ? 'details' : 'plan'
   )
@@ -100,7 +81,7 @@ function RegisterForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Error al procesar el pago')
+        setError(data.error || t('register.errorPayment'))
         setLoading(false)
         return
       }
@@ -109,7 +90,7 @@ function RegisterForm() {
         window.location.href = data.url
       }
     } catch {
-      setError('Error de conexión. Inténtalo de nuevo.')
+      setError(t('register.errorConnection'))
       setLoading(false)
     }
   }
@@ -135,23 +116,26 @@ function RegisterForm() {
 
       <div className="relative z-10 flex min-h-screen flex-col px-4 pb-6 pt-10 sm:px-6 sm:pt-14">
         {/* Logo / nav */}
-        <div className="mb-6 flex items-center gap-2">
-          <span className="text-lg font-bold tracking-tight text-slate-950">InmoCRM</span>
-          <span className="text-slate-400">/</span>
-          <span className="text-sm text-slate-500">Crear cuenta</span>
+        <div className="mb-6 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold tracking-tight text-slate-950">Growthia Global CRM</span>
+            <span className="text-slate-400">/</span>
+            <span className="text-sm text-slate-500">{t('register.breadcrumb')}</span>
+          </div>
+          <LanguageSwitcher />
         </div>
 
         {step === 'plan' ? (
           /* ── STEP 1: Plan selector ── */
           <div className="mx-auto w-full max-w-5xl">
             <div className="mb-2 inline-flex items-center rounded-full border border-slate-200/80 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 backdrop-blur-sm">
-              Paso 1 de 2 — Elige tu plan
+              {t('register.step1Badge')}
             </div>
             <h1 className="mb-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              Empieza a crecer hoy
+              {t('register.step1Title')}
             </h1>
             <p className="mb-8 text-slate-500">
-              Sin permanencia. Cambia o cancela cuando quieras.
+              {t('register.step1Subtitle')}
             </p>
 
             <div className="grid gap-4 sm:grid-cols-3">
@@ -170,7 +154,7 @@ function RegisterForm() {
                     {p.popular && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-0.5 text-xs font-semibold text-white shadow">
-                          <Star size={11} className="fill-white" /> Más popular
+                          <Star size={11} className="fill-white" /> {t('register.popular')}
                         </span>
                       </div>
                     )}
@@ -186,7 +170,7 @@ function RegisterForm() {
 
                     <div className="mb-5 flex items-end gap-1">
                       <span className="text-3xl font-bold text-slate-950">{p.price}€</span>
-                      <span className="mb-0.5 text-sm text-slate-400">/mes</span>
+                      <span className="mb-0.5 text-sm text-slate-400">{t('register.perMonth')}</span>
                     </div>
 
                     <ul className="mb-6 space-y-2">
@@ -203,7 +187,7 @@ function RegisterForm() {
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-slate-950 text-white hover:bg-slate-800'
                     }`}>
-                      Elegir {p.name}
+                      {t('register.choosePlan')} {p.name}
                       <ChevronRight size={16} />
                     </div>
                   </button>
@@ -212,9 +196,9 @@ function RegisterForm() {
             </div>
 
             <p className="mt-6 text-center text-sm text-slate-400">
-              ¿Ya tienes cuenta?{' '}
+              {t('register.alreadyAccount')}{' '}
               <Link href="/login" className="font-medium text-slate-700 hover:underline">
-                Inicia sesión
+                {t('register.loginLink')}
               </Link>
             </p>
           </div>
@@ -225,17 +209,17 @@ function RegisterForm() {
               onClick={() => setStep('plan')}
               className="mb-4 flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
             >
-              ← Cambiar plan
+              {t('register.step2Back')}
             </button>
 
             <div className="mb-2 inline-flex items-center rounded-full border border-slate-200/80 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 backdrop-blur-sm">
-              Paso 2 de 2 — Datos de la cuenta
+              {t('register.step2Badge')}
             </div>
             <h1 className="mb-1 text-3xl font-semibold tracking-tight text-slate-950">
-              Crea tu cuenta
+              {t('register.step2Title')}
             </h1>
             <p className="mb-6 text-slate-500">
-              Completa tus datos y paga de forma segura con Stripe.
+              {t('register.step2Subtitle')}
             </p>
 
             {/* Selected plan summary */}
@@ -256,7 +240,7 @@ function RegisterForm() {
                   onClick={() => setStep('plan')}
                   className="ml-auto text-xs font-medium text-slate-500 hover:text-slate-700 hover:underline"
                 >
-                  Cambiar
+                  {t('register.changePlan')}
                 </button>
               </div>
             )}
@@ -266,13 +250,13 @@ function RegisterForm() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Nombre de tu inmobiliaria
+                    {t('register.agencyNameLabel')}
                   </label>
                   <input
                     type="text"
                     value={form.agency_name}
                     onChange={(e) => setForm((f) => ({ ...f, agency_name: e.target.value }))}
-                    placeholder="Ej: Inmobiliaria García"
+                    placeholder={t('register.agencyNamePlaceholder')}
                     required
                     className={inputClass}
                   />
@@ -280,13 +264,13 @@ function RegisterForm() {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Tu nombre completo
+                    {t('register.fullNameLabel')}
                   </label>
                   <input
                     type="text"
                     value={form.full_name}
                     onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-                    placeholder="Ej: María García López"
+                    placeholder={t('register.fullNamePlaceholder')}
                     required
                     className={inputClass}
                   />
@@ -294,13 +278,13 @@ function RegisterForm() {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Email de trabajo
+                    {t('register.emailLabel')}
                   </label>
                   <input
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    placeholder="hola@tuinmobiliaria.com"
+                    placeholder={t('register.emailPlaceholder')}
                     required
                     className={inputClass}
                   />
@@ -322,29 +306,29 @@ function RegisterForm() {
                     <span className="animate-spin text-lg">⏳</span>
                   ) : (
                     <>
-                      Continuar al pago seguro
+                      {t('register.submit')}
                       <ChevronRight size={18} />
                     </>
                   )}
                 </button>
 
                 <p className="text-center text-xs text-slate-400">
-                  🔒 Pago procesado de forma segura por Stripe. Sin permanencia.
+                  {t('register.securePayment')}
                 </p>
               </form>
             </div>
 
             <p className="mt-4 text-center text-sm text-slate-400">
-              ¿Ya tienes cuenta?{' '}
+              {t('register.alreadyAccount')}{' '}
               <Link href="/login" className="font-medium text-slate-700 hover:underline">
-                Inicia sesión
+                {t('register.loginLink')}
               </Link>
             </p>
           </div>
         )}
 
         <footer className="mt-auto pt-6 text-center text-xs text-slate-400">
-          © 2026 Growthia Global · Todos los derechos reservados
+          {t('register.footer')}
         </footer>
       </div>
     </div>

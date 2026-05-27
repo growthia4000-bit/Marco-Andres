@@ -10,7 +10,7 @@ import { useI18n } from '@/i18n/I18nProvider'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 const WA_NUMBER = '447506862450'
-const WA_MESSAGE = encodeURIComponent('Hola, me interesa solicitar una demo gratuita de Growthia Global CRM.')
+const WA_MESSAGE = encodeURIComponent('Hola, me interesa una demo gratuita de Growthia Global CRM')
 const WA_URL = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
@@ -109,13 +109,15 @@ export default function LandingPage() {
             >
               {t('landing.nav.login')}
             </Link>
-            <Link
-              href="/register"
+            <a
+              href={WA_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-500/20 transition hover:from-blue-700 hover:to-sky-600"
             >
               {t('landing.nav.demo')}
               <ChevronRight size={14} />
-            </Link>
+            </a>
           </div>
         </div>
       </header>

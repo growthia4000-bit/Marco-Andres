@@ -182,6 +182,23 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Video Demo ── */}
+      <section className="bg-white py-16 sm:py-20">
+        <div className="mx-auto max-w-[800px] px-4 sm:px-6">
+          <div className="overflow-hidden rounded-2xl shadow-2xl shadow-slate-200">
+            <div className="relative" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src="https://www.youtube.com/embed/HC9NsBcdOn8"
+                title="Growthia Global CRM Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Features ── */}
       <section id="features" className="bg-slate-50 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">

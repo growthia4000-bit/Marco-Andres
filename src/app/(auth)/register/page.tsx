@@ -7,7 +7,6 @@ import Image from 'next/image'
 import { Check, ChevronRight, AlertCircle, Star, Building2, Users, Zap } from 'lucide-react'
 import { Suspense } from 'react'
 import { useI18n } from '@/i18n/I18nProvider'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 function RegisterForm() {
   const { t } = useI18n()
@@ -116,13 +115,10 @@ function RegisterForm() {
 
       <div className="relative z-10 flex min-h-screen flex-col px-4 pb-6 pt-10 sm:px-6 sm:pt-14">
         {/* Logo / nav */}
-        <div className="mb-6 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight text-slate-950">Growthia Global CRM</span>
-            <span className="text-slate-400">/</span>
-            <span className="text-sm text-slate-500">{t('register.breadcrumb')}</span>
-          </div>
-          <LanguageSwitcher />
+        <div className="mb-6 flex items-center gap-2">
+          <span className="text-lg font-bold tracking-tight text-slate-950">Growthia Global CRM</span>
+          <span className="text-slate-400">/</span>
+          <span className="text-sm text-slate-500">{t('register.breadcrumb')}</span>
         </div>
 
         {step === 'plan' ? (

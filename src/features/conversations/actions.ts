@@ -575,6 +575,18 @@ function safeTemplateVariables(value: unknown, bodyText: string) {
   return buildDefaultVariablesSchema(bodyText)
 }
 
+function repairVariablesSchema(rawSchema: WhatsAppTemplateVariable[], bodyText: string): WhatsAppTemplateVariable[] {
+  const count = countTemplateVariables(bodyText)
+  if (count === 0) return []
+  return Array.from({ length: count }, (_, i) => {
+    const v = rawSchema[i]
+    const example = (v?.example ?? '').trim() || (v?.label ?? '').trim() || (v?.key ?? '').trim() || `Ejemplo ${i + 1}`
+    const label = (v?.label ?? '').trim() || `Variable ${i + 1}`
+    const key = (v?.key ?? '').trim() || `param_${i + 1}`
+    return { key, label, example, required: v?.required ?? true }
+  })
+}
+
 function buildTemplatePayload(row: TenantWhatsAppTemplateRow) {
   const variablesSchema = safeTemplateVariables(row.variables_schema, row.body_text)
   const usable = getTemplateUsableFlag({
@@ -2371,16 +2383,19 @@ export async function publishTenantWhatsAppTemplatesAction(formData: FormData) {
       results.push({ id: row.id, ok: false, message: 'La plantilla está archivada y no se puede publicar.' })
       continue
     }
-    const variablesSchema = safeTemplateVariables(row.variables_schema, row.body_text)
-    validateTemplateDefinition({
-      bodyText: row.body_text,
-      variablesSchema,
-      metaTemplateName: row.meta_template_name,
-    })
 
     try {
+      const rawSchema = safeTemplateVariables(row.variables_schema, row.body_text)
+      const variablesSchema = repairVariablesSchema(rawSchema, row.body_text)
+      validateTemplateDefinition({
+        bodyText: row.body_text,
+        variablesSchema,
+        metaTemplateName: row.meta_template_name,
+      })
+
       const published = await publishTemplateToMeta(metaConfig, {
         meta_template_name: row.meta_template_name,
+        meta_template_id: row.meta_template_id,
         language_code: row.language_code,
         category: row.category,
         body_text: row.body_text,
@@ -2393,8 +2408,8 @@ export async function publishTenantWhatsAppTemplatesAction(formData: FormData) {
         .from('tenant_whatsapp_templates')
         .update({
           status: 'pending_meta',
-          meta_status: typeof published?.status === 'string' ? published.status : 'SUBMITTED',
-          meta_template_id: typeof published?.id === 'string' ? published.id : null,
+          meta_status: typeof published?.status === 'string' ? published.status : 'PENDING',
+          meta_template_id: typeof published?.id === 'string' ? published.id : row.meta_template_id,
           rejection_reason: null,
           last_error: null,
           last_synced_at: new Date().toISOString(),

@@ -7,6 +7,7 @@ export type MetaWhatsAppTemplateConfig = {
 
 export type TenantWhatsAppTemplateMetaPayload = {
   meta_template_name: string
+  meta_template_id?: string | null
   language_code: string
   category: string
   body_text: string
@@ -74,11 +75,21 @@ export async function publishTemplateToMeta(config: MetaWhatsAppTemplateConfig, 
   const components: Array<Record<string, unknown>> = []
 
   if (template.header_text?.trim()) {
-    components.push({
+    const headerVarCount = countBodyVariables(template.header_text)
+    const headerComponent: Record<string, unknown> = {
       type: 'HEADER',
       format: 'TEXT',
       text: template.header_text.trim(),
-    })
+    }
+    if (headerVarCount > 0) {
+      headerComponent.example = {
+        header_text: Array.from({ length: headerVarCount }, (_, i) => {
+          const v = template.variables_schema[i]
+          return (v?.example ?? '').trim() || (v?.label ?? '').trim() || (v?.key ?? '').trim() || `Ejemplo ${i + 1}`
+        }),
+      }
+    }
+    components.push(headerComponent)
   }
 
   const bodyVarCount = countBodyVariables(template.body_text)
@@ -93,6 +104,19 @@ export async function publishTemplateToMeta(config: MetaWhatsAppTemplateConfig, 
       type: 'FOOTER',
       text: template.footer_text.trim(),
     })
+  }
+
+  // If the template already exists in Meta, update it instead of creating
+  if (template.meta_template_id?.trim()) {
+    const response = await fetch(`https://graph.facebook.com/v23.0/${template.meta_template_id}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ components }),
+    })
+    return parseMetaResponse(response)
   }
 
   const response = await fetch(`https://graph.facebook.com/v23.0/${config.whatsappBusinessAccountId}/message_templates`, {

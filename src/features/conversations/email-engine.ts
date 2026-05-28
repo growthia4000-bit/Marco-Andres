@@ -416,10 +416,16 @@ export async function sendEmailViaSmtp(params: {
 }): Promise<SmtpSendResult> {
   const { config, to, subject, text, html, messageId, inReplyTo, references } = params
 
+  // Port 465 always uses implicit SSL/TLS (secure must be true).
+  // Port 587 uses STARTTLS (secure false, requireTLS true).
+  const isPort465 = config.port === 465
+  const secure = isPort465 ? true : config.secure
+
   const transporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
-    secure: config.secure,
+    secure,
+    ...(isPort465 ? {} : { requireTLS: true }),
     auth: {
       user: config.user,
       pass: config.pass,

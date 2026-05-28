@@ -149,13 +149,15 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link
-                href="/register"
+              <a
+                href={WA_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-blue-500 to-sky-400 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:from-blue-600 hover:to-sky-500 hover:shadow-blue-500/40 sm:w-auto"
               >
                 <Zap size={18} />
                 {t('landing.hero.ctaPrimary')}
-              </Link>
+              </a>
               <a
                 href="#features"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-8 py-4 text-base font-medium text-white backdrop-blur-sm transition hover:bg-white/15 sm:w-auto"
@@ -304,7 +306,7 @@ export default function LandingPage() {
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
-                  {cta}
+                  {t('landing.pricing.planCta')}
                   <ArrowRight size={15} />
                 </Link>
               </div>
@@ -369,13 +371,15 @@ export default function LandingPage() {
           <p className="mb-10 text-lg text-slate-300">
             {t('landing.cta.desc')}
           </p>
-          <Link
-            href="/register"
+          <a
+            href={WA_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-blue-500 to-sky-400 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:from-blue-600 hover:to-sky-500"
           >
             <Zap size={18} />
             {t('landing.cta.button')}
-          </Link>
+          </a>
         </div>
       </section>
 

@@ -1296,6 +1296,7 @@ cta: {
       customPlan: 'Hai bisogno di un piano personalizzato per la tua agenzia?',
       contactUs: 'Contattaci su WhatsApp',
       eurNote: 'Prezzi in EUR · Accettiamo pagamenti internazionali',
+      planCta: 'Inizia ora',
       starter: {
         desc: 'Per agenti indipendenti che vogliono organizzarsi fin dal primo giorno.',
         f1: '1 utente', f2: 'Fino a 50 proprietà', f3: 'Pipeline lead',

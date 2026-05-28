@@ -1551,6 +1551,7 @@ source: {
       customPlan: '¿Necesitas un plan personalizado para tu agencia?',
       contactUs: 'Contáctanos por WhatsApp',
       eurNote: 'Precios en EUR · Aceptamos pagos internacionales',
+      planCta: 'Contratar ahora',
       starter: {
         desc: 'Para agentes independientes que quieren organizarse desde el día uno.',
         f1: '1 usuario', f2: 'Hasta 50 propiedades', f3: 'Pipeline de leads',

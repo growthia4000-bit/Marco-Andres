@@ -51,10 +51,22 @@ async function parseMetaResponse(response: Response) {
   return parsed
 }
 
-function buildBodyExample(variables: WhatsAppTemplateVariable[]) {
-  if (!variables.length) return undefined
+function countBodyVariables(text: string): number {
+  const matches = Array.from(text.matchAll(/{{\s*(\d+)\s*}}/g)).map((m) => Number(m[1]))
+  return matches.length > 0 ? Math.max(...matches) : 0
+}
+
+function buildBodyExample(variables: WhatsAppTemplateVariable[], bodyText: string) {
+  const count = countBodyVariables(bodyText)
+  if (count === 0) return undefined
   return {
-    body_text: [variables.map((variable) => variable.example || variable.label || variable.key)],
+    body_text: [
+      Array.from({ length: count }, (_, i) => {
+        const v = variables[i]
+        const value = (v?.example ?? '').trim() || (v?.label ?? '').trim() || (v?.key ?? '').trim()
+        return value || `Ejemplo ${i + 1}`
+      }),
+    ],
   }
 }
 
@@ -69,10 +81,11 @@ export async function publishTemplateToMeta(config: MetaWhatsAppTemplateConfig, 
     })
   }
 
+  const bodyVarCount = countBodyVariables(template.body_text)
   components.push({
     type: 'BODY',
     text: template.body_text,
-    ...(template.variables_schema.length > 0 ? { example: buildBodyExample(template.variables_schema) } : {}),
+    ...(bodyVarCount > 0 ? { example: buildBodyExample(template.variables_schema, template.body_text) } : {}),
   })
 
   if (template.footer_text?.trim()) {

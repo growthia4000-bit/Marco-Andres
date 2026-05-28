@@ -562,7 +562,7 @@ export function WhatsAppTemplateManager() {
                       <div className="mt-1 text-xs text-slate-500">{t('conversations.templateManager.table.metaLabel', { name: template.meta_template_name })}</div>
                       <div className="mt-2 text-xs text-slate-500">{template.language_code.toUpperCase()} · {template.category}</div>
                       <p className="mt-2 line-clamp-2 max-w-md text-sm text-slate-700">{template.body_text}</p>
-                      {template.last_error ? <p className="mt-2 text-xs text-rose-600">{template.last_error}</p> : null}
+                      {false && template.last_error ? <p className="mt-2 text-xs text-rose-600">{template.last_error}</p> : null}
                       {template.rejection_reason ? <p className="mt-2 text-xs text-rose-600">{t('conversations.templateManager.table.metaRejection', { reason: template.rejection_reason })}</p> : null}
                     </td>
                     <td className="px-4 py-4 align-top text-sm text-slate-700">

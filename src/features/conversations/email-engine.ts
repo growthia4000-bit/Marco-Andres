@@ -368,6 +368,11 @@ export interface EmailDemoConfig {
 }
 
 export function detectEmailDemoConfig(env: Record<string, string | undefined>): EmailDemoConfig {
+  // Demo mode is disabled when any real email provider (SMTP, Resend, SendGrid, Postmark) is configured
+  const hasSmtp = !!(env.SMTP_HOST?.trim() && env.SMTP_PORT?.trim() && env.SMTP_USER?.trim() && env.SMTP_PASS?.trim())
+  const hasOtherProvider = !!(env.RESEND_API_KEY?.trim() || env.SENDGRID_API_KEY?.trim() || env.POSTMARK_SERVER_TOKEN?.trim())
+  if (hasSmtp || hasOtherProvider) return { enabled: false }
+
   const enabled = env.EMAIL_DEMO_MODE?.trim() === 'true'
   return { enabled }
 }

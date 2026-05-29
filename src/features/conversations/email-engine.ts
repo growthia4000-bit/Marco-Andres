@@ -236,8 +236,9 @@ export async function fetchInboundEmailsViaImap(config: NonNullable<EmailInbound
     const recentUids = mailboxUids.slice(-config.maxFetch)
     const emails: ImapInboundEmail[] = []
 
+    type BufferedImapMessage = { uid: number; source: Buffer; envelope: any; internalDate: any }
     // Collect raw sources first to minimise time holding the IMAP socket open
-    const rawMessages: Array<{ uid: number; source: Buffer; envelope: typeof message['envelope']; internalDate: typeof message['internalDate'] }> = []
+    const rawMessages: BufferedImapMessage[] = []
     for await (const message of client.fetch(recentUids, { uid: true, source: true, envelope: true, internalDate: true }, { uid: true })) {
       if (!message.source) continue
       rawMessages.push({ uid: message.uid, source: message.source as Buffer, envelope: message.envelope, internalDate: message.internalDate })
@@ -247,8 +248,8 @@ export async function fetchInboundEmailsViaImap(config: NonNullable<EmailInbound
     for (const message of rawMessages) {
       const parsed = await simpleParser(message.source)
 
-      const from = stringifyParsedAddress(parsed.from) || message.envelope?.from?.map((entry) => `${entry.name || ''} <${entry.address || ''}>`).join(', ') || ''
-      const to = stringifyParsedAddress(parsed.to) || message.envelope?.to?.map((entry) => `${entry.name || ''} <${entry.address || ''}>`).join(', ') || ''
+      const from = stringifyParsedAddress(parsed.from) || message.envelope?.from?.map((entry: any) => `${entry.name || ''} <${entry.address || ''}>`).join(', ') || ''
+      const to = stringifyParsedAddress(parsed.to) || message.envelope?.to?.map((entry: any) => `${entry.name || ''} <${entry.address || ''}>`).join(', ') || ''
       const subject = parsed.subject || message.envelope?.subject || '(sin asunto)'
       const text = parsed.text?.trim() || ''
       const html = typeof parsed.html === 'string' ? parsed.html : undefined

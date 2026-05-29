@@ -215,6 +215,12 @@ export async function fetchInboundEmailsViaImap(config: NonNullable<EmailInbound
       pass: config.pass,
     },
     logger: false,
+    // Prevent IDLE command in background/scheduler contexts — avoids "Unexpected close"
+    disableAutoIdle: true,
+    // Fail fast if the server doesn't respond during connection
+    connectionTimeout: 30000,
+    // Keep socket alive with TCP keepalives instead of relying on IMAP IDLE
+    socketTimeout: 120000,
   })
 
   await client.connect()
@@ -230,9 +236,16 @@ export async function fetchInboundEmailsViaImap(config: NonNullable<EmailInbound
     const recentUids = mailboxUids.slice(-config.maxFetch)
     const emails: ImapInboundEmail[] = []
 
+    // Collect raw sources first to minimise time holding the IMAP socket open
+    const rawMessages: Array<{ uid: number; source: Buffer; envelope: typeof message['envelope']; internalDate: typeof message['internalDate'] }> = []
     for await (const message of client.fetch(recentUids, { uid: true, source: true, envelope: true, internalDate: true }, { uid: true })) {
       if (!message.source) continue
-      const parsed = await simpleParser(message.source as Buffer)
+      rawMessages.push({ uid: message.uid, source: message.source as Buffer, envelope: message.envelope, internalDate: message.internalDate })
+    }
+
+    // Parse emails after the IMAP fetch loop is complete (socket no longer needs to stay active)
+    for (const message of rawMessages) {
+      const parsed = await simpleParser(message.source)
 
       const from = stringifyParsedAddress(parsed.from) || message.envelope?.from?.map((entry) => `${entry.name || ''} <${entry.address || ''}>`).join(', ') || ''
       const to = stringifyParsedAddress(parsed.to) || message.envelope?.to?.map((entry) => `${entry.name || ''} <${entry.address || ''}>`).join(', ') || ''
@@ -271,7 +284,11 @@ export async function fetchInboundEmailsViaImap(config: NonNullable<EmailInbound
     return emails.sort((left, right) => right.uid - left.uid)
   } finally {
     lock.release()
-    await client.logout()
+    try {
+      await client.logout()
+    } catch {
+      // Ignore logout errors — connection may already be closed
+    }
   }
 }
 

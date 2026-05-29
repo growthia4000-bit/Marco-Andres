@@ -347,8 +347,21 @@ export function startEmailSyncScheduler(runner: () => Promise<unknown>, trigger:
       })
     } catch (error) {
       if (error instanceof EmailSyncLockedError) return
+      // "Unexpected close" is a transient IMAP socket error (server closed connection).
+      // Treat it as a skipped tick rather than a permanent failure so the next tick retries cleanly.
+      const msg = errorMessage(error)
+      if (msg.toLowerCase().includes('unexpected close') || msg.toLowerCase().includes('connection closed') || msg.toLowerCase().includes('socket closed')) {
+        state.lastHeartbeatAt = nowIso()
+        state.lastSkipAt = state.lastHeartbeatAt
+        schedulerLog('tick skipped (transient socket close, will retry next tick)', {
+          tickCount: state.tickCount,
+          at: state.lastSkipAt,
+          error: msg,
+        })
+        return
+      }
       state.lastFailureAt = nowIso()
-      state.lastError = errorMessage(error)
+      state.lastError = msg
       console.error('[email sync scheduler] tick failed', {
         tickCount: state.tickCount,
         at: state.lastFailureAt,

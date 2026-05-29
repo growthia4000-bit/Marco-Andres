@@ -147,7 +147,6 @@ export async function runEmailInboxSyncWithServerLock<T>(source: EmailSyncSource
     state.lastHeartbeatAt = startedAt
     state.lastSkipAt = startedAt
     state.lastRunSource = source
-    state.lastError = 'Skipped because another email inbox sync is already running'
     schedulerLog('tick skipped', { source, at: startedAt, reason: 'lock_active' })
     throw new EmailSyncLockedError()
   }

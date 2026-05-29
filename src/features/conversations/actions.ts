@@ -1683,7 +1683,7 @@ async function performEmailInboxSync(args: {
       await insertChannelEvent(supabase, {
         tenantId,
         actorUserId,
-        eventType: 'email.inbound.sync.failed',
+        eventType: 'email.inbound.sync.skipped',
         payload: {
           reason: error.message,
           source,
@@ -1693,7 +1693,18 @@ async function performEmailInboxSync(args: {
           conflict: true,
         },
       })
-      throw error
+      return {
+        fetched: 0,
+        imported: 0,
+        skipped: 0,
+        duplicates: 0,
+        threaded: 0,
+        created: 0,
+        irrelevant: 0,
+        failed: 0,
+        reason: null,
+        locked: true,
+      }
     }
 
     const reason = error instanceof Error ? error.message : 'IMAP sync failed'

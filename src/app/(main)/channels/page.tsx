@@ -321,8 +321,10 @@ async function handleEmailTest() {
     setSyncingInbox(true)
     setEmailSyncMessage('')
     try {
-      const result = await syncEmailInboxAction() as { fetched: number; imported: number; skipped: number; duplicates: number; failed: number; threaded: number; created: number; irrelevant: number; reason?: string | null; simulated?: boolean }
-      if (result.simulated) {
+      const result = await syncEmailInboxAction() as { fetched: number; imported: number; skipped: number; duplicates: number; failed: number; threaded: number; created: number; irrelevant: number; reason?: string | null; simulated?: boolean; locked?: boolean }
+      if (result.locked) {
+        setEmailSyncMessage(t('conversations.channelsPanel.email.syncSkipped'))
+      } else if (result.simulated) {
         setEmailSyncMessage(t('conversations.channelsPanel.demo.syncSuccess'))
       } else {
         setEmailSyncMessage(t('conversations.channelsPanel.email.syncSuccess', {
@@ -567,7 +569,7 @@ async function handleEmailTest() {
                 {scheduler?.lastStartedBy ? <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.schedulerTrigger', { source: scheduler.lastStartedBy })}</p> : null}
                 <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.schedulerTicks', { count: String(scheduler?.tickCount || 0) })}</p>
                 {scheduler?.lastHeartbeatAt ? <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.email.schedulerHeartbeat', { date: formatDate(scheduler.lastHeartbeatAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</p> : null}
-                {scheduler?.lastError ? <p className="mt-2 text-xs text-rose-600">{scheduler.lastError}</p> : null}
+                {scheduler?.lastError && !scheduler.lastError.toLowerCase().includes('already running') && !scheduler.lastError.toLowerCase().includes('skipped') ? <p className="mt-2 text-xs text-rose-600">{scheduler.lastError}</p> : null}
               </div>
               {diagnostics?.email.demo?.enabled ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:col-span-2">

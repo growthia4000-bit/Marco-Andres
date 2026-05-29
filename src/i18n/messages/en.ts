@@ -599,6 +599,7 @@ const en = {
         syncButton: 'Sync inbox',
         syncHint: 'Manual fallback only. Real automation runs on the server when the email scheduler is active.',
         syncSuccess: 'Inbox checked: {fetched} read, {imported} imported, {threaded} threaded, {created} new, {irrelevant} irrelevant, {skipped} skipped, {failed} failed.',
+        syncSkipped: 'Sync already in progress. Skipped to avoid conflicts.',
         syncStats: 'Read {fetched} · Imported {imported} · Threaded {threaded} · New {created} · Irrelevant {irrelevant} · Skipped {skipped} · Failed {failed}',
         schedulerServer: 'Real server poller active',
         schedulerExternal: 'Only external scheduler enabled',

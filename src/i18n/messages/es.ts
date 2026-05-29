@@ -854,6 +854,7 @@ const es = {
         syncButton: 'Sincronizar inbox',
         syncHint: 'Fallback manual. La automatizacion real corre del lado servidor cuando el scheduler de email esta activo.',
         syncSuccess: 'Inbox revisado: {fetched} leidos, {imported} importados, {threaded} encadenados, {created} nuevos, {irrelevant} irrelevantes, {skipped} omitidos, {failed} fallidos.',
+        syncSkipped: 'Sincronización ya en curso. Se omitió para evitar conflictos.',
         syncStats: 'Leidos {fetched} · Importados {imported} · Encadenados {threaded} · Nuevos {created} · Irrelevantes {irrelevant} · Omitidos {skipped} · Fallidos {failed}',
         schedulerServer: 'Poller real del servidor activo',
         schedulerExternal: 'Solo scheduler externo habilitado',

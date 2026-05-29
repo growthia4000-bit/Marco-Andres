@@ -863,6 +863,7 @@ const es = {
         schedulerIdle: 'en espera',
         schedulerState: 'Estado {status} · cada {interval} min',
         schedulerHeartbeat: 'Ultimo heartbeat del servidor: {date}',
+        pollerRecovered: 'Ultimo estado: Poller activo · recuperado',
 source: {
           auto: 'Fuente: automatico',
           manual: 'Fuente: manual',

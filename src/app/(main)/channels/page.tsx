@@ -135,6 +135,7 @@ function summarizeLatestTest(t: (key: string, vars?: Record<string, string | num
     status,
     provider: typeof payload.provider === 'string' ? payload.provider : null,
     error: typeof payload.reason === 'string' ? payload.reason : null,
+    createdAt: test.created_at,
     date: formatDate(test.created_at, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
     line: t('conversations.channelsPanel.lastResult', {
       status: t(`conversations.delivery.status.${status}`),
@@ -254,6 +255,13 @@ export default function ChannelsPage() {
   const whatsappEnvironment = whatsappDbConfig?.resolvedEnvironment || 'sandbox'
   const whatsappProductionTone = environmentTone(whatsappEnvironment, whatsappDbConfig?.productionReady === true)
   const scheduler = diagnostics?.email.inbound.scheduler
+  const autoSyncRecovered = Boolean(
+    emailInboundAuto?.status === 'failed'
+    && scheduler?.started
+    && scheduler?.lastHeartbeatAt
+    && emailInboundAuto.createdAt
+    && new Date(scheduler.lastHeartbeatAt).getTime() > new Date(emailInboundAuto.createdAt).getTime()
+  )
   const schedulerStatusLine = !diagnostics
     ? t('common.loading')
     : scheduler?.started && scheduler?.mechanism === 'server_process'
@@ -569,7 +577,7 @@ async function handleEmailTest() {
                 {scheduler?.lastStartedBy ? <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.schedulerTrigger', { source: scheduler.lastStartedBy })}</p> : null}
                 <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.schedulerTicks', { count: String(scheduler?.tickCount || 0) })}</p>
                 {scheduler?.lastHeartbeatAt ? <p className="mt-1 text-xs text-slate-500">{t('conversations.channelsPanel.email.schedulerHeartbeat', { date: formatDate(scheduler.lastHeartbeatAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</p> : null}
-                {scheduler?.lastError && !scheduler.lastError.toLowerCase().includes('already running') && !scheduler.lastError.toLowerCase().includes('skipped') ? <p className="mt-2 text-xs text-rose-600">{scheduler.lastError}</p> : null}
+                {scheduler?.lastError && !autoSyncRecovered && !scheduler.lastError.toLowerCase().includes('already running') && !scheduler.lastError.toLowerCase().includes('skipped') ? <p className="mt-2 text-xs text-rose-600">{scheduler.lastError}</p> : null}
               </div>
               {diagnostics?.email.demo?.enabled ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:col-span-2">
@@ -613,7 +621,7 @@ async function handleEmailTest() {
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                     <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncAuto')}</p>
-                    <p className="mt-1 text-sm text-slate-900">{emailInboundAuto?.line || t('conversations.channelsPanel.noData')}</p>
+                    <p className="mt-1 text-sm text-slate-900">{autoSyncRecovered ? t('conversations.channelsPanel.email.pollerRecovered') : emailInboundAuto?.line || t('conversations.channelsPanel.noData')}</p>
                     {emailInboundAuto?.source ? <p className="mt-1 text-xs text-slate-500">{t(`conversations.channelsPanel.email.source.${emailInboundAuto.source}`)}</p> : null}
                     {emailInboundAuto?.fetched !== null ? (
                       <p className="mt-1 text-xs text-slate-500">
@@ -663,7 +671,13 @@ async function handleEmailTest() {
                         ))}
                       </div>
                     ) : null}
-                    {emailInboundAuto?.error ? <p className="mt-2 text-xs text-rose-600">{emailInboundAuto.error}</p> : null}
+                    {emailInboundAuto?.error && !autoSyncRecovered ? <p className="mt-2 text-xs text-rose-600">{emailInboundAuto.error}</p> : null}
+                    {emailInboundAuto?.error && autoSyncRecovered ? (
+                      <details className="mt-2 text-xs text-slate-500">
+                        <summary className="cursor-pointer select-none">{t('conversations.channelsPanel.technicalHistory')}</summary>
+                        <p className="mt-2 text-slate-600">{emailInboundAuto.error}</p>
+                      </details>
+                    ) : null}
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
                     <p className="text-xs uppercase tracking-wide text-slate-500">{t('conversations.channelsPanel.fields.lastInboundSyncManual')}</p>

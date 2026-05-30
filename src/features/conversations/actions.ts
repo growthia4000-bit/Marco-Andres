@@ -1268,6 +1268,9 @@ async function sendEmailAiReplyByMessageId(args: {
     : []
   const threadReferences = Array.from(new Set([...references, ...(inboundMessageId ? [inboundMessageId] : [])]))
 
+  // Set Reply-To to the IMAP inbox so replies route back to the monitored mailbox
+  const imapReplyTo = process.env.EMAIL_IMAP_USER?.trim() || undefined
+
   const sendParams = {
     to: fromEmail,
     subject: generateEmailSubject('Re:', conversation.subject || subject),
@@ -1276,6 +1279,7 @@ async function sendEmailAiReplyByMessageId(args: {
     messageId: localMessageId,
     inReplyTo: inboundMessageId,
     references: threadReferences,
+    replyTo: imapReplyTo,
   }
   const sendResult = deliveryConfig.provider === 'resend' && deliveryConfig.resend
     ? await sendEmailViaResend({ config: deliveryConfig.resend, ...sendParams })
@@ -1285,7 +1289,11 @@ async function sendEmailAiReplyByMessageId(args: {
     ? deliveryConfig.resend!.fromEmail
     : deliveryConfig.smtp!.fromEmail
 
-  const sentMessageId = sendResult.messageId || localMessageId
+  // localMessageId is the actual Message-ID header used in the sent email.
+  // Recipients' email clients will reference this in their In-Reply-To header when replying.
+  // sendResult.messageId is the provider's internal tracking ID (different from the email header).
+  const actualMessageId = localMessageId
+  const deliveryProviderId = sendResult.messageId || localMessageId
 
   const { error: insertError } = await supabase.from('conversation_messages').insert({
     conversation_id: msg.conversation_id,
@@ -1300,13 +1308,13 @@ async function sendEmailAiReplyByMessageId(args: {
       email_to: fromEmail,
       email_from: fromEmailAddress,
       email_subject: generateEmailSubject('Re:', conversation.subject || subject),
-      email_message_id: sentMessageId,
+      email_message_id: actualMessageId,
       email_in_reply_to: inboundMessageId,
       email_references: threadReferences,
       email_delivery_provider: sendResult.provider,
       email_delivery_status: 'sent',
       email_delivery_response: 'response' in sendResult ? sendResult.response : undefined,
-      email_delivery_provider_message_id: sendResult.messageId,
+      email_delivery_provider_message_id: deliveryProviderId,
       email_delivery_accepted: sendResult.accepted,
       email_delivery_rejected: sendResult.rejected,
       reply_type: 'auto',
@@ -1327,7 +1335,7 @@ async function sendEmailAiReplyByMessageId(args: {
     .update({
       metadata: {
         ...convMeta,
-        email_message_id: sentMessageId,
+        email_message_id: actualMessageId,
         email_references: threadReferences,
         last_email_to: fromEmail,
         last_email_error: null,
@@ -1898,9 +1906,10 @@ export async function testEmailChannelAction(formData: FormData) {
   }
 
   try {
+    const testImapReplyTo = process.env.EMAIL_IMAP_USER?.trim() || undefined
     const result = deliveryConfig.provider === 'resend' && deliveryConfig.resend
-      ? await sendEmailViaResend({ config: deliveryConfig.resend, to, subject, text, html: `<p>${text}</p>` })
-      : await sendEmailViaSmtp({ config: deliveryConfig.smtp!, to, subject, text, html: `<p>${text}</p>` })
+      ? await sendEmailViaResend({ config: deliveryConfig.resend, to, subject, text, html: `<p>${text}</p>`, replyTo: testImapReplyTo })
+      : await sendEmailViaSmtp({ config: deliveryConfig.smtp!, to, subject, text, html: `<p>${text}</p>`, replyTo: testImapReplyTo })
 
     const fromEmailAddress = deliveryConfig.provider === 'resend'
       ? deliveryConfig.resend!.fromEmail

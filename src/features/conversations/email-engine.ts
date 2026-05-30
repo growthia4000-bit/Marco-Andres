@@ -302,7 +302,8 @@ export function detectEmailDeliveryConfig(env: Record<string, string | undefined
   // Resend takes priority over SMTP when RESEND_API_KEY is set
   if (env.RESEND_API_KEY?.trim()) {
     const resendFromEmail = env.RESEND_FROM_EMAIL?.trim() || 'noreply@example.com'
-    const resendFromName = env.RESEND_FROM_NAME?.trim() || ''
+    // Fall back to SMTP_FROM_NAME so sender display name works even if RESEND_FROM_NAME is not set in the environment
+    const resendFromName = env.RESEND_FROM_NAME?.trim() || env.SMTP_FROM_NAME?.trim() || ''
     return {
       provider: 'resend',
       configured: true,
@@ -455,8 +456,9 @@ export async function sendEmailViaResend(params: {
   messageId?: string
   inReplyTo?: string
   references?: string[]
+  replyTo?: string
 }): Promise<ResendSendResult> {
-  const { config, to, subject, text, html, messageId, inReplyTo, references } = params
+  const { config, to, subject, text, html, messageId, inReplyTo, references, replyTo } = params
 
   const from = config.fromName ? `${config.fromName} <${config.fromEmail}>` : config.fromEmail
 
@@ -467,6 +469,7 @@ export async function sendEmailViaResend(params: {
 
   const body: Record<string, unknown> = { from, to, subject, text }
   if (html) body.html = html
+  if (replyTo) body.reply_to = replyTo
   if (Object.keys(headers).length) body.headers = headers
 
   const response = await fetch('https://api.resend.com/emails', {
@@ -504,8 +507,9 @@ export async function sendEmailViaSmtp(params: {
   messageId?: string
   inReplyTo?: string
   references?: string[]
+  replyTo?: string
 }): Promise<SmtpSendResult> {
-  const { config, to, subject, text, html, messageId, inReplyTo, references } = params
+  const { config, to, subject, text, html, messageId, inReplyTo, references, replyTo } = params
 
   // Port 465 always uses implicit SSL/TLS (secure must be true).
   // Port 587 uses STARTTLS (secure false, requireTLS true).
@@ -532,6 +536,7 @@ export async function sendEmailViaSmtp(params: {
     messageId,
     inReplyTo,
     references,
+    ...(replyTo ? { replyTo } : {}),
   })
 
   return {

@@ -299,6 +299,21 @@ export async function fetchInboundEmailsViaImap(config: NonNullable<EmailInbound
 }
 
 export function detectEmailDeliveryConfig(env: Record<string, string | undefined>): EmailDeliveryConfig {
+  // Resend takes priority over SMTP when RESEND_API_KEY is set
+  if (env.RESEND_API_KEY?.trim()) {
+    const resendFromEmail = env.RESEND_FROM_EMAIL?.trim() || 'noreply@example.com'
+    const resendFromName = env.RESEND_FROM_NAME?.trim() || ''
+    return {
+      provider: 'resend',
+      configured: true,
+      resend: {
+        apiKey: env.RESEND_API_KEY.trim(),
+        fromEmail: resendFromEmail,
+        fromName: resendFromName,
+      },
+    }
+  }
+
   const smtpHost = env.SMTP_HOST?.trim()
   const smtpPortRaw = env.SMTP_PORT?.trim()
   const smtpUser = env.SMTP_USER?.trim()
@@ -359,20 +374,6 @@ export function detectEmailDeliveryConfig(env: Record<string, string | undefined
         pass: smtpPass!,
         fromEmail: smtpFromEmail!,
         fromName: smtpFromName!,
-      },
-    }
-  }
-
-  if (env.RESEND_API_KEY) {
-    const resendFromEmail = env.RESEND_FROM_EMAIL?.trim() || 'noreply@example.com'
-    const resendFromName = env.RESEND_FROM_NAME?.trim() || ''
-    return {
-      provider: 'resend',
-      configured: true,
-      resend: {
-        apiKey: env.RESEND_API_KEY.trim(),
-        fromEmail: resendFromEmail,
-        fromName: resendFromName,
       },
     }
   }

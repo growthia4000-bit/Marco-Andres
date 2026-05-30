@@ -51,6 +51,11 @@ export interface EmailDeliveryConfig {
     fromEmail: string
     fromName: string
   }
+  resend?: {
+    apiKey: string
+    fromEmail: string
+    fromName: string
+  }
   graph?: {
     accessToken: string
     refreshToken: string
@@ -359,7 +364,17 @@ export function detectEmailDeliveryConfig(env: Record<string, string | undefined
   }
 
   if (env.RESEND_API_KEY) {
-    return { provider: 'resend', configured: true }
+    const resendFromEmail = env.RESEND_FROM_EMAIL?.trim() || 'noreply@example.com'
+    const resendFromName = env.RESEND_FROM_NAME?.trim() || ''
+    return {
+      provider: 'resend',
+      configured: true,
+      resend: {
+        apiKey: env.RESEND_API_KEY.trim(),
+        fromEmail: resendFromEmail,
+        fromName: resendFromName,
+      },
+    }
   }
 
   if (env.SENDGRID_API_KEY) {
@@ -419,6 +434,63 @@ export async function sendEmailViaDemo(params: {
     messageId,
     simulated: true,
     delivered: false,
+  }
+}
+
+export interface ResendSendResult {
+  provider: 'resend'
+  status: 'sent'
+  messageId: string
+  accepted: string[]
+  rejected: string[]
+}
+
+export async function sendEmailViaResend(params: {
+  config: NonNullable<EmailDeliveryConfig['resend']>
+  to: string
+  subject: string
+  text: string
+  html?: string
+  messageId?: string
+  inReplyTo?: string
+  references?: string[]
+}): Promise<ResendSendResult> {
+  const { config, to, subject, text, html, messageId, inReplyTo, references } = params
+
+  const from = config.fromName ? `${config.fromName} <${config.fromEmail}>` : config.fromEmail
+
+  const headers: Record<string, string> = {}
+  if (messageId) headers['Message-ID'] = messageId
+  if (inReplyTo) headers['In-Reply-To'] = inReplyTo
+  if (references?.length) headers['References'] = references.join(' ')
+
+  const body: Record<string, unknown> = { from, to, subject, text }
+  if (html) body.html = html
+  if (Object.keys(headers).length) body.headers = headers
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => response.statusText)
+    throw new Error(`Resend API error ${response.status}: ${errorBody}`)
+  }
+
+  const data = await response.json() as { id?: string }
+  const sentId = data.id ? `<${data.id}@resend.dev>` : messageId || `<resend-${Date.now()}@resend.dev>`
+
+  return {
+    provider: 'resend',
+    status: 'sent',
+    messageId: sentId,
+    accepted: [to],
+    rejected: [],
   }
 }
 

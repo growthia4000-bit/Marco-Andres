@@ -10,7 +10,7 @@ import { classifyMessage } from './intent-engine'
 import { generateReply } from './reply-engine'
 import { findAvailableSlots, suggestSlotsMessage } from './scheduling-engine'
 import { generateHumanSuggestion } from './human-engine'
-import { detectEmailDeliveryConfig, detectEmailDemoConfig, detectEmailInboundConfig, detectMicrosoftGraphConfig, fetchEmailsViaMicrosoftGraph, fetchInboundEmailsViaImap, generateEmailSubject, normalizeEmailSubject, parseEmailAddress, refreshMicrosoftGraphToken, resolveInboundTenantSlug, sendEmailViaDemo, sendEmailViaMicrosoftGraph, sendEmailViaSmtp } from './email-engine'
+import { detectEmailDeliveryConfig, detectEmailDemoConfig, detectEmailInboundConfig, detectMicrosoftGraphConfig, fetchEmailsViaMicrosoftGraph, fetchInboundEmailsViaImap, generateEmailSubject, normalizeEmailSubject, parseEmailAddress, refreshMicrosoftGraphToken, resolveInboundTenantSlug, sendEmailViaDemo, sendEmailViaMicrosoftGraph, sendEmailViaResend, sendEmailViaSmtp } from './email-engine'
 import { decryptToken, encryptToken, hasValidEncryptionKey } from '@/lib/email-token-encryption'
 import { detectWhatsAppDeliveryConfig, normalizeWhatsAppRecipient, renderTemplate, sendWhatsAppViaMeta, validateWhatsAppNumber, WHATSAPP_TEMPLATES, getTemplateByName, resolveTemplateByKeyAndLocale } from './whatsapp-engine'
 import { getRuleTemplate, RULE_TEMPLATES } from './automation-engine'
@@ -1214,8 +1214,12 @@ async function sendEmailAiReplyByMessageId(args: {
 
   if (!conversation) throw new Error('Conversacion no encontrada')
   if (!hasAiProviderConfig()) throw new Error('OPENROUTER_API_KEY no esta configurada')
-  if (!deliveryConfig.configured || deliveryConfig.provider !== 'smtp' || !deliveryConfig.smtp) {
-    throw new Error('SMTP no esta configurado completamente para enviar la respuesta IA')
+  const canSendEmail = deliveryConfig.configured && (
+    (deliveryConfig.provider === 'smtp' && !!deliveryConfig.smtp) ||
+    (deliveryConfig.provider === 'resend' && !!deliveryConfig.resend)
+  )
+  if (!canSendEmail) {
+    throw new Error('El proveedor de email no esta configurado completamente para enviar la respuesta IA')
   }
 
   const { data: recentMessages } = await supabase
@@ -1264,8 +1268,7 @@ async function sendEmailAiReplyByMessageId(args: {
     : []
   const threadReferences = Array.from(new Set([...references, ...(inboundMessageId ? [inboundMessageId] : [])]))
 
-  const smtpResult = await sendEmailViaSmtp({
-    config: deliveryConfig.smtp,
+  const sendParams = {
     to: fromEmail,
     subject: generateEmailSubject('Re:', conversation.subject || subject),
     text: aiReplyText,
@@ -1273,9 +1276,16 @@ async function sendEmailAiReplyByMessageId(args: {
     messageId: localMessageId,
     inReplyTo: inboundMessageId,
     references: threadReferences,
-  })
+  }
+  const sendResult = deliveryConfig.provider === 'resend' && deliveryConfig.resend
+    ? await sendEmailViaResend({ config: deliveryConfig.resend, ...sendParams })
+    : await sendEmailViaSmtp({ config: deliveryConfig.smtp!, ...sendParams })
 
-  const sentMessageId = smtpResult.messageId || localMessageId
+  const fromEmailAddress = deliveryConfig.provider === 'resend'
+    ? deliveryConfig.resend!.fromEmail
+    : deliveryConfig.smtp!.fromEmail
+
+  const sentMessageId = sendResult.messageId || localMessageId
 
   const { error: insertError } = await supabase.from('conversation_messages').insert({
     conversation_id: msg.conversation_id,
@@ -1288,17 +1298,17 @@ async function sendEmailAiReplyByMessageId(args: {
     is_automated: true,
     metadata: {
       email_to: fromEmail,
-      email_from: deliveryConfig.smtp.fromEmail,
+      email_from: fromEmailAddress,
       email_subject: generateEmailSubject('Re:', conversation.subject || subject),
       email_message_id: sentMessageId,
       email_in_reply_to: inboundMessageId,
       email_references: threadReferences,
-      email_delivery_provider: smtpResult.provider,
+      email_delivery_provider: sendResult.provider,
       email_delivery_status: 'sent',
-      email_delivery_response: smtpResult.response,
-      email_delivery_provider_message_id: smtpResult.messageId,
-      email_delivery_accepted: smtpResult.accepted,
-      email_delivery_rejected: smtpResult.rejected,
+      email_delivery_response: 'response' in sendResult ? sendResult.response : undefined,
+      email_delivery_provider_message_id: sendResult.messageId,
+      email_delivery_accepted: sendResult.accepted,
+      email_delivery_rejected: sendResult.rejected,
       reply_type: 'auto',
       ai_generated: true,
       ai_reply_mode: mode,
@@ -1335,8 +1345,8 @@ async function sendEmailAiReplyByMessageId(args: {
     payload: {
       based_on_message_id: messageId,
       to: fromEmail,
-      provider: smtpResult.provider,
-      provider_message_id: smtpResult.messageId,
+      provider: sendResult.provider,
+      provider_message_id: sendResult.messageId,
       model: AI_MODELS.balanced,
       mode,
       intent: classification.intent.intent,
@@ -1834,7 +1844,12 @@ export async function testEmailChannelAction(formData: FormData) {
 
   const deliveryConfig = detectEmailDeliveryConfig(process.env)
 
-  if (!deliveryConfig.configured || deliveryConfig.provider !== 'smtp' || !deliveryConfig.smtp) {
+  const canSendEmail = deliveryConfig.configured && (
+    (deliveryConfig.provider === 'smtp' && !!deliveryConfig.smtp) ||
+    (deliveryConfig.provider === 'resend' && !!deliveryConfig.resend)
+  )
+
+  if (!canSendEmail) {
     const demoConfig = detectEmailDemoConfig(process.env)
 
     if (demoConfig.enabled) {
@@ -1872,7 +1887,7 @@ export async function testEmailChannelAction(formData: FormData) {
       }
     }
 
-    const reason = 'SMTP no esta configurado completamente para ejecutar la prueba.'
+    const reason = 'El proveedor de email no esta configurado completamente para ejecutar la prueba.'
     await insertChannelEvent(supabase, {
       tenantId,
       actorUserId: user?.id,
@@ -1883,13 +1898,13 @@ export async function testEmailChannelAction(formData: FormData) {
   }
 
   try {
-    const result = await sendEmailViaSmtp({
-      config: deliveryConfig.smtp,
-      to,
-      subject,
-      text,
-      html: `<p>${text}</p>`,
-    })
+    const result = deliveryConfig.provider === 'resend' && deliveryConfig.resend
+      ? await sendEmailViaResend({ config: deliveryConfig.resend, to, subject, text, html: `<p>${text}</p>` })
+      : await sendEmailViaSmtp({ config: deliveryConfig.smtp!, to, subject, text, html: `<p>${text}</p>` })
+
+    const fromEmailAddress = deliveryConfig.provider === 'resend'
+      ? deliveryConfig.resend!.fromEmail
+      : deliveryConfig.smtp!.fromEmail
 
     const { data: testConversation, error: testConversationError } = await supabase
       .from('conversations')
@@ -1923,14 +1938,14 @@ export async function testEmailChannelAction(formData: FormData) {
       is_automated: false,
       metadata: {
         email_to: to,
-        email_from: deliveryConfig.smtp.fromEmail,
+        email_from: fromEmailAddress,
         email_subject: subject,
         email_message_id: result.messageId,
         email_references: result.messageId ? [result.messageId] : [],
         reply_type: 'human',
         email_delivery_provider: result.provider,
         email_delivery_status: 'sent',
-        email_delivery_response: result.response,
+        email_delivery_response: 'response' in result ? result.response : undefined,
         email_delivery_provider_message_id: result.messageId,
         email_delivery_accepted: result.accepted,
         email_delivery_rejected: result.rejected,
@@ -1947,7 +1962,7 @@ export async function testEmailChannelAction(formData: FormData) {
         to,
         provider: result.provider,
         status: result.status,
-        response: result.response,
+        response: 'response' in result ? result.response : undefined,
         message_id: result.messageId,
         accepted: result.accepted,
         rejected: result.rejected,
@@ -1956,7 +1971,7 @@ export async function testEmailChannelAction(formData: FormData) {
 
     return { ok: true, provider: result.provider, status: result.status }
   } catch (error) {
-    const reason = error instanceof Error ? error.message : 'SMTP test failed'
+    const reason = error instanceof Error ? error.message : 'Email test failed'
     await insertChannelEvent(supabase, {
       tenantId,
       actorUserId: user?.id,

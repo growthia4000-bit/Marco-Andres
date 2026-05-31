@@ -3832,7 +3832,7 @@ export async function sendEmailFromConversationAction(formData: FormData) {
     : undefined
 
   const emailMeta: EmailMetadata = {
-    email_from: deliveryConfig.smtp?.fromEmail || 'noreply@crm-inmobiliario.local',
+    email_from: (deliveryConfig.provider === 'resend' ? deliveryConfig.resend?.fromEmail : deliveryConfig.smtp?.fromEmail) || 'noreply@crm-inmobiliario.local',
     email_to: to,
     email_subject: emailSubject,
     email_message_id: localMessageId,
@@ -3900,55 +3900,6 @@ export async function sendEmailFromConversationAction(formData: FormData) {
     throw new Error(`${failureReason} Configura SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE, SMTP_FROM_EMAIL y SMTP_FROM_NAME.`)
   }
 
-  if (deliveryConfig.provider !== 'smtp' || !deliveryConfig.smtp) {
-    const transportReason = `Hay credenciales para ${deliveryConfig.provider}, pero este repo solo tiene implementado transporte SMTP real.`
-
-    const { error } = await supabase.from('conversation_messages').insert({
-      conversation_id: conversationId,
-      tenant_id: tenantId,
-      sender_user_id: user?.id,
-      direction: 'outbound',
-      channel: 'email',
-      status: 'failed',
-      content,
-      is_automated: false,
-      metadata: {
-        ...emailMeta,
-        reply_type: 'human',
-        email_delivery_status: 'failed',
-        email_delivery_error: transportReason,
-      },
-    })
-
-    if (error) throw new Error(error.message)
-
-    await supabase
-      .from('conversations')
-      .update({
-        metadata: { ...convMeta, email_thread_id: emailSubject, last_email_to: to, last_email_error: transportReason },
-      })
-      .eq('id', conversationId)
-      .eq('tenant_id', tenantId)
-
-    await supabase.from('automation_events').insert({
-      tenant_id: tenantId,
-      event_type: 'email.outbound.failed',
-      entity_type: 'conversation',
-      entity_id: conversationId,
-      actor_user_id: user?.id,
-      payload: {
-        to,
-        subject: emailSubject,
-        message_id: localMessageId,
-        provider: deliveryConfig.provider,
-        reason: transportReason,
-      },
-    })
-
-    revalidatePath('/conversations')
-    throw new Error(transportReason)
-  }
-
   await supabase.from('automation_events').insert({
     tenant_id: tenantId,
     event_type: 'email.outbound.created',
@@ -3964,20 +3915,15 @@ export async function sendEmailFromConversationAction(formData: FormData) {
   })
 
   try {
-    const smtpResult = await sendEmailViaSmtp({
-      config: deliveryConfig.smtp,
-      to,
-      subject: emailSubject,
-      text: content,
-      html: content,
-      messageId: localMessageId,
-      inReplyTo,
-      references,
-    })
+    const outboundReplyTo = process.env.EMAIL_REPLY_TO?.trim() || process.env.EMAIL_IMAP_USER?.trim() || undefined
+    const sendResult = deliveryConfig.provider === 'resend' && deliveryConfig.resend
+      ? await sendEmailViaResend({ config: deliveryConfig.resend, to, subject: emailSubject, text: content, html: content, messageId: localMessageId, inReplyTo, references, replyTo: outboundReplyTo })
+      : await sendEmailViaSmtp({ config: deliveryConfig.smtp!, to, subject: emailSubject, text: content, html: content, messageId: localMessageId, inReplyTo, references, replyTo: outboundReplyTo })
 
-    const sentMessageId = smtpResult.messageId || localMessageId
-    const accepted = smtpResult.accepted || []
-    const rejected = smtpResult.rejected || []
+    const sentMessageId = localMessageId
+    const deliveryProviderId = sendResult.messageId || localMessageId
+    const accepted = sendResult.accepted || []
+    const rejected = sendResult.rejected || []
 
     if (accepted.length === 0 || rejected.length > 0) {
       const rejectionReason = rejected.length > 0
@@ -3998,8 +3944,8 @@ export async function sendEmailFromConversationAction(formData: FormData) {
           email_message_id: sentMessageId,
           email_delivery_status: 'failed',
           email_delivery_error: rejectionReason,
-          email_delivery_response: smtpResult.response,
-          email_delivery_provider_message_id: smtpResult.messageId,
+          email_delivery_response: ('response' in sendResult ? sendResult.response : undefined),
+          email_delivery_provider_message_id: deliveryProviderId,
           email_delivery_accepted: accepted,
           email_delivery_rejected: rejected,
         },
@@ -4029,7 +3975,7 @@ export async function sendEmailFromConversationAction(formData: FormData) {
           reason: rejectionReason,
           accepted,
           rejected,
-          response: smtpResult.response,
+          response: ('response' in sendResult ? sendResult.response : undefined),
         },
       })
 
@@ -4039,7 +3985,7 @@ export async function sendEmailFromConversationAction(formData: FormData) {
         subject: emailSubject,
         accepted,
         rejected,
-        response: smtpResult.response,
+        response: ('response' in sendResult ? sendResult.response : undefined),
       })
 
       revalidatePath('/conversations')
@@ -4059,8 +4005,8 @@ export async function sendEmailFromConversationAction(formData: FormData) {
         ...emailMeta,
         email_message_id: sentMessageId,
         email_delivery_status: 'sent',
-        email_delivery_response: smtpResult.response,
-        email_delivery_provider_message_id: smtpResult.messageId,
+        email_delivery_response: ('response' in sendResult ? sendResult.response : undefined),
+        email_delivery_provider_message_id: deliveryProviderId,
         email_delivery_accepted: accepted,
         email_delivery_rejected: rejected,
       },
@@ -4093,10 +4039,10 @@ export async function sendEmailFromConversationAction(formData: FormData) {
         to,
         subject: emailSubject,
         message_id: sentMessageId,
-        provider: smtpResult.provider,
+        provider: sendResult.provider,
         accepted,
         rejected,
-        response: smtpResult.response,
+        response: ('response' in sendResult ? sendResult.response : undefined),
       },
     })
 
@@ -4104,12 +4050,12 @@ export async function sendEmailFromConversationAction(formData: FormData) {
     return {
       messageId: sentMessageId,
       subject: emailSubject,
-      provider: smtpResult.provider,
+      provider: sendResult.provider,
       accepted,
       rejected,
     }
   } catch (error) {
-    const failureReason = error instanceof Error ? error.message : 'SMTP send failed'
+    const failureReason = error instanceof Error ? error.message : 'Email send failed'
 
     const { error: insertError } = await supabase.from('conversation_messages').insert({
       conversation_id: conversationId,
@@ -4153,7 +4099,7 @@ export async function sendEmailFromConversationAction(formData: FormData) {
       },
     })
 
-    console.error('[conversations] email outbound failed during SMTP send', {
+    console.error('[conversations] email outbound failed during send', {
       conversationId,
       to,
       subject: emailSubject,

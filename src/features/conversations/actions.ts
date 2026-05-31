@@ -4241,31 +4241,16 @@ export async function processInboundEmailAction(data: {
   let conversationId: string | null = null
   let tenantId: string | null = null
   let matchedBy: 'thread' | 'sender_subject' | 'channel_test' | null = null
-  const existingConversationById = new Map((existingConvs || []).map((conv) => [conv.id, conv]))
-
   if (threadIds.length > 0) {
     for (const msg of (outboundMessages || [])) {
       const meta = (msg.metadata || {}) as Record<string, unknown>
       const outboundIds = [meta.email_message_id, meta.email_delivery_provider_message_id]
         .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-      const targetConversation = existingConversationById.get(msg.conversation_id as string)
-      const targetMeta = (targetConversation?.metadata || {}) as Record<string, unknown>
-      const targetThreadSubject = normalizeEmailSubject(
-        typeof targetMeta.email_thread_id === 'string'
-          ? targetMeta.email_thread_id
-          : typeof targetConversation?.subject === 'string'
-            ? targetConversation.subject
-            : ''
-      )
-      const outboundSubject = normalizeEmailSubject(typeof meta.email_subject === 'string' ? meta.email_subject : '')
       const sameThreadByHeaders = outboundIds.some((id) => threadIds.includes(id))
-      const sameThreadBySubject = Boolean(
-        normalizedInboundSubject
-        && ((targetThreadSubject && targetThreadSubject === normalizedInboundSubject)
-          || (outboundSubject && outboundSubject === normalizedInboundSubject))
-      )
 
-      if (sameThreadByHeaders && sameThreadBySubject) {
+      // Email headers (In-Reply-To / References) are globally unique identifiers — match by headers alone.
+      // Subject matching is unreliable: recipients can change subjects, double "Re:" prefixes break normalization, etc.
+      if (sameThreadByHeaders) {
         conversationId = msg.conversation_id as string
         tenantId = msg.tenant_id as string
         matchedBy = 'thread'

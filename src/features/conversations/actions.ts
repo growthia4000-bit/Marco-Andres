@@ -1268,8 +1268,8 @@ async function sendEmailAiReplyByMessageId(args: {
     : []
   const threadReferences = Array.from(new Set([...references, ...(inboundMessageId ? [inboundMessageId] : [])]))
 
-  // Set Reply-To to the IMAP inbox so replies route back to the monitored mailbox
-  const imapReplyTo = process.env.EMAIL_IMAP_USER?.trim() || undefined
+  // EMAIL_REPLY_TO overrides EMAIL_IMAP_USER so Reply-To can point to a different inbox than IMAP
+  const imapReplyTo = process.env.EMAIL_REPLY_TO?.trim() || process.env.EMAIL_IMAP_USER?.trim() || undefined
 
   const sendParams = {
     to: fromEmail,
@@ -1906,7 +1906,7 @@ export async function testEmailChannelAction(formData: FormData) {
   }
 
   try {
-    const testImapReplyTo = process.env.EMAIL_IMAP_USER?.trim() || undefined
+    const testImapReplyTo = process.env.EMAIL_REPLY_TO?.trim() || process.env.EMAIL_IMAP_USER?.trim() || undefined
     const result = deliveryConfig.provider === 'resend' && deliveryConfig.resend
       ? await sendEmailViaResend({ config: deliveryConfig.resend, to, subject, text, html: `<p>${text}</p>`, replyTo: testImapReplyTo })
       : await sendEmailViaSmtp({ config: deliveryConfig.smtp!, to, subject, text, html: `<p>${text}</p>`, replyTo: testImapReplyTo })

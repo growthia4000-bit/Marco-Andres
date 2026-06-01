@@ -1,4 +1,5 @@
 import type { ChatbotDialogueState, ChatbotSearchCriteria } from './chatbot-engine'
+import { formatCurrencyES } from './chatbot-engine'
 
 export type PropertyTurnAct =
   | 'SEARCH_REQUEST'
@@ -487,6 +488,16 @@ export function isConcretePropertyFollowUp(text: string): boolean {
   return /\b(este apartamento|esta propiedad|este inmueble|este piso|esta casa|esta|esa|dame los detalles|dime mas|dime más|quiero mas informacion|quiero más información|this apartment|this property|this house|this one|that one|give me the details|tell me more about this property|questo appartamento|questo immobile|questa proprieta|questa proprietà|questa|quella|dammi i dettagli|dimmi di piu|dimmi di più)\b/.test(normalized)
 }
 
+function translatePropertyType(type: string | null, locale: string): string {
+  if (type === 'apartment') return locale === 'en' ? 'apartment' : locale === 'it' ? 'appartamento' : 'apartamento'
+  if (type === 'house') return locale === 'en' ? 'house' : locale === 'it' ? 'casa' : 'casa'
+  if (type === 'penthouse') return locale === 'en' ? 'penthouse' : locale === 'it' ? 'attico' : 'ático'
+  if (type === 'land') return locale === 'en' ? 'land' : locale === 'it' ? 'terreno' : 'terreno'
+  if (type === 'commercial') return locale === 'en' ? 'commercial' : locale === 'it' ? 'commerciale' : 'local comercial'
+  if (type === 'office') return locale === 'en' ? 'office' : locale === 'it' ? 'ufficio' : 'oficina'
+  return type || (locale === 'en' ? 'property' : locale === 'it' ? 'immobile' : 'propiedad')
+}
+
 export function buildConcretePropertyReply(args: {
   property: ConcretePropertyRecord | null
   candidate: string | null
@@ -501,9 +512,10 @@ export function buildConcretePropertyReply(args: {
   }
 
   if (asksPropertyPrice(text) && property.price != null) {
-    if (locale === 'en') return `For ${property.title}, the listed price is ${property.price}.`
-    if (locale === 'it') return `Per ${property.title}, il prezzo publicado è ${property.price}.`
-    return `En ${property.title}, el precio publicado es ${property.price}.`
+    const priceStr = `€${formatCurrencyES(property.price, locale)}`
+    if (locale === 'en') return `For ${property.title}, the listed price is ${priceStr}.`
+    if (locale === 'it') return `Per ${property.title}, il prezzo publicado è ${priceStr}.`
+    return `En ${property.title}, el precio publicado es ${priceStr}.`
   }
   if (asksPropertyAddress(text)) {
     const place = property.address || property.city
@@ -513,11 +525,11 @@ export function buildConcretePropertyReply(args: {
   }
   if (asksPropertyDetails(text)) {
     const chunks: string[] = []
-    if (property.property_type) chunks.push(locale === 'en' ? `type: ${property.property_type}` : locale === 'it' ? `tipo: ${property.property_type}` : `tipo: ${property.property_type}`)
+    if (property.property_type) chunks.push(locale === 'en' ? `type: ${translatePropertyType(property.property_type, locale)}` : locale === 'it' ? `tipo: ${translatePropertyType(property.property_type, locale)}` : `tipo: ${translatePropertyType(property.property_type, locale)}`)
     if (property.deal_type) chunks.push(locale === 'en' ? `operation: ${property.deal_type}` : locale === 'it' ? `operazione: ${property.deal_type}` : `operación: ${property.deal_type}`)
     if (property.city) chunks.push(locale === 'en' ? `city: ${property.city}` : locale === 'it' ? `città: ${property.city}` : `ciudad: ${property.city}`)
     if (property.address) chunks.push(locale === 'en' ? `address: ${property.address}` : locale === 'it' ? `indirizzo: ${property.address}` : `dirección: ${property.address}`)
-    if (property.price != null) chunks.push(locale === 'en' ? `price: ${property.price}` : locale === 'it' ? `prezzo: ${property.price}` : `precio: ${property.price}`)
+    if (property.price != null) chunks.push(locale === 'en' ? `price: €${formatCurrencyES(property.price, locale)}` : locale === 'it' ? `prezzo: €${formatCurrencyES(property.price, locale)}` : `precio: €${formatCurrencyES(property.price, locale)}`)
     if (property.rooms != null) chunks.push(locale === 'en' ? `rooms: ${property.rooms}` : locale === 'it' ? `camere: ${property.rooms}` : `habitaciones: ${property.rooms}`)
     const detailText = chunks.join(locale === 'en' ? '; ' : locale === 'it' ? '; ' : '; ')
     if (locale === 'en') return `For ${property.title}, these are the concrete details I have right now: ${detailText || 'no additional confirmed data'}.`

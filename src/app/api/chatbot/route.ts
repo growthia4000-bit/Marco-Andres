@@ -50,6 +50,7 @@ import {
   resolveConcretePropertyReference,
   translatePropertyType,
 } from '@/features/conversations/chatbot-property-core'
+import { convertBetween, formatCurrencyAmount, isCurrencyCode, type CurrencyCode } from '@/lib/currency-rates'
 import { upsertChatbotLeadCapture } from '@/features/conversations/chatbot-lead-capture'
 import { upsertChatbotCrmAction } from '@/features/conversations/chatbot-crm-actions'
 import type { IntentType, DecisionType } from '@/features/conversations/intent-types'
@@ -293,11 +294,14 @@ function resolveSelectionFromResults(text: string, results: StoredPropertyResult
   return results.find((item) => normalized.includes(normalizeChatText(item.title)) || (!!item.address && normalized.includes(normalizeChatText(item.address)))) || null
 }
 
-function formatPropertyLine(property: StoredPropertyResult, locale: 'es' | 'en' | 'it') {
+function formatPropertyLine(property: StoredPropertyResult, locale: 'es' | 'en' | 'it', currency: CurrencyCode = 'EUR') {
   const pieces = [property.title]
   if (property.city) pieces.push(property.city)
   if (property.property_type) pieces.push(translatePropertyType(property.property_type, locale))
-  if (property.price != null) pieces.push(`€${formatCurrencyES(property.price, locale)}`)
+  if (property.price != null) {
+    const converted = convertBetween(property.price, 'EUR', currency)
+    pieces.push(formatCurrencyAmount(converted, currency))
+  }
   if (property.rooms != null) pieces.push(locale === 'en' ? `${property.rooms} rooms` : locale === 'it' ? `${property.rooms} camere` : `${property.rooms} habitaciones`)
   return pieces.join(' - ')
 }
@@ -306,14 +310,15 @@ function buildPropertyResultsListReply(args: {
   locale: 'es' | 'en' | 'it'
   results: StoredPropertyResult[]
   summary?: string | null
+  currency?: CurrencyCode
 }) {
-  const { locale, results, summary } = args
+  const { locale, results, summary, currency = 'EUR' } = args
   const intro = locale === 'en'
     ? summary ? `I found these options ${summary}:` : 'I found these properties:'
     : locale === 'it'
       ? summary ? `Ho trovato queste opzioni ${summary}:` : 'Ho trovato questi immobili:'
       : summary ? `Encontré estas opciones ${summary}:` : 'Encontré estos inmuebles:'
-  const lines = results.map((item, index) => `${index + 1}. ${formatPropertyLine(item, locale)}`).join('\n')
+  const lines = results.map((item, index) => `${index + 1}. ${formatPropertyLine(item, locale, currency)}`).join('\n')
   const closing = locale === 'en'
     ? 'If you want, I can show the details of one, compare them, arrange a visit, or mark the conversation for an agent.'
     : locale === 'it'
@@ -325,14 +330,15 @@ function buildPropertyResultsListReply(args: {
 function buildPropertyComparisonReply(args: {
   locale: 'es' | 'en' | 'it'
   results: StoredPropertyResult[]
+  currency?: CurrencyCode
 }) {
-  const { locale, results } = args
+  const { locale, results, currency = 'EUR' } = args
   const intro = locale === 'en'
     ? 'Here is a quick comparison of the options we were looking at:'
     : locale === 'it'
       ? 'Ti faccio un confronto rapido delle opzioni che stavamo guardando:'
       : 'Te hago una comparativa rápida de las opciones que estábamos viendo:'
-  const lines = results.map((item, index) => `${index + 1}. ${formatPropertyLine(item, locale)}`).join('\n')
+  const lines = results.map((item, index) => `${index + 1}. ${formatPropertyLine(item, locale, currency)}`).join('\n')
   const closing = locale === 'en'
     ? 'Tell me which one you want to review in detail, or if you prefer I can recommend one based on your criteria.'
     : locale === 'it'
@@ -358,14 +364,15 @@ function buildRecommendationReply(args: {
 function buildBrowseCatalogReply(args: {
   locale: 'es' | 'en' | 'it'
   results: StoredPropertyResult[]
+  currency?: CurrencyCode
 }) {
-  const { locale, results } = args
+  const { locale, results, currency = 'EUR' } = args
   if (results.length === 0) {
     if (locale === 'en') return 'Right now I do not see active properties in the catalogue. If you want, tell me city, budget, operation, or property type and I will guide the search from there.'
     if (locale === 'it') return 'In questo momento non vedo immobili attivi nel catalogo. Se vuoi, dimmi città, budget, operazione o tipologia e ti guido da lì.'
     return 'Ahora mismo no veo inmuebles activos en el catálogo. Si quieres, dime ciudad, presupuesto, operación o tipo de inmueble y te guío desde ahí.'
   }
-  return buildPropertyResultsListReply({ locale, results: results.slice(0, 5), summary: null })
+  return buildPropertyResultsListReply({ locale, results: results.slice(0, 5), summary: null, currency })
 }
 
 function buildContextlessPluralReply(locale: 'es' | 'en' | 'it') {
@@ -379,11 +386,12 @@ function buildBroadenedResultsReply(args: {
   originalCriteria: ChatbotSearchCriteria
   broadenedCriteria: ChatbotSearchCriteria
   results: StoredPropertyResult[]
+  currency?: CurrencyCode
 }) {
-  const { locale, originalCriteria, broadenedCriteria, results } = args
+  const { locale, originalCriteria, broadenedCriteria, results, currency = 'EUR' } = args
   const target = buildSearchSummary(originalCriteria, locale) || (locale === 'en' ? 'your search' : locale === 'it' ? 'la tua ricerca' : 'tu búsqueda')
   const broadened = buildSearchSummary(broadenedCriteria, locale) || (locale === 'en' ? 'a broader search' : locale === 'it' ? 'una ricerca più ampia' : 'una búsqueda más amplia')
-  const list = results.map((item, index) => `${index + 1}. ${formatPropertyLine(item, locale)}`).join('\n')
+  const list = results.map((item, index) => `${index + 1}. ${formatPropertyLine(item, locale, currency)}`).join('\n')
 
   if (locale === 'en') {
     return `I did not find an exact match for ${target}, so I broadened the search to ${broadened}. These are the closest real options I can confirm now:\n${list}\nIf you want, I can help you compare them, show one in detail, or keep widening the search.`
@@ -680,13 +688,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { text, session_id, conversation_id: requestConversationId, visitor_name, visitor_email, tenant_slug: rawTenantSlug, slug, locale: userLocale, channel: rawChannel, screen_path, user_role } = body
+    const { text, session_id, conversation_id: requestConversationId, visitor_name, visitor_email, tenant_slug: rawTenantSlug, slug, locale: userLocale, currency: userCurrency, channel: rawChannel, screen_path, user_role } = body
     requestText = typeof text === 'string' ? text : ''
     requestScreenPath = typeof screen_path === 'string' ? screen_path : null
     requestUserRole = typeof user_role === 'string' ? user_role : null
     const tenant_slug = rawTenantSlug || slug || null
     const activeLocale = userLocale === 'en' ? 'en' : userLocale === 'it' ? 'it' : 'es'
     requestLocale = activeLocale
+    const activeCurrency: CurrencyCode = (typeof userCurrency === 'string' && isCurrencyCode(userCurrency)) ? userCurrency : 'EUR'
     const activeChannel = rawChannel === 'whatsapp' ? 'whatsapp' : rawChannel === 'email' ? 'email' : rawChannel === 'admin' ? 'admin' : 'dashboard'
     const isAdminChannel = activeChannel === 'admin'
     const currentScreenKnowledge = getAppKnowledgeByPath(requestScreenPath)
@@ -1197,7 +1206,7 @@ export async function POST(req: NextRequest) {
       candidatePropertiesSummary = requestedResultSet
       propertyMatchCount = requestedResultSet.length
       if (comparisonIntent) {
-        replyText = buildPropertyComparisonReply({ locale: activeLocale, results: requestedResultSet })
+        replyText = buildPropertyComparisonReply({ locale: activeLocale, results: requestedResultSet, currency: activeCurrency })
         replyType = 'auto_reply'
         replySource = 'property_results_comparison'
       } else if (recommendationIntent && requestedResultSet.length > 0) {
@@ -1206,7 +1215,7 @@ export async function POST(req: NextRequest) {
         replySource = 'property_results_recommendation'
         selectedPropertyFacts = requestedResultSet[0]
       } else {
-        replyText = buildPropertyResultsListReply({ locale: activeLocale, results: requestedResultSet, summary: null })
+        replyText = buildPropertyResultsListReply({ locale: activeLocale, results: requestedResultSet, summary: null, currency: activeCurrency })
         replyType = 'auto_reply'
         replySource = 'property_results_plural_followup'
       }
@@ -1285,6 +1294,7 @@ export async function POST(req: NextRequest) {
             originalCriteria: mergedCriteria,
             broadenedCriteria: broadenedCriteriaForReply,
             results: broaderMatches.slice(0, 10),
+            currency: activeCurrency,
           })
           replyType = 'auto_reply'
           replySource = locationBroadenedMatches.length > 0
@@ -1295,6 +1305,7 @@ export async function POST(req: NextRequest) {
             locale: activeLocale,
             results: filteredMatches.slice(0, 10),
             summary: buildSearchSummary(mergedCriteria, activeLocale),
+            currency: activeCurrency,
           })
           replyType = 'auto_reply'
           replySource = 'chatbot_property_results_list'
@@ -1329,7 +1340,7 @@ export async function POST(req: NextRequest) {
       if (!hasPropertySearchContext(mergedCriteria) && catalogBrowseIntent) {
         candidatePropertiesSummary = normalizedActiveProperties.slice(0, 10)
         propertyMatchCount = normalizedActiveProperties.length
-        replyText = buildBrowseCatalogReply({ locale: activeLocale, results: normalizedActiveProperties.slice(0, 10) })
+        replyText = buildBrowseCatalogReply({ locale: activeLocale, results: normalizedActiveProperties.slice(0, 10), currency: activeCurrency })
         replyType = 'auto_reply'
         replySource = 'property_catalog_browse'
       } else if (!hasPropertySearchContext(mergedCriteria) && (pluralResultsIntent || comparisonIntent || recommendationIntent || !!resultSubsetCount)) {
@@ -2004,7 +2015,7 @@ export async function POST(req: NextRequest) {
     if (!replyText) {
       if (!isAdminChannel && hasPropertySearchContext(mergedCriteria)) {
         if (propertyMatchCount > 1 && candidatePropertiesSummary.length > 1) {
-          replyText = buildPropertyResultsListReply({ locale: activeLocale, results: candidatePropertiesSummary.slice(0, 10), summary: null })
+          replyText = buildPropertyResultsListReply({ locale: activeLocale, results: candidatePropertiesSummary.slice(0, 10), summary: null, currency: activeCurrency })
           replyType = 'auto_reply'
           replySource = 'property_deterministic_multi_fallback'
         } else if (candidatePropertiesSummary.length === 1) {

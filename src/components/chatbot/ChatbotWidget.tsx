@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { MessageSquare, Send, X, Minimize2, Bot, UserCheck, AlertCircle, RotateCcw } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider'
+import { useCurrency } from '@/context/CurrencyContext'
 import { createClient } from '@/lib/supabase/client'
 
 interface ChatMessage {
@@ -56,6 +57,7 @@ function getCloseChatLabel(locale: string) {
 
 export default function ChatbotWidget({ tenantSlug }: { tenantSlug: string | null }) {
   const { t, locale } = useI18n()
+  const { currency } = useCurrency()
   const pathname = usePathname()
   const supabase = useMemo(() => createClient(), [])
   const [isOpen, setIsOpen] = useState(false)
@@ -231,6 +233,7 @@ export default function ChatbotWidget({ tenantSlug }: { tenantSlug: string | nul
           session_id: sessionId,
           tenant_slug: tenantSlug,
           locale,
+          currency,
           channel: pathname === '/admin' ? 'admin' : 'dashboard',
           screen_path: pathname,
           user_role: userRole,

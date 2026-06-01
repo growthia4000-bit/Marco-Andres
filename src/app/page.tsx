@@ -8,6 +8,8 @@ import {
 } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import CurrencySwitcher from '@/components/CurrencySwitcher'
+import { useCurrency } from '@/context/CurrencyContext'
 
 const WA_NUMBER = '447506862450'
 const WA_MESSAGE = encodeURIComponent('Hola, me interesa una demo gratuita de Growthia Global CRM')
@@ -17,6 +19,7 @@ const WA_URL = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`
 
 export default function LandingPage() {
   const { t } = useI18n()
+  const { formatPrice } = useCurrency()
 
   // ── Data (built from translations) ──────────────────────────────────────────
 
@@ -39,7 +42,7 @@ export default function LandingPage() {
   const PLANS = [
     {
       name: 'Starter',
-      price: '29',
+      price: 29,
       planKey: 'starter',
       desc: t('landing.pricing.starter.desc'),
       features: ['f1','f2','f3','f4','f5','f6'].map(k => t(`landing.pricing.starter.${k}`)),
@@ -48,7 +51,7 @@ export default function LandingPage() {
     },
     {
       name: 'Profesional',
-      price: '59',
+      price: 59,
       planKey: 'profesional',
       desc: t('landing.pricing.pro.desc'),
       features: ['f1','f2','f3','f4','f5','f6','f7'].map(k => t(`landing.pricing.pro.${k}`)),
@@ -57,7 +60,7 @@ export default function LandingPage() {
     },
     {
       name: 'Premium',
-      price: '99',
+      price: 99,
       planKey: 'premium',
       desc: t('landing.pricing.premium.desc'),
       features: ['f1','f2','f3','f4','f5','f6','f7'].map(k => t(`landing.pricing.premium.${k}`)),
@@ -102,6 +105,7 @@ export default function LandingPage() {
             <a href="#contact" className="transition hover:text-slate-900">{t('landing.nav.contact')}</a>
           </nav>
           <div className="flex items-center gap-3">
+            <CurrencySwitcher />
             <LanguageSwitcher />
             <Link
               href="/login"
@@ -283,7 +287,7 @@ export default function LandingPage() {
                 <div className="mb-6">
                   <h3 className={`text-lg font-bold ${highlight ? 'text-white' : 'text-slate-900'}`}>{name}</h3>
                   <div className="mt-3 flex items-end gap-1">
-                    <span className={`text-4xl font-bold ${highlight ? 'text-white' : 'text-slate-900'}`}>{price}€</span>
+                    <span className={`text-4xl font-bold ${highlight ? 'text-white' : 'text-slate-900'}`}>{formatPrice(price)}</span>
                     <span className={`mb-1.5 text-sm ${highlight ? 'text-blue-100' : 'text-slate-400'}`}>{t('landing.pricing.perMonth')}</span>
                   </div>
                   <p className={`mt-3 text-sm leading-relaxed ${highlight ? 'text-blue-100' : 'text-slate-500'}`}>{desc}</p>

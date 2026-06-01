@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { I18nProvider } from '@/i18n/I18nProvider'
 import { getRequestI18nSettings } from '@/i18n/server'
+import { CurrencyProvider } from '@/context/CurrencyContext'
 
 export const metadata: Metadata = {
   title: 'Growthia Global CRM',
@@ -19,7 +20,9 @@ export default async function RootLayout({
     <html lang={localeCode}>
       <body>
         <I18nProvider initialLocale={locale} initialLocaleCode={localeCode} initialCurrencyCode={currencyCode} initialTimezone={timezone}>
-          {children}
+          <CurrencyProvider>
+            {children}
+          </CurrencyProvider>
         </I18nProvider>
       </body>
     </html>

@@ -9,6 +9,7 @@ import type { Property } from '@/features/properties/types'
 import { useSavedFilters } from '@/hooks/useSavedFilters'
 import { useI18n } from '@/i18n/I18nProvider'
 import { getDealTypeLabel, getPropertyStatusLabel, getPropertyTypeLabel } from '@/i18n/pageLabels'
+import { useCurrency } from '@/context/CurrencyContext'
 
 const KPI_STYLES = [
   {
@@ -55,7 +56,8 @@ export default function PropertiesPage() {
   const router = useRouter()
   const supabase = createClient()
   const { savedFilters, showSaveDialog, setShowSaveDialog, filterName, setFilterName, saveFilter, deleteFilter } = useSavedFilters('properties')
-  const { t, formatCurrency, currencyCode } = useI18n()
+  const { t } = useI18n()
+  const { formatPriceFrom } = useCurrency()
 
   const currentFilters = { search, filterType, filterDeal, filterStatus, sortBy }
   const hasActiveFilters = Boolean(search) || filterType !== 'all' || filterDeal !== 'all' || filterStatus !== 'all'
@@ -338,7 +340,7 @@ export default function PropertiesPage() {
                     {property.bathrooms && <span className="flex items-center gap-1"><Bath size={14} /> {property.bathrooms}</span>}
                     {property.area_sqm && <span className="flex items-center gap-1"><Square size={14} /> {t('propertiesExtra.area', { value: property.area_sqm })}</span>}
                   </div>
-                  <div className="flex items-end justify-between gap-3 border-t border-slate-100 pt-4"><p className="text-2xl font-bold tracking-tight text-blue-700">{formatCurrency(property.price_amount ?? property.price, property.currency_code ?? currencyCode)}</p><div className="flex items-center gap-2 text-xs text-slate-400"><span>{property.city || ''}</span></div></div>
+                  <div className="flex items-end justify-between gap-3 border-t border-slate-100 pt-4"><p className="text-2xl font-bold tracking-tight text-blue-700">{formatPriceFrom(property.price_amount ?? property.price, property.currency_code ?? 'EUR')}</p><div className="flex items-center gap-2 text-xs text-slate-400"><span>{property.city || ''}</span></div></div>
                 </div>
               </div>
             ))}

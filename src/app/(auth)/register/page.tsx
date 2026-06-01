@@ -7,9 +7,11 @@ import Image from 'next/image'
 import { Check, ChevronRight, AlertCircle, Star, Building2, Users, Zap } from 'lucide-react'
 import { Suspense } from 'react'
 import { useI18n } from '@/i18n/I18nProvider'
+import { useCurrency } from '@/context/CurrencyContext'
 
 function RegisterForm() {
   const { t } = useI18n()
+  const { formatPrice } = useCurrency()
   const searchParams = useSearchParams()
 
   const PLANS = [
@@ -165,7 +167,7 @@ function RegisterForm() {
                     <div className="mb-3 text-sm text-slate-500">{p.description}</div>
 
                     <div className="mb-5 flex items-end gap-1">
-                      <span className="text-3xl font-bold text-slate-950">{p.price}€</span>
+                      <span className="text-3xl font-bold text-slate-950">{formatPrice(p.price)}</span>
                       <span className="mb-0.5 text-sm text-slate-400">{t('register.perMonth')}</span>
                     </div>
 

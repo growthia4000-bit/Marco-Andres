@@ -7,12 +7,14 @@ import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Edit, MapPin, Bed, Bath, Square, Image as ImageIcon, ChevronLeft, ChevronRight, ZoomIn, X, Building2, Home } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider'
 import { getDealTypeLabel, getPropertyStatusLabel, getPropertyTypeLabel } from '@/i18n/pageLabels'
+import { useCurrency } from '@/context/CurrencyContext'
 
 export default function PropertyDetailPage() {
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
-  const { t, formatCurrency, currencyCode } = useI18n()
+  const { t } = useI18n()
+  const { formatPriceFrom, currency } = useCurrency()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -136,9 +138,9 @@ export default function PropertyDetailPage() {
 
               <div className="flex w-full max-w-sm flex-col gap-3 xl:items-end">
                 <div className="w-full rounded-[24px] border border-slate-200/80 bg-white/90 p-4 shadow-sm xl:max-w-sm">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t('propertyForm.price', { currency: property.currency_code ?? currencyCode })}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t('propertyForm.price', { currency })}</p>
                   <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                    {formatCurrency(property.price_amount ?? property.price, property.currency_code ?? currencyCode)}
+                    {formatPriceFrom(property.price_amount ?? property.price, property.currency_code ?? 'EUR')}
                   </p>
                 </div>
 
@@ -198,7 +200,7 @@ export default function PropertyDetailPage() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-blue-600">
-                  {formatCurrency(property.price_amount ?? property.price, property.currency_code ?? currencyCode)}
+                  {formatPriceFrom(property.price_amount ?? property.price, property.currency_code ?? 'EUR')}
                 </p>
               </div>
             </div>
@@ -211,7 +213,7 @@ export default function PropertyDetailPage() {
               {property.rooms ? <div className="bg-slate-50 rounded-xl p-4"><div className="flex items-center gap-2 text-slate-500 mb-1"><Bed size={16} />{t('propertyForm.rooms')}</div><p className="text-xl font-semibold text-slate-900">{property.rooms}</p></div> : null}
               {property.bathrooms ? <div className="bg-slate-50 rounded-xl p-4"><div className="flex items-center gap-2 text-slate-500 mb-1"><Bath size={16} />{t('propertyForm.bathrooms')}</div><p className="text-xl font-semibold text-slate-900">{property.bathrooms}</p></div> : null}
               {property.area_sqm ? <div className="bg-slate-50 rounded-xl p-4"><div className="flex items-center gap-2 text-slate-500 mb-1"><Square size={16} />{t('propertyForm.area')}</div><p className="text-xl font-semibold text-slate-900">{property.area_sqm}</p></div> : null}
-              <div className="bg-slate-50 rounded-xl p-4"><div className="text-slate-500 mb-1">{t('common.currency')}</div><p className="text-xl font-semibold text-slate-900">{property.currency_code ?? currencyCode}</p></div>
+              <div className="bg-slate-50 rounded-xl p-4"><div className="text-slate-500 mb-1">{t('common.currency')}</div><p className="text-xl font-semibold text-slate-900">{currency}</p></div>
             </div>
           </div>
         </div>

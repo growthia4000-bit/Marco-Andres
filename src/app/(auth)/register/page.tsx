@@ -228,7 +228,7 @@ function RegisterForm() {
                 <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
                   plan.popular ? 'bg-blue-600 text-white' : 'bg-slate-950 text-white'
                 }`}>
-                  {plan.price}€
+                  {formatPrice(plan.price)}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Plan {plan.name}</p>

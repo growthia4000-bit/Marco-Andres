@@ -864,7 +864,10 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-2">
               {availableWidgets.length === 0 ? (
-                 <p className="text-slate-500 text-center py-4">{t('dashboard.labels.allWidgetsAdded')}</p>
+                <div className="text-center py-4 px-2 space-y-1.5">
+                  <p className="text-slate-700 font-medium text-sm">{t('dashboard.labels.allWidgetsAdded')}</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">{t('dashboard.labels.allWidgetsAddedHint')}</p>
+                </div>
               ) : (
                 availableWidgets.map(widget => (
                   <button

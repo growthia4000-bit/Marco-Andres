@@ -173,6 +173,7 @@ const en = {
       commercial: 'Commercial',
       widget: 'Widget',
       allWidgetsAdded: 'All widgets have already been added',
+      allWidgetsAddedHint: "Your dashboard already shows all available information. You can rearrange widgets by dragging them or use 'Reset Widgets' to return to the default view.",
       noWidgets: 'No widgets',
       customizeDashboard: 'Add widgets to customize your Dashboard',
       resetWidgets: 'Reset Widgets',

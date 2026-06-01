@@ -173,6 +173,7 @@ const es = {
       commercial: 'Comercial',
       widget: 'Widget',
       allWidgetsAdded: 'Todos los widgets ya están agregados',
+      allWidgetsAddedHint: "Tu panel ya muestra toda la información disponible. Puedes reorganizar los widgets arrastrándolos o usar 'Restablecer Widgets' para volver a la vista por defecto.",
       noWidgets: 'Sin widgets',
       customizeDashboard: 'Agrega widgets para personalizar tu panel',
       resetWidgets: 'Restablecer Widgets',

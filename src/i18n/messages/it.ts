@@ -173,6 +173,7 @@ const it = {
       commercial: 'Commerciale',
       widget: 'Widget',
       allWidgetsAdded: 'Tutti i widget sono già stati aggiunti',
+      allWidgetsAddedHint: "Il tuo pannello mostra già tutte le informazioni disponibili. Puoi riorganizzare i widget trascinandoli o usare 'Ripristina widget' per tornare alla vista predefinita.",
       noWidgets: 'Nessun widget',
       customizeDashboard: 'Aggiungi widget per personalizzare il cruscotto',
       resetWidgets: 'Ripristina widget',

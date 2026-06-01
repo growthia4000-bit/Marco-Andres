@@ -11,7 +11,7 @@ import { useCurrency } from '@/context/CurrencyContext'
 
 function RegisterForm() {
   const { t } = useI18n()
-  const { formatPrice } = useCurrency()
+  const { formatPrice, currency } = useCurrency()
   const searchParams = useSearchParams()
 
   const PLANS = [
@@ -76,6 +76,7 @@ function RegisterForm() {
           agency_name: form.agency_name,
           full_name: form.full_name,
           email: form.email,
+          currency,
         }),
       })
 

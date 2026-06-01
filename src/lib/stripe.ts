@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { convertFromEUR, type CurrencyCode } from '@/lib/currency-rates'
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY is not set')
@@ -37,32 +38,47 @@ export const PLANS = {
 
 export type PlanKey = keyof typeof PLANS
 
-/** Get or create a Stripe Price for a plan. Stores price_id in plan metadata. */
-export async function getOrCreateStripePrice(planKey: PlanKey): Promise<string> {
-  const plan = PLANS[planKey]
+// Currencies supported by this UK Stripe account (GTQ → USD fallback)
+export type StripeCurrency = 'eur' | 'usd' | 'gbp' | 'mxn'
 
-  // Search for existing product by metadata
+/** Map CurrencyCode to a Stripe-supported currency. GTQ is not supported on UK accounts → USD. */
+export function toStripeCurrency(currency: CurrencyCode): StripeCurrency {
+  if (currency === 'GTQ') return 'usd'
+  return currency.toLowerCase() as StripeCurrency
+}
+
+/** Compute Stripe unit_amount (smallest currency unit) from EUR base price.
+ *  MXN: rounds to whole peso then expresses in centavos (no fractional pesos).
+ *  EUR/USD/GBP: rounds to nearest cent/pence. */
+function computeUnitAmount(eurPrice: number, stripeCurrency: StripeCurrency): number {
+  const codeMap: Record<StripeCurrency, CurrencyCode> = {
+    eur: 'EUR', usd: 'USD', gbp: 'GBP', mxn: 'MXN',
+  }
+  const converted = convertFromEUR(eurPrice, codeMap[stripeCurrency])
+  if (stripeCurrency === 'mxn') return Math.round(converted) * 100
+  return Math.round(converted * 100)
+}
+
+/** Get or create a Stripe Price for a plan + currency combination.
+ *  Each plan can have up to one active Price per supported currency. */
+export async function getOrCreateStripePrice(
+  planKey: PlanKey,
+  currency: CurrencyCode = 'EUR',
+): Promise<string> {
+  const plan = PLANS[planKey]
+  const stripeCurrency = toStripeCurrency(currency)
+
+  // Find or create Product (shared across all currencies for this plan)
   const products = await stripe.products.search({
     query: `metadata['plan_slug']:'${plan.slug}'`,
     limit: 1,
   })
 
   let productId: string
-  let priceId: string | null = null
 
   if (products.data.length > 0) {
     productId = products.data[0].id
-    // Find active price for this product
-    const prices = await stripe.prices.list({
-      product: productId,
-      active: true,
-      limit: 1,
-    })
-    if (prices.data.length > 0) {
-      priceId = prices.data[0].id
-    }
   } else {
-    // Create product
     const product = await stripe.products.create({
       name: `InmoCRM ${plan.name}`,
       description: plan.description,
@@ -71,17 +87,24 @@ export async function getOrCreateStripePrice(planKey: PlanKey): Promise<string> 
     productId = product.id
   }
 
-  if (!priceId) {
-    // Create price
-    const price = await stripe.prices.create({
-      product: productId,
-      unit_amount: plan.priceCents,
-      currency: 'eur',
-      recurring: { interval: 'month' },
-      metadata: { plan_slug: plan.slug },
-    })
-    priceId = price.id
-  }
+  // Find existing active Price for this product + currency
+  const prices = await stripe.prices.list({
+    product: productId,
+    active: true,
+    currency: stripeCurrency,
+    limit: 1,
+  })
 
-  return priceId
+  if (prices.data.length > 0) return prices.data[0].id
+
+  // Create Price for this currency
+  const price = await stripe.prices.create({
+    product: productId,
+    unit_amount: computeUnitAmount(plan.priceEur, stripeCurrency),
+    currency: stripeCurrency,
+    recurring: { interval: 'month' },
+    metadata: { plan_slug: plan.slug, display_currency: currency },
+  })
+
+  return price.id
 }

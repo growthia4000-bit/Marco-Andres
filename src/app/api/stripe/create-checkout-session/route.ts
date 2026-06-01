@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, getOrCreateStripePrice, PLANS, type PlanKey } from '@/lib/stripe'
+import { isCurrencyCode, type CurrencyCode } from '@/lib/currency-rates'
 
 const VALID_PLAN_KEYS = Object.keys(PLANS) as PlanKey[]
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { plan_key, agency_name, full_name, email } = body as {
+    const { plan_key, agency_name, full_name, email, currency } = body as {
       plan_key: string
       agency_name: string
       full_name: string
       email: string
+      currency?: string
     }
 
     // Validate inputs
@@ -27,8 +29,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email inválido', errorCode: 'invalid_email' }, { status: 400 })
     }
 
-    // Get or create Stripe price for this plan
-    const priceId = await getOrCreateStripePrice(plan_key as PlanKey)
+    const activeCurrency: CurrencyCode =
+      typeof currency === 'string' && isCurrencyCode(currency) ? currency : 'EUR'
+
+    // Get or create Stripe price for this plan + currency
+    const priceId = await getOrCreateStripePrice(plan_key as PlanKey, activeCurrency)
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
@@ -44,6 +49,7 @@ export async function POST(request: NextRequest) {
         agency_name: agency_name.trim(),
         full_name: full_name.trim(),
         email: email.toLowerCase().trim(),
+        display_currency: activeCurrency,
       },
       success_url: `${baseUrl}/register/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/register?cancelled=1`,

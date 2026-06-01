@@ -1524,7 +1524,7 @@ export async function POST(req: NextRequest) {
             replySource = 'appointment_confirmed_natural'
           }
         } else {
-          const alternatives = findAlternativeSlots(existingAppointments || [], start, { tenantId: tenantId!, date: start, daysAhead: 2, businessHourStart: 8, businessHourEnd: 21 })
+          const alternatives = findAlternativeSlots(existingAppointments || [], start, { tenantId: tenantId!, date: start, daysAhead: 2, businessHourStart: 9, businessHourEnd: 18 })
           const sameDayAlternatives = alternatives.filter((slot) => slot.date === requestedSlot.date)
           replyText = sameDayAlternatives.length > 0
             ? `A las ${requestedSlot.time} ya no tengo disponibilidad. El mismo ${requestedSlot.date.split('-').reverse().join('/')} todavía tengo libres ${sameDayAlternatives.slice(0, 3).map((slot) => slot.time).join(', ')}. Si quieres, puedo reservarte una de esas opciones.`
@@ -1610,8 +1610,8 @@ export async function POST(req: NextRequest) {
           ? findAvailableSlotsForDate(existingAppointments || [], requestedAppointmentDate, {
             tenantId: tenantId!,
             date: requestedAppointmentDate,
-            businessHourStart: 8,
-            businessHourEnd: 21,
+            businessHourStart: 9,
+            businessHourEnd: 18,
           })
           : []
         const contextualSlots = relativeSchedulePreference
@@ -1767,7 +1767,7 @@ export async function POST(req: NextRequest) {
             replySource = 'appointment_confirmed'
           }
         } else {
-          const alternatives = findAlternativeSlots(existingAppointments || [], start, { tenantId: tenantId!, date: start, daysAhead: 2, businessHourStart: 8, businessHourEnd: 21 })
+          const alternatives = findAlternativeSlots(existingAppointments || [], start, { tenantId: tenantId!, date: start, daysAhead: 2, businessHourStart: 9, businessHourEnd: 18 })
           const sameDayAlternatives = alternatives.filter((slot) => slot.date === requestedSlot.date)
           const displaySlots = sameDayAlternatives.length > 0 ? sameDayAlternatives : alternatives
           replyText = sameDayAlternatives.length > 0
@@ -1821,7 +1821,7 @@ export async function POST(req: NextRequest) {
           replyType = 'appointment_suggestion'
           replySource = 'appointment_exact_available'
         } else {
-          const alternatives = findAlternativeSlots(existingAppointments || [], start, { tenantId: tenantId!, date: start, daysAhead: 2, businessHourStart: 8, businessHourEnd: 21 })
+          const alternatives = findAlternativeSlots(existingAppointments || [], start, { tenantId: tenantId!, date: start, daysAhead: 2, businessHourStart: 9, businessHourEnd: 18 })
           const sameDayAlternatives = alternatives.filter((slot) => slot.date === requestedSlot.date)
           const displaySlots = sameDayAlternatives.length > 0 ? sameDayAlternatives : alternatives
           replyText = sameDayAlternatives.length > 0
@@ -1949,8 +1949,8 @@ export async function POST(req: NextRequest) {
           conversationMetaState.chatbot_active_appointment_date = closestSuggestedSlot.date
         } else {
           const slots = requestedAppointmentDate
-            ? findAvailableSlotsForDate(existingAppointments || [], requestedAppointmentDate, { tenantId: tenantId!, date: requestedAppointmentDate, businessHourStart: 8, businessHourEnd: 21 })
-            : findAvailableSlots(existingAppointments || [], { tenantId: tenantId!, businessHourStart: 8, businessHourEnd: 21 })
+            ? findAvailableSlotsForDate(existingAppointments || [], requestedAppointmentDate, { tenantId: tenantId!, date: requestedAppointmentDate, businessHourStart: 9, businessHourEnd: 18 })
+            : findAvailableSlots(existingAppointments || [], { tenantId: tenantId!, businessHourStart: 9, businessHourEnd: 18 })
           await supabase
             .from('conversations')
             .update({ metadata: { ...conversationMetaState, chatbot_suggested_slots: slots, chatbot_active_appointment_date: slots[0]?.date || storedAppointmentDate || null } })

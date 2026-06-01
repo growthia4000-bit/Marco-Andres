@@ -70,7 +70,7 @@ export function findAvailableSlots(
     const slotDate = new Date(Date.UTC(seed.year, seed.month - 1, seed.day))
     slotDate.setUTCDate(slotDate.getUTCDate() + day)
 
-    if (slotDate.getUTCDay() === 0) continue
+    if (slotDate.getUTCDay() === 0 || slotDate.getUTCDay() === 6) continue
 
     for (let hour = businessHourStart; hour < businessHourEnd; hour++) {
       for (const minute of [0, 30]) {
@@ -128,6 +128,8 @@ export function findAvailableSlotsForDate(
   params: AvailabilityParams
 ): TimeSlot[] {
   const timezone = DEFAULT_TIMEZONE
+  const dayOfWeek = date.getUTCDay()
+  if (dayOfWeek === 0 || dayOfWeek === 6) return []
   const slots = collectDaySlots(existingAppointments, date, params, timezone)
   const now = new Date()
 

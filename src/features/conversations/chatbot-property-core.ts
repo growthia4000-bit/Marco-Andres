@@ -488,7 +488,7 @@ export function isConcretePropertyFollowUp(text: string): boolean {
   return /\b(este apartamento|esta propiedad|este inmueble|este piso|esta casa|esta|esa|dame los detalles|dime mas|dime más|quiero mas informacion|quiero más información|this apartment|this property|this house|this one|that one|give me the details|tell me more about this property|questo appartamento|questo immobile|questa proprieta|questa proprietà|questa|quella|dammi i dettagli|dimmi di piu|dimmi di più)\b/.test(normalized)
 }
 
-function translatePropertyType(type: string | null, locale: string): string {
+export function translatePropertyType(type: string | null, locale: string): string {
   if (type === 'apartment') return locale === 'en' ? 'apartment' : locale === 'it' ? 'appartamento' : 'apartamento'
   if (type === 'house') return locale === 'en' ? 'house' : locale === 'it' ? 'casa' : 'casa'
   if (type === 'penthouse') return locale === 'en' ? 'penthouse' : locale === 'it' ? 'attico' : 'ático'

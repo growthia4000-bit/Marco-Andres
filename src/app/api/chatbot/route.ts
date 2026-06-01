@@ -32,6 +32,7 @@ import {
   buildSellerHelpReply,
   buildHumanContactReply,
   buildLegalComplexReply,
+  formatCurrencyES,
 } from '@/features/conversations/chatbot-engine'
 import { buildResponseContext, generateSemanticInterpretation, generateVisibleReplyWithAi } from '@/features/conversations/chatbot-ai'
 import { findExplicitAppKnowledgeMatch, findExplicitAppKnowledgeSwitchMatch, findRelevantAppKnowledge, getAppKnowledgeByPath, getAppKnowledgeByRoute } from '@/features/conversations/chatbot-app-knowledge'
@@ -47,6 +48,7 @@ import {
   propertyMatchesOperation,
   rankPropertyMatches,
   resolveConcretePropertyReference,
+  translatePropertyType,
 } from '@/features/conversations/chatbot-property-core'
 import { upsertChatbotLeadCapture } from '@/features/conversations/chatbot-lead-capture'
 import { upsertChatbotCrmAction } from '@/features/conversations/chatbot-crm-actions'
@@ -294,8 +296,8 @@ function resolveSelectionFromResults(text: string, results: StoredPropertyResult
 function formatPropertyLine(property: StoredPropertyResult, locale: 'es' | 'en' | 'it') {
   const pieces = [property.title]
   if (property.city) pieces.push(property.city)
-  if (property.property_type) pieces.push(property.property_type)
-  if (property.price != null) pieces.push(String(property.price))
+  if (property.property_type) pieces.push(translatePropertyType(property.property_type, locale))
+  if (property.price != null) pieces.push(`€${formatCurrencyES(property.price, locale)}`)
   if (property.rooms != null) pieces.push(locale === 'en' ? `${property.rooms} rooms` : locale === 'it' ? `${property.rooms} camere` : `${property.rooms} habitaciones`)
   return pieces.join(' - ')
 }
